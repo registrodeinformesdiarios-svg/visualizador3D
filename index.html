@@ -1,290 +1,1674 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js CAD Viewer (Draco Support)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { margin: 0; background-color: #1a1a1a; color: white; font-family: ui-sans-serif, system-ui, sans-serif; }
-        canvas { display: block; outline: none; }
-        #drop-zone {
-            transition: all 0.3s ease;
-            border: 2px dashed #444;
-        }
-        #drop-zone.dragover {
-            border-color: #3b82f6;
-            background-color: rgba(59, 130, 246, 0.1);
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIM360 Viewer — SolidWorks Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e2a;
+    --border: rgba(255,255,255,0.08);
+    --border-hi: rgba(99,179,237,0.5);
+    --accent: #63b3ed;
+    --accent2: #48bb78;
+    --accent3: #f6ad55;
+    --danger: #fc8181;
+    --text: #e2e8f0;
+    --text2: #a0aec0;
+    --text3: #4a5568;
+    --panel-w: 380px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; overflow: hidden; height: 100vh; }
+
+  /* ─── CANVAS ─── */
+  #canvas-main { position: absolute; inset: 0; }
+
+  /* ─── TOPBAR ─── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
+    background: rgba(13,15,20,0.85); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  }
+  .logo { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; white-space: nowrap; }
+  .logo span { color: var(--accent2); }
+  .topbar-sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+  #project-label { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  #project-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .spacer { flex: 1; }
+  .tb-btn {
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text2); cursor: pointer; font-family: var(--sans); font-size: 12px;
+    transition: all .15s; white-space: nowrap;
+  }
+  .tb-btn:hover { border-color: var(--border-hi); color: var(--accent); background: rgba(99,179,237,0.06); }
+  .tb-btn.active { border-color: var(--accent); color: var(--accent); }
+  .tb-btn svg { flex-shrink: 0; }
+
+  /* ─── SIDEBAR TABS ─── */
+  .sb-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .sb-tab {
+    flex: 1; padding: 9px 8px; text-align: center; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .8px; text-transform: uppercase; color: var(--text3); cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all .15s;
+  }
+  .sb-tab:hover { color: var(--text2); }
+  .sb-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .sb-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .sb-pane.active { display: flex; }
+
+  /* ─── OBJECT LIST ─── */
+  .obj-list-toolbar {
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+  .obj-list-search {
+    flex: 1; display: flex; align-items: center; gap: 5px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 7px;
+  }
+  .obj-list-search input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: var(--sans); font-size: 11px; }
+  .obj-list-search svg { color: var(--text3); flex-shrink: 0; }
+  .obj-toolbar-btn {
+    width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s; flex-shrink: 0;
+  }
+  .obj-toolbar-btn:hover { border-color: var(--border-hi); color: var(--accent); }
+  .obj-toolbar-btn.on { border-color: var(--accent); color: var(--accent); background: rgba(99,179,237,0.08); }
+  #obj-list-scroll { flex: 1; overflow-y: auto; }
+  .obj-list-item {
+    display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer;
+    border-left: 2px solid transparent; transition: all .1s;
+  }
+  .obj-list-item:hover { background: rgba(255,255,255,0.025); }
+  .obj-list-item.selected { border-left-color: var(--accent); background: rgba(99,179,237,0.06); }
+  .obj-list-item.hidden-obj { opacity: .35; }
+  .obj-color-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .obj-item-name { flex: 1; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); }
+  .obj-list-item.selected .obj-item-name { color: var(--accent); }
+  .obj-vis-btn {
+    width: 20px; height: 20px; border-radius: 3px; border: none; background: none;
+    color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color .1s; flex-shrink: 0;
+  }
+  .obj-vis-btn:hover { color: var(--text); }
+  .obj-glass-btn {
+    width: 20px; height: 20px; border-radius: 3px; border: none; background: none;
+    color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color .1s; flex-shrink: 0; font-size: 10px; font-family: var(--mono);
+  }
+  .obj-glass-btn:hover { color: var(--accent2); }
+  .obj-glass-btn.on { color: var(--accent2); }
+  .obj-list-empty { padding: 20px 12px; text-align: center; color: var(--text3); font-size: 11px; font-family: var(--mono); }
+
+  /* ─── LEFT SIDEBAR (Drive Browser) ─── */
+  #sidebar {
+    position: fixed; top: 52px; left: 0; bottom: 0; width: 260px; z-index: 90;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #sidebar.hidden { transform: translateX(-260px); }
+  .sb-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+  .sb-title { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text3); text-transform: uppercase; }
+  .sb-search {
+    margin-top: 8px; display: flex; align-items: center; gap: 6px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px;
+  }
+  .sb-search input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: var(--sans); font-size: 12px; }
+  .sb-search svg { color: var(--text3); }
+  #project-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .project-item {
+    padding: 9px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    border-left: 2px solid transparent; transition: all .12s; color: var(--text2);
+  }
+  .project-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .project-item.active { border-left-color: var(--accent); background: rgba(99,179,237,0.06); color: var(--accent); }
+  .project-item svg { flex-shrink: 0; }
+  .project-name { font-size: 12px; font-weight: 500; }
+  .project-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .sb-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+  .sb-load-btn {
+    width: 100%; padding: 8px; background: var(--accent); color: var(--bg);
+    border: none; border-radius: 6px; font-family: var(--sans); font-weight: 600;
+    font-size: 12px; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .sb-load-btn:hover { opacity: .85; }
+  .sb-load-btn:disabled { opacity: .4; cursor: default; }
+
+  /* ─── RIGHT PANEL (Properties) ─── */
+  #props-panel {
+    position: fixed; top: 52px; right: 0; bottom: 0; width: var(--panel-w); z-index: 90;
+    background: var(--bg2); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; transition: transform .25s cubic-bezier(.4,0,.2,1);
+    transform: translateX(var(--panel-w));
+  }
+  #props-panel.open { transform: translateX(0); }
+
+  /* Mini 3D viewport */
+  #mini-viewport {
+    height: 200px; background: #080a10; border-bottom: 1px solid var(--border);
+    position: relative; flex-shrink: 0;
+  }
+  #mini-canvas { width: 100%; height: 100%; display: block; }
+  #mini-label {
+    position: absolute; top: 8px; left: 10px;
+    font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase;
+  }
+  #mini-clip-btn {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(13,15,20,0.8); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text2); padding: 4px 8px; font-size: 10px; cursor: pointer; font-family: var(--mono);
+    display: flex; align-items: center; gap: 4px; transition: all .15s;
+  }
+  #mini-clip-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .clip-controls { display: none; padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .clip-controls.visible { display: block; }
+  .clip-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .clip-row label { font-family: var(--mono); font-size: 10px; color: var(--text3); width: 14px; }
+  .clip-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .clip-row span { font-family: var(--mono); font-size: 10px; color: var(--text2); width: 28px; text-align: right; }
+
+  /* Props scroll area */
+  #props-body { flex: 1; overflow-y: auto; }
+  .props-section { border-bottom: 1px solid var(--border); }
+  .props-section-header {
+    padding: 10px 14px 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+  }
+  .props-section-title { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
+  .props-section-toggle { color: var(--text3); transition: transform .2s; }
+  .props-section-toggle.open { transform: rotate(90deg); }
+  .props-section-content { padding: 0 14px 12px; }
+
+  /* Object identity */
+  #obj-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; word-break: break-word; }
+  #obj-type-badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+    background: rgba(99,179,237,0.1); border: 1px solid rgba(99,179,237,0.2);
+    border-radius: 100px; font-family: var(--mono); font-size: 10px; color: var(--accent);
+  }
+  .obj-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .obj-meta-cell { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; }
+  .obj-meta-k { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-bottom: 2px; }
+  .obj-meta-v { font-size: 12px; font-weight: 500; }
+
+  /* Documents */
+  .doc-list { display: flex; flex-direction: column; gap: 6px; }
+  .doc-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; transition: all .15s;
+  }
+  .doc-item:hover { border-color: var(--border-hi); background: rgba(99,179,237,0.04); }
+  .doc-icon { width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+  .doc-icon.plano { background: rgba(99,179,237,0.15); color: var(--accent); }
+  .doc-icon.norma { background: rgba(246,173,85,0.15); color: var(--accent3); }
+  .doc-icon.general { background: rgba(72,187,120,0.15); color: var(--accent2); }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-type { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; }
+  .doc-open-btn { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border); background: none; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+  .doc-open-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .add-doc-btn {
+    margin-top: 6px; width: 100%; padding: 7px; border: 1px dashed var(--border); border-radius: 6px;
+    background: none; color: var(--text3); font-family: var(--sans); font-size: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 4px; transition: all .15s;
+  }
+  .add-doc-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Comments */
+  .comment-list { display: flex; flex-direction: column; gap: 8px; }
+  .comment-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+  .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .comment-author { font-family: var(--mono); font-size: 10px; color: var(--accent); }
+  .comment-date { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+  .comment-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 3px; font-family: var(--mono); font-size: 9px; margin-bottom: 4px;
+  }
+  .tag-obs { background: rgba(246,173,85,0.15); color: var(--accent3); }
+  .tag-ok { background: rgba(72,187,120,0.15); color: var(--accent2); }
+  .tag-issue { background: rgba(252,129,129,0.15); color: var(--danger); }
+  .comment-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .comment-input-area { margin-top: 8px; }
+  .comment-input-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .comment-input-row select, .comment-input-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text); font-family: var(--sans); font-size: 12px; padding: 6px 8px; outline: none;
+  }
+  .comment-input-row select:focus, .comment-input-row input:focus { border-color: var(--border-hi); }
+  textarea.comment-ta {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text); font-family: var(--sans); font-size: 12px; padding: 8px; outline: none;
+    resize: vertical; min-height: 60px;
+  }
+  textarea.comment-ta:focus { border-color: var(--border-hi); }
+  .comment-submit {
+    margin-top: 6px; width: 100%; padding: 7px; background: var(--accent2); border: none;
+    border-radius: 5px; color: var(--bg); font-family: var(--sans); font-weight: 600; font-size: 12px;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .comment-submit:hover { opacity: .85; }
+
+  /* ─── MODALS ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: scale(.95); transition: transform .2s;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .5px; }
+  .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; }
+  .modal-close:hover { color: var(--text); background: var(--bg3); }
+
+  /* Document viewer modal */
+  #doc-modal .modal { width: 90vw; max-width: 1100px; height: 85vh; }
+  #doc-modal iframe { flex: 1; border: none; background: #fff; }
+  #doc-modal .modal-sub { padding: 10px 18px; background: var(--bg); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text2); }
+  #doc-modal .modal-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #doc-modal .no-preview {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text3);
+  }
+  #doc-modal .no-preview a { color: var(--accent); font-size: 13px; text-decoration: none; }
+  #doc-modal .no-preview a:hover { text-decoration: underline; }
+
+  /* Add doc modal */
+  #add-doc-modal .modal { width: 480px; }
+  #add-doc-modal .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .form-row { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+  .form-input, .form-select {
+    padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: var(--sans); font-size: 13px; outline: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--border-hi); }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .btn-secondary {
+    padding: 8px 16px; background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text2); font-family: var(--sans); font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+  .btn-secondary:hover { border-color: var(--border-hi); color: var(--text); }
+  .btn-primary {
+    padding: 8px 16px; background: var(--accent); border: none; border-radius: 6px;
+    color: var(--bg); font-family: var(--sans); font-weight: 600; font-size: 12px; cursor: pointer; transition: opacity .15s;
+  }
+  .btn-primary:hover { opacity: .85; }
+
+  /* Settings modal */
+  #settings-modal .modal { width: 520px; }
+  #settings-modal .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .settings-group { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .settings-group-title { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  .settings-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .settings-row:last-child { margin-bottom: 0; }
+  .settings-row label { font-family: var(--mono); font-size: 10px; color: var(--text2); }
+  .settings-row input {
+    padding: 7px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text); font-family: var(--mono); font-size: 11px; outline: none;
+  }
+  .settings-row input:focus { border-color: var(--border-hi); }
+  .settings-row input::placeholder { color: var(--text3); }
+  .settings-io { display: flex; gap: 8px; }
+  .settings-io-btn {
+    flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg2); color: var(--text2); font-family: var(--sans); font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s;
+  }
+  .settings-io-btn:hover { border-color: var(--border-hi); color: var(--accent); }
+  .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Status bar */
+  #statusbar {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 24px; z-index: 100;
+    background: rgba(13,15,20,0.9); border-top: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 14px; gap: 16px;
+  }
+  .status-item { font-family: var(--mono); font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .status-dot.green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .status-dot.yellow { background: var(--accent3); }
+  .status-dot.red { background: var(--danger); }
+
+  /* Drop overlay */
+  #drop-overlay {
+    position: fixed; inset: 0; z-index: 300; background: rgba(99,179,237,0.08);
+    border: 3px dashed var(--accent); display: none; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  #drop-overlay.visible { display: flex; }
+  #drop-overlay span { font-family: var(--mono); font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+
+  /* Welcome screen */
+  #welcome {
+    position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 30% 40%, rgba(99,179,237,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(72,187,120,0.04) 0%, transparent 50%), var(--bg);
+    transition: opacity .4s;
+  }
+  #welcome.hidden { opacity: 0; pointer-events: none; }
+  .welcome-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 40px;
+    width: 420px; text-align: center;
+  }
+  .welcome-icon { font-size: 40px; margin-bottom: 16px; }
+  .welcome-title { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+  .welcome-sub { color: var(--text2); font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+  .welcome-actions { display: flex; flex-direction: column; gap: 10px; }
+  .w-btn-primary {
+    padding: 12px; background: var(--accent); border: none; border-radius: 8px;
+    color: var(--bg); font-family: var(--sans); font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity .15s;
+  }
+  .w-btn-primary:hover { opacity: .85; }
+  .w-btn-secondary {
+    padding: 12px; background: none; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text2); font-family: var(--sans); font-size: 13px; cursor: pointer; transition: all .15s;
+  }
+  .w-btn-secondary:hover { border-color: var(--border-hi); color: var(--accent); }
+  .w-file-input { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+  /* Loading spinner */
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Tooltip */
+  [data-tip] { position: relative; }
+  [data-tip]::after {
+    content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px;
+    font-family: var(--mono); font-size: 9px; color: var(--text2); white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 999;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+</style>
 </head>
 <body>
 
-    <!-- UI Overlay -->
-    <div id="ui-container" class="fixed inset-0 pointer-events-none z-10 flex flex-col">
-        <!-- Header -->
-        <header class="p-6 flex justify-between items-start">
-            <div class="pointer-events-auto">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                    SolidWorks Web Viewer
-                </h1>
-                <p class="text-gray-400 text-sm">Soporte para compresión Draco activado</p>
-            </div>
-            
-            <div id="part-info" class="glass p-4 rounded-xl w-72 pointer-events-auto hidden transform transition-all duration-300 translate-x-0">
-                <h2 class="text-blue-400 font-semibold mb-1 uppercase text-xs tracking-wider">Componente Seleccionado</h2>
-                <div id="part-name" class="text-lg font-medium truncate mb-2 text-white">Ninguno</div>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="text-gray-400">Tipo: <span id="part-type" class="text-gray-200">Mesh</span></div>
-                    <div class="text-gray-400">Materiales: <span id="part-mat" class="text-gray-200">1</span></div>
-                </div>
-            </div>
-        </header>
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">BIM<span>360</span></div>
+  <div class="topbar-sep"></div>
+  <div>
+    <div id="project-label" style="font-size:9px;text-transform:uppercase;letter-spacing:1px;">Proyecto</div>
+    <div id="project-name">Sin cargar</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="tb-btn" id="btn-toggle-sidebar" data-tip="Explorador">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+    Proyectos
+  </button>
+  <button class="tb-btn" id="btn-load-file" data-tip="Archivo local">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+    Abrir
+  </button>
+  <button class="tb-btn" id="btn-settings" data-tip="Configuración">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+    Ajustes
+  </button>
+  <input type="file" id="file-input-hidden" accept=".glb,.gltf" style="display:none">
+</div>
 
-        <!-- Drop Zone (Central) -->
-        <div id="drop-container" class="flex-1 flex items-center justify-center p-10">
-            <div id="drop-zone" class="pointer-events-auto w-full max-w-md p-10 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer bg-black/20">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <p class="text-lg font-medium">Arrastra tu archivo .glb aquí</p>
-                <p class="text-sm text-gray-500 mt-2 mb-6 tracking-wide">Compatible con archivos comprimidos de SolidWorks</p>
-                
-                <input type="file" id="file-input" class="hidden" accept=".glb,.gltf">
-                
-                <div class="flex flex-col gap-3 w-full">
-                    <button id="select-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                        Seleccionar Archivo
-                    </button>
-                    <div class="flex items-center gap-2">
-                        <hr class="flex-1 border-gray-700">
-                        <span class="text-gray-600 text-xs">O TAMBIÉN</span>
-                        <hr class="flex-1 border-gray-700">
-                    </div>
-                    <button id="load-example-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Cargar ejemplo desde GitHub
-                    </button>
-                </div>
-            </div>
+<!-- SIDEBAR (Projects + Objects) -->
+<div id="sidebar">
+  <!-- Tabs -->
+  <div class="sb-tabs">
+    <div class="sb-tab active" id="tab-projects" onclick="switchSbTab('projects')">Proyectos</div>
+    <div class="sb-tab" id="tab-objects" onclick="switchSbTab('objects')">Objetos</div>
+  </div>
+
+  <!-- Projects pane -->
+  <div class="sb-pane active" id="pane-projects">
+    <div class="sb-header">
+      <div class="sb-search">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
+        <input id="search-projects" type="text" placeholder="Buscar proyecto...">
+      </div>
+    </div>
+    <div id="project-list" style="flex:1;overflow-y:auto;padding:8px 0;">
+      <div style="padding:24px 16px;text-align:center;color:var(--text3);font-size:11px;font-family:var(--mono);">
+        Configure el ID de carpeta<br>de Google Drive en Ajustes
+      </div>
+    </div>
+    <div class="sb-footer">
+      <button id="btn-refresh-drive" class="sb-load-btn">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Actualizar desde Drive
+      </button>
+    </div>
+  </div>
+
+  <!-- Objects pane -->
+  <div class="sb-pane" id="pane-objects">
+    <div class="obj-list-toolbar">
+      <div class="obj-list-search">
+        <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
+        <input id="search-objects" type="text" placeholder="Filtrar objetos...">
+      </div>
+      <button class="obj-toolbar-btn" id="btn-all-visible" title="Mostrar todos" onclick="setAllVisibility(true)">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </button>
+      <button class="obj-toolbar-btn" id="btn-all-hidden" title="Ocultar todos" onclick="setAllVisibility(false)">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+      </button>
+    </div>
+    <div id="obj-list-scroll">
+      <div class="obj-list-empty" id="obj-list-empty">Carga un modelo para<br>ver los objetos</div>
+      <div id="obj-list-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CANVAS -->
+<div id="canvas-main"></div>
+
+<!-- PROPERTIES PANEL -->
+<div id="props-panel">
+  <!-- Mini 3D -->
+  <div id="mini-viewport">
+    <canvas id="mini-canvas"></canvas>
+    <div id="mini-label">Vista previa 3D</div>
+    <button id="mini-clip-btn">
+      <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"/></svg>
+      Corte
+    </button>
+  </div>
+  <div id="clip-controls" class="clip-controls">
+    <div class="clip-row">
+      <label>X</label>
+      <input type="range" id="clip-x" min="-1" max="1" step="0.01" value="1">
+      <span id="clip-x-val">1.0</span>
+    </div>
+    <div class="clip-row">
+      <label>Y</label>
+      <input type="range" id="clip-y" min="-1" max="1" step="0.01" value="1">
+      <span id="clip-y-val">1.0</span>
+    </div>
+    <div class="clip-row">
+      <label>Z</label>
+      <input type="range" id="clip-z" min="-1" max="1" step="0.01" value="1">
+      <span id="clip-z-val">1.0</span>
+    </div>
+  </div>
+
+  <div id="props-body">
+    <!-- Identity -->
+    <div class="props-section" id="section-identity">
+      <div class="props-section-header" onclick="toggleSection('identity')">
+        <span class="props-section-title">Objeto</span>
+        <span class="props-section-toggle open" id="toggle-identity">›</span>
+      </div>
+      <div class="props-section-content" id="content-identity">
+        <div id="obj-name">—</div>
+        <div style="margin-top:6px;"><span id="obj-type-badge"><span>●</span> Mesh</span></div>
+        <div class="obj-meta-grid">
+          <div class="obj-meta-cell"><div class="obj-meta-k">Materiales</div><div class="obj-meta-v" id="meta-mats">—</div></div>
+          <div class="obj-meta-cell"><div class="obj-meta-k">Vértices</div><div class="obj-meta-v" id="meta-verts">—</div></div>
+          <div class="obj-meta-cell"><div class="obj-meta-k">Triángulos</div><div class="obj-meta-v" id="meta-tris">—</div></div>
+          <div class="obj-meta-cell"><div class="obj-meta-k">Código</div><div class="obj-meta-v" id="meta-code" style="font-family:var(--mono);font-size:10px;">—</div></div>
         </div>
-
-        <!-- Footer Instructions -->
-        <footer class="p-6 flex justify-center">
-            <div class="glass px-4 py-2 rounded-full text-xs text-gray-300 flex space-x-4">
-                <span>🖱️ Click Izq: Rotar</span>
-                <span>🖱️ Click Der: Desplazar</span>
-                <span>🖱️ Rueda: Zoom</span>
-                <span>🖱️ Click Simple: Info Pieza</span>
-            </div>
-        </footer>
+      </div>
     </div>
 
-    <!-- WebGL Container -->
-    <div id="container" class="absolute inset-0"></div>
+    <!-- JSON Properties -->
+    <div class="props-section" id="section-jsonprops">
+      <div class="props-section-header" onclick="toggleSection('jsonprops')">
+        <span class="props-section-title">Propiedades JSON</span>
+        <span class="props-section-toggle open" id="toggle-jsonprops">›</span>
+      </div>
+      <div class="props-section-content" id="content-jsonprops">
+        <div id="json-props-list" style="font-family:var(--mono);font-size:10px;color:var(--text3);">Sin datos JSON cargados</div>
+      </div>
+    </div>
 
-    <!-- Scripts -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
-            }
-        }
-    </script>
+    <!-- Documents -->
+    <div class="props-section" id="section-docs">
+      <div class="props-section-header" onclick="toggleSection('docs')">
+        <span class="props-section-title">Documentos vinculados</span>
+        <span class="props-section-toggle open" id="toggle-docs">›</span>
+      </div>
+      <div class="props-section-content" id="content-docs">
+        <div class="doc-list" id="doc-list"></div>
+        <button class="add-doc-btn" id="btn-add-doc">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Agregar documento
+        </button>
+      </div>
+    </div>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <!-- Comments -->
+    <div class="props-section" id="section-comments">
+      <div class="props-section-header" onclick="toggleSection('comments')">
+        <span class="props-section-title">Bitácora constructiva</span>
+        <span class="props-section-toggle open" id="toggle-comments">›</span>
+      </div>
+      <div class="props-section-content" id="content-comments">
+        <div class="comment-list" id="comment-list"></div>
+        <div class="comment-input-area" style="margin-top:10px;">
+          <div class="comment-input-row">
+            <input id="comment-author" type="text" placeholder="Autor..." style="max-width:120px;">
+            <select id="comment-tag">
+              <option value="obs">Observación</option>
+              <option value="ok">Aprobado</option>
+              <option value="issue">Problema</option>
+            </select>
+          </div>
+          <textarea class="comment-ta" id="comment-text" placeholder="Ingresa un comentario constructivo..."></textarea>
+          <button class="comment-submit" onclick="addComment()">Registrar comentario</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        let scene, camera, renderer, controls, raycaster, mouse;
-        let currentModel = null;
+<!-- WELCOME SCREEN -->
+<div id="welcome">
+  <div class="welcome-card">
+    <div class="welcome-icon">🏗️</div>
+    <div class="welcome-title">BIM360 Viewer</div>
+    <div class="welcome-sub">Visualizador 3D para proyectos SolidWorks con integración a Google Drive, SharePoint y bitácora constructiva.</div>
+    <div class="welcome-actions">
+      <button class="w-btn-primary" id="w-btn-drive">Explorar proyectos en Drive</button>
+      <label class="w-btn-secondary" style="cursor:pointer;">
+        <input type="file" class="w-file-input" id="w-file-input" accept=".glb,.gltf">
+        Abrir archivo local .glb
+      </label>
+      <button class="w-btn-secondary" id="w-btn-example">Cargar modelo de ejemplo</button>
+    </div>
+  </div>
+</div>
 
-        const container = document.getElementById('container');
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const selectBtn = document.getElementById('select-btn');
-        const loadExampleBtn = document.getElementById('load-example-btn');
-        const partInfo = document.getElementById('part-info');
-        const partNameDisplay = document.getElementById('part-name');
-        const partTypeDisplay = document.getElementById('part-type');
-        const partMatDisplay = document.getElementById('part-mat');
+<!-- DRAG OVERLAY -->
+<div id="drop-overlay"><span>Suelta el archivo .glb</span></div>
 
-        // URL Raw de GitHub para evitar problemas de visualización HTML de GitHub
-        const EXAMPLE_URL = 'https://raw.githubusercontent.com/registrodeinformesdiarios-svg/visualizador3D/66dd2724e1c18bb88d55be126d96031846efcade/Ejemplo.glb';
-        //const EXAMPLE_URL = 'https://raw.githubusercontent.com/registrodeinformesdiarios-svg/visualizador3D/refs/heads/main/Ejemplo.glb';
-        
-        init();
-        animate();
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="status-item"><div class="status-dot green"></div><span id="status-text">Listo</span></div>
+  <div class="topbar-sep" style="height:12px;"></div>
+  <div class="status-item" id="status-objects">— objetos</div>
+  <div class="topbar-sep" style="height:12px;"></div>
+  <div class="status-item" id="status-tris">— triángulos</div>
+  <div class="topbar-sep" style="height:12px;"></div>
+  <div class="status-item" style="margin-left:auto;">🖱 Rotar · Der: Desplazar · Rueda: Zoom · Click: Seleccionar</div>
+</div>
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x111111);
-            scene.fog = new THREE.Fog(0x111111, 15, 60);
+<!-- DOCUMENT VIEWER MODAL -->
+<div class="modal-overlay" id="doc-modal">
+  <div class="modal" style="display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <span class="modal-title" id="doc-modal-title">Documento</span>
+      <button class="modal-close" onclick="closeModal('doc-modal')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-sub" id="doc-modal-url"></div>
+    <div class="modal-body" id="doc-modal-body"></div>
+  </div>
+</div>
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(8, 8, 8);
+<!-- ADD DOC MODAL -->
+<div class="modal-overlay" id="add-doc-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Agregar documento vinculado</span>
+      <button class="modal-close" onclick="closeModal('add-doc-modal')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-label">Nombre del documento</div>
+        <input class="form-input" id="new-doc-name" placeholder="Ej: Plano de detalle estructural">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Tipo</div>
+        <select class="form-select" id="new-doc-type">
+          <option value="plano">Plano</option>
+          <option value="norma">Norma</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-label">URL SharePoint / enlace</div>
+        <input class="form-input" id="new-doc-url" placeholder="https://company.sharepoint.com/...">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="closeModal('add-doc-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="saveNewDoc()">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.toneMapping = THREE.ReinhardToneMapping;
-            container.appendChild(renderer.domElement);
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙ Ajustes del sistema</span>
+      <button class="modal-close" onclick="closeModal('settings-modal')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-group">
+        <div class="settings-group-title">Google Drive</div>
+        <div class="settings-row">
+          <label>ID de carpeta raíz (Drive)</label>
+          <input id="cfg-drive-folder" placeholder="1ABC...xyz (ID de la carpeta en Drive)">
+        </div>
+        <div class="settings-row">
+          <label>API Key de Google (para lectura pública)</label>
+          <input id="cfg-drive-api-key" placeholder="AIza...">
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">Google Apps Script</div>
+        <div class="settings-row">
+          <label>URL del Web App — Listado de proyectos</label>
+          <input id="cfg-script-list" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="settings-row">
+          <label>URL del Web App — Guardar comentarios</label>
+          <input id="cfg-script-comments" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="settings-row">
+          <label>URL del Web App — Guardar propiedades</label>
+          <input id="cfg-script-props" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">General</div>
+        <div class="settings-row">
+          <label>Nombre de usuario / Inspector</label>
+          <input id="cfg-username" placeholder="Juan Pérez">
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-group-title">Importar / Exportar configuración</div>
+        <div class="settings-io">
+          <button class="settings-io-btn" onclick="exportSettings()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Exportar JSON
+          </button>
+          <label class="settings-io-btn" style="cursor:pointer;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Importar JSON
+            <input type="file" accept=".json" style="display:none" onchange="importSettings(event)">
+          </label>
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button class="btn-secondary" onclick="closeModal('settings-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="saveSettings()">Guardar ajustes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
+<!-- THREE.JS -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            dirLight.position.set(10, 20, 10);
-            scene.add(dirLight);
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-            const grid = new THREE.GridHelper(30, 30, 0x333333, 0x222222);
-            grid.position.y = -2;
-            scene.add(grid);
+// ── GLOBALS ──────────────────────────────────────────────────────────────────
+let mainScene, mainCamera, mainRenderer, mainControls, raycaster, mouse;
+let miniScene, miniCamera, miniRenderer, miniControls;
+let currentModel = null, selectedObject = null, lastHighlighted = null;
+let projectData = {}; // { objectName: { docs:[], comments:[], jsonProps:{} } }
+let currentProject = null;
+let clipPlanes = { x: 1, y: 1, z: 1 };
+let clipEnabled = false;
 
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
+const EXAMPLE_URL = 'https://raw.githubusercontent.com/registrodeinformesdiarios-svg/visualizador3D/66dd2724e1c18bb88d55be126d96031846efcade/Ejemplo.glb';
 
-            window.addEventListener('resize', onWindowResize);
-            renderer.domElement.addEventListener('pointerdown', onDocumentMouseDown);
-            
-            // UI Events
-            selectBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
-            loadExampleBtn.addEventListener('click', (e) => { 
-                e.stopPropagation(); 
-                loadModel(EXAMPLE_URL); 
-            });
-            fileInput.addEventListener('change', handleFileSelect);
-            
-            // Drag & Drop
-            window.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-            window.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            window.addEventListener('drop', handleDrop);
-        }
+// Default settings
+let cfg = {
+  driveFolderId: '',
+  driveApiKey: '',
+  scriptList: '',
+  scriptComments: '',
+  scriptProps: '',
+  username: 'Inspector'
+};
 
-        function handleDrop(e) {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) loadModel(URL.createObjectURL(file));
-        }
+// Load saved config
+try { const s = localStorage.getItem('bim360_cfg'); if(s) cfg = {...cfg, ...JSON.parse(s)}; } catch(e){}
+try { const d = localStorage.getItem('bim360_data'); if(d) projectData = JSON.parse(d); } catch(e){}
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) loadModel(URL.createObjectURL(file));
-        }
+// ── INIT MAIN SCENE ──────────────────────────────────────────────────────────
+function initMain() {
+  const container = document.getElementById('canvas-main');
+  mainScene = new THREE.Scene();
+  mainScene.background = new THREE.Color(0x0d0f14);
+  mainScene.fog = new THREE.Fog(0x0d0f14, 20, 80);
 
-        function loadModel(url) {
-            const loader = new GLTFLoader();
-            const dracoLoader = new DRACOLoader();
-            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-            loader.setDRACOLoader(dracoLoader);
+  mainCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+  mainCamera.position.set(10, 8, 10);
 
-            const loadingText = dropZone.querySelector('p');
-            loadingText.innerText = "Cargando archivo binario...";
-            
-            loader.load(url, (gltf) => {
-                if (currentModel) scene.remove(currentModel);
-                
-                currentModel = gltf.scene;
-                
-                const box = new THREE.Box3().setFromObject(currentModel);
-                const size = box.getSize(new THREE.Vector3());
-                const center = box.getCenter(new THREE.Vector3());
-                
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 8 / maxDim;
-                currentModel.scale.setScalar(scale);
-                
-                currentModel.position.x = -center.x * scale;
-                currentModel.position.y = -center.y * scale;
-                currentModel.position.z = -center.z * scale;
+  mainRenderer = new THREE.WebGLRenderer({ antialias: true });
+  mainRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  mainRenderer.setSize(window.innerWidth, window.innerHeight);
+  mainRenderer.shadowMap.enabled = true;
+  mainRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  mainRenderer.toneMapping = THREE.ReinhardToneMapping;
+  mainRenderer.toneMappingExposure = 1.2;
+  mainRenderer.localClippingEnabled = true;
+  container.appendChild(mainRenderer.domElement);
 
-                scene.add(currentModel);
-                
-                document.getElementById('drop-container').style.display = 'none';
-                loadingText.innerText = "Arrastra tu archivo .glb aquí";
-                
-                dracoLoader.dispose();
-            }, 
-            (xhr) => {
-                if (xhr.lengthComputable) {
-                    const percent = (xhr.loaded / xhr.total * 100);
-                    loadingText.innerText = `Descargando: ${Math.round(percent)}%`;
-                }
-            },
-            (error) => {
-                console.error(error);
-                loadingText.innerText = "Error: No se pudo cargar el modelo. Verifica la conexión.";
-                setTimeout(() => {
-                   loadingText.innerText = "Arrastra tu archivo .glb aquí";
-                }, 3000);
-            });
-        }
+  mainControls = new OrbitControls(mainCamera, mainRenderer.domElement);
+  mainControls.enableDamping = true;
+  mainControls.dampingFactor = 0.05;
 
-        function onDocumentMouseDown(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  // Lights
+  mainScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir1 = new THREE.DirectionalLight(0xffffff, 1.2);
+  dir1.position.set(10, 20, 10);
+  dir1.castShadow = true;
+  mainScene.add(dir1);
+  const dir2 = new THREE.DirectionalLight(0x6ee7f7, 0.4);
+  dir2.position.set(-10, 5, -10);
+  mainScene.add(dir2);
 
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
+  // Grid
+  const grid = new THREE.GridHelper(40, 40, 0x1a1e2a, 0x13161e);
+  grid.position.y = -0.01;
+  mainScene.add(grid);
 
-            if (intersects.length > 0) {
-                let object = intersects[0].object;
-                let name = object.name || object.parent.name || "Componente";
-                
-                name = name.split('_')[0].split('<')[0];
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
 
-                showPartInfo(name, object);
-                highlightObject(object);
-            } else {
-                partInfo.classList.add('hidden');
-            }
-        }
+  mainRenderer.domElement.addEventListener('click', onMainClick);
+  window.addEventListener('resize', onResize);
+}
 
-        function showPartInfo(name, obj) {
-            partInfo.classList.remove('hidden');
-            partNameDisplay.innerText = name;
-            partTypeDisplay.innerText = obj.type;
-            partMatDisplay.innerText = Array.isArray(obj.material) ? obj.material.length : 1;
-        }
+// ── INIT MINI SCENE ──────────────────────────────────────────────────────────
+function initMini() {
+  const canvas = document.getElementById('mini-canvas');
+  miniScene = new THREE.Scene();
+  miniScene.background = new THREE.Color(0x080a10);
 
-        let lastSelected = null;
-        function highlightObject(obj) {
-            if (lastSelected && lastSelected.material) {
-                const mats = Array.isArray(lastSelected.material) ? lastSelected.material : [lastSelected.material];
-                mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x000000) });
-            }
-            
-            lastSelected = obj;
-            if (obj.material) {
-                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-                mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x222222) });
-            }
-        }
+  miniCamera = new THREE.PerspectiveCamera(40, 1, 0.01, 1000);
+  miniCamera.position.set(3, 2, 3);
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+  miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  miniRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  miniRenderer.localClippingEnabled = true;
 
-        function animate() {
-            requestAnimationFrame(animate);
-            if (controls) controls.update();
-            renderer.render(scene, camera);
-        }
-    </script>
+  miniControls = new OrbitControls(miniCamera, canvas);
+  miniControls.enableDamping = true;
+  miniControls.dampingFactor = 0.08;
+
+  miniScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const ml = new THREE.DirectionalLight(0xffffff, 1.0);
+  ml.position.set(5, 10, 5);
+  miniScene.add(ml);
+}
+
+// ── MAIN LOOP ────────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  mainControls?.update();
+  mainRenderer?.render(mainScene, mainCamera);
+
+  // Mini viewport resize
+  const mv = document.getElementById('mini-viewport');
+  const mc = document.getElementById('mini-canvas');
+  if(mc && miniRenderer) {
+    const w = mv.clientWidth, h = mv.clientHeight;
+    if(mc.width !== w || mc.height !== h) {
+      miniRenderer.setSize(w, h);
+      miniCamera.aspect = w / h;
+      miniCamera.updateProjectionMatrix();
+    }
+  }
+  miniControls?.update();
+  miniRenderer?.render(miniScene, miniCamera);
+}
+
+// ── LOAD MODEL ───────────────────────────────────────────────────────────────
+window.loadModel = function(url, projectName) {
+  setStatus('Cargando modelo...', 'loading');
+  if(projectName) {
+    document.getElementById('project-name').textContent = projectName;
+    currentProject = projectName;
+    if(!projectData[projectName]) projectData[projectName] = {};
+  }
+
+  const loader = new GLTFLoader();
+  const draco = new DRACOLoader();
+  draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+  loader.setDRACOLoader(draco);
+
+  loader.load(url, gltf => {
+    if(currentModel) mainScene.remove(currentModel);
+    currentModel = gltf.scene;
+
+    const box = new THREE.Box3().setFromObject(currentModel);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const scale = 8 / maxDim;
+
+    currentModel.scale.setScalar(scale);
+    currentModel.position.set(-center.x * scale, -center.y * scale + 0.01, -center.z * scale);
+
+    currentModel.traverse(obj => {
+      if(obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+
+    mainScene.add(currentModel);
+
+    let tris = 0, objs = 0;
+    currentModel.traverse(o => { if(o.isMesh) { objs++; tris += (o.geometry.index ? o.geometry.index.count/3 : o.geometry.attributes.position.count/3) | 0; } });
+    document.getElementById('status-objects').textContent = `${objs} objetos`;
+    document.getElementById('status-tris').textContent = `${tris.toLocaleString()} triángulos`;
+    setStatus('Modelo cargado', 'ok');
+
+    document.getElementById('welcome').classList.add('hidden');
+
+    // Build object list
+    buildObjectList();
+
+    draco.dispose();
+  }, xhr => {
+    if(xhr.lengthComputable) setStatus(`Descargando ${Math.round(xhr.loaded/xhr.total*100)}%`, 'loading');
+  }, err => {
+    console.error(err);
+    setStatus('Error al cargar modelo', 'error');
+  });
+}
+
+// ── SELECTION ────────────────────────────────────────────────────────────────
+function onMainClick(e) {
+  if(e.target !== mainRenderer.domElement) return;
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, mainCamera);
+  const hits = raycaster.intersectObjects(currentModel ? [currentModel] : [], true);
+
+  if(hits.length > 0) {
+    selectObject(hits[0].object);
+  } else {
+    deselectObject();
+  }
+}
+
+function selectObject(obj) {
+  // Dehighlight previous
+  if(lastHighlighted) {
+    const mats = Array.isArray(lastHighlighted.material) ? lastHighlighted.material : [lastHighlighted.material];
+    mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x000000); });
+  }
+
+  selectedObject = obj;
+  lastHighlighted = obj;
+
+  // Highlight
+  const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+  mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x1a3a5c); });
+
+  // Build name
+  let name = obj.name || obj.parent?.name || obj.parent?.parent?.name || 'Componente';
+  name = name.replace(/_/g,' ').split('<')[0].trim() || 'Componente';
+
+  // Update panel
+  document.getElementById('obj-name').textContent = name;
+  document.getElementById('meta-mats').textContent = Array.isArray(obj.material) ? obj.material.length : 1;
+  const geo = obj.geometry;
+  const verts = geo?.attributes?.position?.count || 0;
+  const tris = geo?.index ? (geo.index.count/3|0) : (verts/3|0);
+  document.getElementById('meta-verts').textContent = verts.toLocaleString();
+  document.getElementById('meta-tris').textContent = tris.toLocaleString();
+  document.getElementById('meta-code').textContent = obj.uuid.slice(0,8).toUpperCase();
+
+  // JSON props
+  loadJsonProps(name);
+  // Docs + comments
+  renderDocs(name);
+  renderComments(name);
+
+  // Mini viewport
+  loadMiniObject(obj, name);
+
+  document.getElementById('props-panel').classList.add('open');
+  renderObjectList();
+}
+
+function deselectObject() {
+  if(lastHighlighted) {
+    const mats = Array.isArray(lastHighlighted.material) ? lastHighlighted.material : [lastHighlighted.material];
+    mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x000000); });
+    lastHighlighted = null;
+  }
+  selectedObject = null;
+  document.getElementById('props-panel').classList.remove('open');
+}
+
+// ── MINI VIEWPORT ────────────────────────────────────────────────────────────
+function loadMiniObject(obj, name) {
+  // Clear mini scene meshes (keep lights)
+  const toRemove = [];
+  miniScene.traverse(o => { if(o.isMesh || (o.isObject3D && o !== miniScene)) toRemove.push(o); });
+  // Only remove non-light, non-scene root objects
+  miniScene.children.filter(c => !c.isLight).forEach(c => miniScene.remove(c));
+
+  // Clone the full mesh (with its world transform reset)
+  const clone = obj.clone(true);
+  clone.position.set(0, 0, 0);
+  clone.rotation.set(0, 0, 0);
+  clone.scale.set(1, 1, 1);
+
+  // Clone materials and clear emissive highlight
+  clone.traverse(child => {
+    if(child.isMesh) {
+      const mats = Array.isArray(child.material) ? child.material.map(m => m.clone()) : child.material.clone();
+      if(Array.isArray(mats)) { mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x000000); }); child.material = mats; }
+      else { if(mats.emissive) mats.emissive.setHex(0x000000); child.material = mats; }
+    }
+  });
+
+  // Wrap in a pivot group for clean centering
+  const pivot = new THREE.Group();
+  pivot.add(clone);
+  miniScene.add(pivot);
+
+  // Compute bbox in world space AFTER adding to scene
+  const box = new THREE.Box3().setFromObject(clone);
+  if(box.isEmpty()) return;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxD = Math.max(size.x, size.y, size.z) || 1;
+
+  // Scale pivot so max dimension = 2 units, then center
+  const sc = 2 / maxD;
+  pivot.scale.setScalar(sc);
+  pivot.position.set(-center.x * sc, -center.y * sc, -center.z * sc);
+
+  // Position camera at a comfortable distance based on size
+  const camDist = 2.2;
+  miniCamera.position.set(camDist, camDist * 0.7, camDist);
+  miniCamera.near = 0.001;
+  miniCamera.far = 100;
+  miniCamera.updateProjectionMatrix();
+  miniControls.target.set(0, 0, 0);
+  miniControls.update();
+
+  updateClipPlanes();
+}
+
+function updateClipPlanes() {
+  const planes = clipEnabled ? [
+    new THREE.Plane(new THREE.Vector3(-1, 0, 0), clipPlanes.x * 2),
+    new THREE.Plane(new THREE.Vector3(0, -1, 0), clipPlanes.y * 2),
+    new THREE.Plane(new THREE.Vector3(0, 0, -1), clipPlanes.z * 2),
+  ] : [];
+  miniScene.traverse(m => {
+    if(m.isMesh) {
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      mats.forEach(mt => { mt.clippingPlanes = planes; mt.clipShadows = true; });
+    }
+  });
+}
+
+// ── JSON PROPERTIES ──────────────────────────────────────────────────────────
+function loadJsonProps(name) {
+  const proj = currentProject;
+  const el = document.getElementById('json-props-list');
+  if(!proj || !projectData[proj]) { el.textContent = 'Sin datos JSON cargados'; el.style.color = 'var(--text3)'; return; }
+  const props = projectData[proj]?.jsonProps?.[name];
+  if(!props) { el.textContent = 'No hay propiedades para este objeto'; el.style.color = 'var(--text3)'; return; }
+  el.style.color = '';
+  el.innerHTML = Object.entries(props).map(([k,v]) =>
+    `<div style="display:flex;gap:8px;margin-bottom:5px;padding:4px 6px;background:var(--bg);border-radius:3px;">
+      <span style="color:var(--accent);min-width:100px;">${k}</span>
+      <span style="color:var(--text);">${v}</span>
+    </div>`
+  ).join('');
+}
+
+// ── DOCUMENTS ────────────────────────────────────────────────────────────────
+function getObjData(name) {
+  if(!currentProject) return null;
+  if(!projectData[currentProject]) projectData[currentProject] = {};
+  if(!projectData[currentProject][name]) projectData[currentProject][name] = { docs: [], comments: [] };
+  return projectData[currentProject][name];
+}
+
+function renderDocs(name) {
+  const list = document.getElementById('doc-list');
+  const data = getObjData(name);
+  if(!data || !data.docs.length) { list.innerHTML = '<div style="color:var(--text3);font-size:11px;">Sin documentos vinculados</div>'; return; }
+  list.innerHTML = data.docs.map((doc, i) =>
+    `<div class="doc-item" onclick="openDoc('${escHtml(doc.url)}','${escHtml(doc.name)}')">
+      <div class="doc-icon ${doc.type}">${doc.type === 'plano' ? '📐' : doc.type === 'norma' ? '📋' : '📄'}</div>
+      <div class="doc-info">
+        <div class="doc-name">${escHtml(doc.name)}</div>
+        <div class="doc-type">${doc.type}</div>
+      </div>
+      <button class="doc-open-btn" onclick="event.stopPropagation();openDoc('${escHtml(doc.url)}','${escHtml(doc.name)}')">
+        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </button>
+    </div>`
+  ).join('');
+}
+
+window.openDoc = function(url, name) {
+  document.getElementById('doc-modal-title').textContent = name;
+  document.getElementById('doc-modal-url').textContent = url;
+  const body = document.getElementById('doc-modal-body');
+
+  const strategy = resolveDocStrategy(url);
+
+  if(strategy.type === 'iframe') {
+    body.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;">
+        <div id="doc-iframe-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:2;flex-direction:column;gap:10px;">
+          <div class="spinner" style="width:24px;height:24px;border-width:3px;"></div>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);">Cargando documento...</span>
+        </div>
+        <iframe src="${strategy.embedUrl}" frameborder="0"
+          style="flex:1;border:none;background:#fff;"
+          onload="document.getElementById('doc-iframe-loading').style.display='none'"
+          onerror="showDocFallback('${encodeURIComponent(url)}','${encodeURIComponent(name)}')">
+        </iframe>
+      </div>`;
+  } else if(strategy.type === 'sharepoint') {
+    // SharePoint blocks iframe embedding — show rich fallback with multiple options
+    body.innerHTML = buildSharePointFallback(url, name, strategy);
+  } else {
+    body.innerHTML = buildGenericFallback(url, name);
+  }
+  openModal('doc-modal');
+}
+
+function resolveDocStrategy(url) {
+  // SharePoint — always blocked by CSP, never try iframe
+  if(url.includes('sharepoint.com') || url.includes('-my.sharepoint.com')) {
+    return { type: 'sharepoint', url };
+  }
+  // Personal OneDrive (live.com) — also CSP blocked in iframes
+  if(url.includes('onedrive.live.com') || url.includes('1drv.ms')) {
+    return { type: 'sharepoint', url };
+  }
+  // Google Drive file
+  if(url.includes('drive.google.com/file')) {
+    const m = url.match(/\/d\/([^\/]+)/);
+    if(m) return { type: 'iframe', embedUrl: `https://drive.google.com/file/d/${m[1]}/preview` };
+  }
+  // Google Docs/Sheets/Slides
+  if(url.includes('docs.google.com')) {
+    const embedUrl = url.replace('/edit', '/preview').replace('/pub', '/preview');
+    return { type: 'iframe', embedUrl };
+  }
+  // Direct PDF — use Google Docs viewer as proxy (no CSP issues)
+  if(url.toLowerCase().endsWith('.pdf')) {
+    return { type: 'iframe', embedUrl: `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true` };
+  }
+  // Generic URL — try Office Online Viewer (works for public Office files)
+  if(url.match(/\.(docx|xlsx|pptx|doc|xls|ppt)$/i)) {
+    return { type: 'iframe', embedUrl: `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}` };
+  }
+  // Unknown — generic fallback
+  return { type: 'generic', url };
+}
+
+function buildSharePointFallback(url, name, strategy) {
+  // Extract a direct download / Office Online Viewer URL from SharePoint link
+  // SharePoint OneDrive URLs often contain ?id= param pointing to file path
+  let officeViewerUrl = null;
+  try {
+    const u = new URL(url);
+    const filePath = u.searchParams.get('id') || u.searchParams.get('sourcedoc');
+    if(filePath && filePath.match(/\.(docx|xlsx|pptx|pdf|doc|xls|ppt)$/i)) {
+      // Build the direct SharePoint view URL (opens in browser natively)
+      const origin = u.origin;
+      if(filePath.match(/\.(docx|xlsx|pptx|doc|xls|ppt)$/i)) {
+        officeViewerUrl = `${origin}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodeURIComponent(filePath)}&action=view`;
+      }
+    }
+  } catch(e) {}
+
+  const isPdf = url.toLowerCase().includes('.pdf') || (url.includes('id=') && url.toLowerCase().includes('.pdf'));
+
+  return `
+  <div class="no-preview" style="gap:16px;padding:32px;">
+    <div style="width:56px;height:56px;border-radius:12px;background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;">🔒</div>
+    <div style="text-align:center;">
+      <div style="color:var(--text);font-size:14px;font-weight:600;margin-bottom:6px;">SharePoint no permite vista previa interna</div>
+      <div style="color:var(--text3);font-size:11px;font-family:var(--mono);max-width:340px;line-height:1.6;">
+        Las políticas de seguridad de Microsoft (CSP <code style="color:var(--accent3);">frame-ancestors</code>) bloquean el embedding de SharePoint en aplicaciones externas.
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;">
+      <a href="${url}" target="_blank" rel="noopener" style="
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        padding:11px 18px;background:var(--accent);color:var(--bg);
+        border-radius:7px;text-decoration:none;font-weight:600;font-size:13px;font-family:var(--sans);
+        transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        Abrir en SharePoint
+      </a>
+      ${officeViewerUrl ? `
+      <a href="${officeViewerUrl}" target="_blank" rel="noopener" style="
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        padding:11px 18px;background:var(--bg3);color:var(--text);border:1px solid var(--border);
+        border-radius:7px;text-decoration:none;font-size:13px;font-family:var(--sans);
+        transition:all .15s;" onmouseover="this.style.borderColor='var(--border-hi)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Vista previa Office Online
+      </a>` : ''}
+      <button onclick="copyToClip('${url.replace(/'/g,"\\'")}', this)" style="
+        display:flex;align-items:center;justify-content:center;gap:8px;
+        padding:9px 18px;background:none;color:var(--text2);border:1px solid var(--border);
+        border-radius:7px;font-size:12px;font-family:var(--sans);cursor:pointer;
+        transition:all .15s;" onmouseover="this.style.borderColor='var(--border-hi)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copiar enlace
+      </button>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;max-width:340px;line-height:1.5;">
+      💡 Para habilitar vista interna, usa la función <strong style="color:var(--text2);">Compartir → Obtener enlace de inserción</strong> en SharePoint y guarda esa URL en su lugar.
+    </div>
+  </div>`;
+}
+
+function buildGenericFallback(url, name) {
+  return `<div class="no-preview">
+    <svg width="48" height="48" fill="none" stroke="var(--text3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    <div style="color:var(--text2);font-size:13px;">Vista previa no disponible</div>
+    <a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);font-size:13px;text-decoration:none;">Abrir documento en nueva pestaña →</a>
+    <button onclick="copyToClip('${url.replace(/'/g,"\\'")}', this)" style="padding:7px 14px;background:none;border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--sans);">Copiar enlace</button>
+  </div>`;
+}
+
+window.copyToClip = function(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copiado';
+    btn.style.color = 'var(--accent2)';
+    btn.style.borderColor = 'var(--accent2)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
+window.showDocFallback = function(encodedUrl, encodedName) {
+  const url = decodeURIComponent(encodedUrl);
+  const name = decodeURIComponent(encodedName);
+  document.getElementById('doc-modal-body').innerHTML = buildGenericFallback(url, name);
+}
+
+window.saveNewDoc = function() {
+  const name = document.getElementById('new-doc-name').value.trim();
+  const url = document.getElementById('new-doc-url').value.trim();
+  const type = document.getElementById('new-doc-type').value;
+  if(!name || !url) return alert('Completa todos los campos.');
+
+  const objName = document.getElementById('obj-name').textContent;
+  const data = getObjData(objName);
+  if(!data) return;
+  data.docs.push({ name, url, type });
+  saveProjectData();
+  renderDocs(objName);
+  closeModal('add-doc-modal');
+  document.getElementById('new-doc-name').value = '';
+  document.getElementById('new-doc-url').value = '';
+}
+
+// ── COMMENTS ─────────────────────────────────────────────────────────────────
+function renderComments(name) {
+  const list = document.getElementById('comment-list');
+  const data = getObjData(name);
+  if(!data || !data.comments.length) { list.innerHTML = '<div style="color:var(--text3);font-size:11px;margin-bottom:6px;">Sin comentarios registrados</div>'; return; }
+  list.innerHTML = data.comments.map(c =>
+    `<div class="comment-item">
+      <div class="comment-header">
+        <span class="comment-author">${escHtml(c.author)}</span>
+        <span class="comment-date">${c.date}</span>
+      </div>
+      <span class="comment-tag tag-${c.tag}">${c.tag === 'obs' ? 'Observación' : c.tag === 'ok' ? 'Aprobado' : 'Problema'}</span>
+      <div class="comment-text">${escHtml(c.text)}</div>
+    </div>`
+  ).join('');
+}
+
+window.addComment = function() {
+  const objName = document.getElementById('obj-name').textContent;
+  const author = document.getElementById('comment-author').value.trim() || cfg.username;
+  const tag = document.getElementById('comment-tag').value;
+  const text = document.getElementById('comment-text').value.trim();
+  if(!text) return;
+
+  const data = getObjData(objName);
+  if(!data) return;
+  const now = new Date();
+  data.comments.unshift({
+    author, tag, text,
+    date: now.toLocaleDateString('es', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + now.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' })
+  });
+  saveProjectData();
+  renderComments(objName);
+  document.getElementById('comment-text').value = '';
+
+  // Send to Apps Script if configured
+  if(cfg.scriptComments) {
+    fetch(cfg.scriptComments, { method:'POST', body: JSON.stringify({ project: currentProject, object: objName, ...data.comments[0] }), headers:{'Content-Type':'application/json'} }).catch(()=>{});
+  }
+}
+
+// ── DRIVE INTEGRATION ─────────────────────────────────────────────────────────
+window.refreshDrive = async function() {
+  const list = document.getElementById('project-list');
+  list.innerHTML = '<div style="padding:20px;text-align:center;"><div class="spinner" style="margin:0 auto;"></div></div>';
+
+  // Option A: Apps Script
+  if(cfg.scriptList) {
+    try {
+      const r = await fetch(cfg.scriptList);
+      const data = await r.json();
+      renderProjectList(data.projects || data);
+      return;
+    } catch(e) { console.warn('Script error:', e); }
+  }
+
+  // Option B: Drive API (public folders)
+  if(cfg.driveFolderId && cfg.driveApiKey) {
+    try {
+      const url = `https://www.googleapis.com/drive/v3/files?q='${cfg.driveFolderId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'&key=${cfg.driveApiKey}&fields=files(id,name,modifiedTime)`;
+      const r = await fetch(url);
+      const data = await r.json();
+      const projects = (data.files || []).map(f => ({ id: f.id, name: f.name, modified: f.modifiedTime?.slice(0,10) }));
+      renderProjectList(projects);
+      return;
+    } catch(e) { console.warn('Drive API error:', e); }
+  }
+
+  list.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px;font-family:var(--mono);">Configura el API Key y carpeta Drive en Ajustes, o un Apps Script URL.</div>';
+}
+
+function renderProjectList(projects) {
+  const list = document.getElementById('project-list');
+  if(!projects.length) { list.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px;text-align:center;">Sin proyectos encontrados</div>'; return; }
+  list.innerHTML = projects.map(p =>
+    `<div class="project-item" onclick="selectProject('${escHtml(p.id)}','${escHtml(p.name)}')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      <div>
+        <div class="project-name">${escHtml(p.name)}</div>
+        ${p.modified ? `<div class="project-meta">${p.modified}</div>` : ''}
+      </div>
+    </div>`
+  ).join('');
+}
+
+window.selectProject = async function(id, name) {
+  document.querySelectorAll('.project-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  currentProject = name;
+  if(!projectData[name]) projectData[name] = {};
+
+  setStatus(`Cargando proyecto "${name}"...`, 'loading');
+
+  // Find GLB file in folder
+  if(cfg.driveApiKey && id) {
+    try {
+      const url = `https://www.googleapis.com/drive/v3/files?q='${id}'+in+parents&key=${cfg.driveApiKey}&fields=files(id,name,mimeType)`;
+      const r = await fetch(url);
+      const data = await r.json();
+      const glb = (data.files || []).find(f => f.name.endsWith('.glb') || f.name.endsWith('.gltf'));
+      const jsonFile = (data.files || []).find(f => f.name.endsWith('.json'));
+
+      if(jsonFile) {
+        const jr = await fetch(`https://www.googleapis.com/drive/v3/files/${jsonFile.id}?alt=media&key=${cfg.driveApiKey}`);
+        const jdata = await jr.json();
+        if(!projectData[name].jsonProps) projectData[name].jsonProps = {};
+        // Merge: expects { "ObjectName": { key: val, ... } }
+        Object.assign(projectData[name].jsonProps, jdata);
+        saveProjectData();
+      }
+
+      if(glb) {
+        const modelUrl = `https://www.googleapis.com/drive/v3/files/${glb.id}?alt=media&key=${cfg.driveApiKey}`;
+        window.loadModel(modelUrl, name);
+      } else {
+        setStatus('No se encontró archivo .glb en el proyecto', 'error');
+      }
+    } catch(e) { setStatus('Error al leer Drive: ' + e.message, 'error'); }
+  }
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+window.saveSettings = function() {
+  cfg.driveFolderId = document.getElementById('cfg-drive-folder').value.trim();
+  cfg.driveApiKey = document.getElementById('cfg-drive-api-key').value.trim();
+  cfg.scriptList = document.getElementById('cfg-script-list').value.trim();
+  cfg.scriptComments = document.getElementById('cfg-script-comments').value.trim();
+  cfg.scriptProps = document.getElementById('cfg-script-props').value.trim();
+  cfg.username = document.getElementById('cfg-username').value.trim() || 'Inspector';
+  localStorage.setItem('bim360_cfg', JSON.stringify(cfg));
+  closeModal('settings-modal');
+  setStatus('Ajustes guardados', 'ok');
+}
+
+window.exportSettings = function() {
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'bim360_config.json' });
+  a.click();
+}
+
+window.importSettings = function(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      cfg = { ...cfg, ...imported };
+      applySettingsToForm();
+      setStatus('Configuración importada', 'ok');
+    } catch(err) { alert('JSON inválido'); }
+  };
+  reader.readAsText(file);
+}
+
+function applySettingsToForm() {
+  document.getElementById('cfg-drive-folder').value = cfg.driveFolderId || '';
+  document.getElementById('cfg-drive-api-key').value = cfg.driveApiKey || '';
+  document.getElementById('cfg-script-list').value = cfg.scriptList || '';
+  document.getElementById('cfg-script-comments').value = cfg.scriptComments || '';
+  document.getElementById('cfg-script-props').value = cfg.scriptProps || '';
+  document.getElementById('cfg-username').value = cfg.username || '';
+}
+
+// ── MODALS ───────────────────────────────────────────────────────────────────
+window.openModal = function(id) { document.getElementById(id).classList.add('open'); }
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ── SECTION TOGGLES ──────────────────────────────────────────────────────────
+window.toggleSection = function(id) {
+  const content = document.getElementById(`content-${id}`);
+  const toggle = document.getElementById(`toggle-${id}`);
+  const hidden = content.style.display === 'none';
+  content.style.display = hidden ? '' : 'none';
+  toggle.classList.toggle('open', hidden);
+}
+
+// ── CLIP PLANES ──────────────────────────────────────────────────────────────
+document.getElementById('mini-clip-btn').addEventListener('click', () => {
+  const cc = document.getElementById('clip-controls');
+  clipEnabled = !clipEnabled;
+  cc.classList.toggle('visible', clipEnabled);
+  document.getElementById('mini-clip-btn').style.borderColor = clipEnabled ? 'var(--accent)' : '';
+  document.getElementById('mini-clip-btn').style.color = clipEnabled ? 'var(--accent)' : '';
+  updateClipPlanes();
+});
+
+['x','y','z'].forEach(axis => {
+  document.getElementById(`clip-${axis}`).addEventListener('input', e => {
+    clipPlanes[axis] = parseFloat(e.target.value);
+    document.getElementById(`clip-${axis}-val`).textContent = clipPlanes[axis].toFixed(1);
+    updateClipPlanes();
+  });
+});
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function setStatus(msg, type) {
+  document.getElementById('status-text').textContent = msg;
+  const dot = document.querySelector('.status-dot');
+  dot.className = 'status-dot ' + (type === 'ok' ? 'green' : type === 'error' ? 'red' : 'yellow');
+}
+
+function saveProjectData() { try { localStorage.setItem('bim360_data', JSON.stringify(projectData)); } catch(e){} }
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function onResize() {
+  mainCamera.aspect = window.innerWidth / window.innerHeight;
+  mainCamera.updateProjectionMatrix();
+  mainRenderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ── UI EVENTS ────────────────────────────────────────────────────────────────
+document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('hidden');
+});
+
+document.getElementById('btn-settings').addEventListener('click', () => {
+  applySettingsToForm();
+  openModal('settings-modal');
+});
+
+document.getElementById('btn-load-file').addEventListener('click', () => {
+  document.getElementById('file-input-hidden').click();
+});
+
+document.getElementById('file-input-hidden').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+});
+
+document.getElementById('btn-refresh-drive').addEventListener('click', refreshDrive);
+
+document.getElementById('btn-add-doc').addEventListener('click', () => openModal('add-doc-modal'));
+
+document.getElementById('w-btn-drive').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('hidden');
+  document.getElementById('welcome').classList.add('hidden');
+  openModal('settings-modal');
+});
+
+document.getElementById('w-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+});
+
+document.getElementById('w-btn-example').addEventListener('click', () => {
+  window.loadModel(EXAMPLE_URL, 'Ejemplo SolidWorks');
+});
+
+// Drag & Drop
+window.addEventListener('dragover', e => { e.preventDefault(); document.getElementById('drop-overlay').classList.add('visible'); });
+window.addEventListener('dragleave', e => { if(e.clientX === 0 && e.clientY === 0) document.getElementById('drop-overlay').classList.remove('visible'); });
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('drop-overlay').classList.remove('visible');
+  const file = e.dataTransfer.files[0];
+  if(file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+    window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+  }
+});
+
+// Search projects
+document.getElementById('search-projects').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.project-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// ── SIDEBAR TABS ─────────────────────────────────────────────────────────────
+window.switchSbTab = function(tab) {
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sb-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`pane-${tab}`).classList.add('active');
+}
+
+// ── OBJECT LIST ───────────────────────────────────────────────────────────────
+// Track per-mesh visibility state: uuid -> { visible, glass }
+const meshStates = {};
+
+// Color palette for object dots
+const OBJ_COLORS = ['#63b3ed','#48bb78','#f6ad55','#fc8181','#b794f4','#76e4f7','#fbd38d','#90cdf4','#9ae6b4','#feb2b2'];
+
+function buildObjectList() {
+  if(!currentModel) return;
+  const container = document.getElementById('obj-list-items');
+  const empty = document.getElementById('obj-list-empty');
+  const meshes = [];
+
+  currentModel.traverse(obj => { if(obj.isMesh) meshes.push(obj); });
+  if(!meshes.length) { empty.style.display = ''; container.innerHTML = ''; return; }
+  empty.style.display = 'none';
+
+  // Init states
+  meshes.forEach(m => {
+    if(!meshStates[m.uuid]) meshStates[m.uuid] = { visible: true, glass: false };
+  });
+
+  renderObjectList(meshes);
+
+  // Switch to objects tab
+  switchSbTab('objects');
+}
+
+function getMeshes() {
+  const meshes = [];
+  if(currentModel) currentModel.traverse(o => { if(o.isMesh) meshes.push(o); });
+  return meshes;
+}
+
+function renderObjectList(meshesArg) {
+  const meshes = meshesArg || getMeshes();
+  const container = document.getElementById('obj-list-items');
+  const q = document.getElementById('search-objects').value.toLowerCase();
+
+  container.innerHTML = meshes
+    .filter(m => !q || (m.name || 'Componente').toLowerCase().includes(q))
+    .map((m, i) => {
+      const state = meshStates[m.uuid] || { visible: true, glass: false };
+      const rawName = m.name || m.parent?.name || 'Componente';
+      const name = rawName.replace(/_/g,' ').split('<')[0].trim() || `Objeto ${i+1}`;
+      const color = OBJ_COLORS[i % OBJ_COLORS.length];
+      const isSelected = selectedObject?.uuid === m.uuid;
+      return `<div class="obj-list-item ${isSelected ? 'selected' : ''} ${!state.visible ? 'hidden-obj' : ''}"
+                   data-uuid="${m.uuid}"
+                   onclick="objListSelect('${m.uuid}')">
+        <div class="obj-color-dot" style="background:${color}"></div>
+        <div class="obj-item-name" title="${escHtml(name)}">${escHtml(name)}</div>
+        <button class="obj-glass-btn ${state.glass ? 'on' : ''}" title="Cristal" onclick="event.stopPropagation();toggleGlass('${m.uuid}')">◈</button>
+        <button class="obj-vis-btn" title="${state.visible ? 'Ocultar' : 'Mostrar'}" onclick="event.stopPropagation();toggleVisibility('${m.uuid}')">
+          ${state.visible
+            ? `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`
+            : `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`
+          }
+        </button>
+      </div>`;
+    }).join('');
+}
+
+window.objListSelect = function(uuid) {
+  const mesh = findMeshByUUID(uuid);
+  if(mesh) selectObject(mesh);
+  renderObjectList();
+}
+
+window.toggleVisibility = function(uuid) {
+  const mesh = findMeshByUUID(uuid);
+  if(!mesh) return;
+  if(!meshStates[uuid]) meshStates[uuid] = { visible: true, glass: false };
+  const state = meshStates[uuid];
+  state.visible = !state.visible;
+  mesh.visible = state.visible;
+  renderObjectList();
+}
+
+window.toggleGlass = function(uuid) {
+  const mesh = findMeshByUUID(uuid);
+  if(!mesh) return;
+  if(!meshStates[uuid]) meshStates[uuid] = { visible: true, glass: false };
+  const state = meshStates[uuid];
+  state.glass = !state.glass;
+
+  // Store original materials if not yet stored
+  if(!mesh._origMaterials) {
+    mesh._origMaterials = Array.isArray(mesh.material)
+      ? mesh.material.map(m => m.clone())
+      : mesh.material.clone();
+  }
+
+  if(state.glass) {
+    // Apply glass material
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x88ccff,
+      metalness: 0.0,
+      roughness: 0.0,
+      transmission: 0.92,
+      thickness: 0.5,
+      transparent: true,
+      opacity: 0.25,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    mesh.material = glassMat;
+  } else {
+    // Restore original
+    mesh.material = mesh._origMaterials;
+    // Clear highlight if was highlighted
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    mats.forEach(m => { if(m.emissive) m.emissive.setHex(0x000000); });
+  }
+  renderObjectList();
+}
+
+window.setAllVisibility = function(visible) {
+  getMeshes().forEach(m => {
+    if(!meshStates[m.uuid]) meshStates[m.uuid] = { visible: true, glass: false };
+    meshStates[m.uuid].visible = visible;
+    m.visible = visible;
+  });
+  renderObjectList();
+}
+
+function findMeshByUUID(uuid) {
+  let found = null;
+  if(currentModel) currentModel.traverse(o => { if(o.uuid === uuid) found = o; });
+  return found;
+}
+
+document.getElementById('search-objects').addEventListener('input', () => renderObjectList());
+
+// ── BOOT ────────────────────────────────────────────────────────────────────
+initMain();
+initMini();
+animate();
+</script>
 </body>
 </html>
