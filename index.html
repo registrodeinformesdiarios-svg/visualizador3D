@@ -109,6 +109,46 @@
   .obj-glass-btn.on { color: var(--accent2); }
   .obj-list-empty { padding: 20px 12px; text-align: center; color: var(--text3); font-size: 11px; font-family: var(--mono); }
 
+  /* ─── TREE VIEW ─── */
+  .tree-group { border-bottom: 1px solid var(--border); }
+  .tree-group-header {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer;
+    background: var(--bg3); user-select: none; transition: background .1s;
+  }
+  .tree-group-header:hover { background: rgba(99,179,237,0.06); }
+  .tree-chevron {
+    width: 14px; height: 14px; display: flex; align-items: center; justify-content: center;
+    color: var(--text3); transition: transform .18s; flex-shrink: 0;
+  }
+  .tree-chevron.open { transform: rotate(90deg); }
+  .tree-group-name {
+    flex: 1; font-size: 11px; font-weight: 600; color: var(--text2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: var(--mono); letter-spacing: .3px;
+  }
+  .tree-group-count {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1px 6px; flex-shrink: 0;
+  }
+  .tree-group-vis {
+    width: 20px; height: 20px; border-radius: 3px; border: none; background: none;
+    color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color .1s; flex-shrink: 0;
+  }
+  .tree-group-vis:hover { color: var(--text); }
+  .tree-children { overflow: hidden; }
+  .tree-children.collapsed { display: none; }
+  .tree-leaf {
+    display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 28px; cursor: pointer;
+    border-left: 2px solid transparent; transition: all .1s;
+  }
+  .tree-leaf:hover { background: rgba(255,255,255,0.02); }
+  .tree-leaf.selected { border-left-color: var(--accent); background: rgba(99,179,237,0.06); }
+  .tree-leaf.hidden-obj { opacity: .35; }
+  .tree-leaf .obj-item-name { flex: 1; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); }
+  .tree-leaf.selected .obj-item-name { color: var(--accent); }
+
   /* ─── LEFT SIDEBAR (Drive Browser) ─── */
   #sidebar {
     position: fixed; top: 52px; left: 0; bottom: 0; width: 260px; z-index: 90;
@@ -470,6 +510,12 @@
         <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
         <input id="search-objects" type="text" placeholder="Filtrar objetos...">
       </div>
+      <button class="obj-toolbar-btn" id="btn-expand-all" title="Desplegar todos los ensambles" onclick="setAllGroupsCollapsed(false)">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/><line x1="3" y1="12" x2="16" y2="12" stroke-linecap="round" stroke-width="2"/></svg>
+      </button>
+      <button class="obj-toolbar-btn" id="btn-collapse-all" title="Plegar todos los ensambles" onclick="setAllGroupsCollapsed(true)">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 9l7-7 7 7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7 7 7-7"/></svg>
+      </button>
       <button class="obj-toolbar-btn" id="btn-all-visible" title="Mostrar todos" onclick="setAllVisibility(true)">
         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
       </button>
@@ -725,6 +771,68 @@
       <div class="settings-actions">
         <button class="btn-secondary" onclick="closeModal('settings-modal')">Cancelar</button>
         <button class="btn-primary" onclick="saveSettings()">Guardar ajustes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FILE:// PROTOCOL WARNING MODAL -->
+<div class="modal-overlay" id="file-protocol-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <span class="modal-title">⚠ Servidor local requerido</span>
+      <button class="modal-close" onclick="closeModal('file-protocol-modal')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.2);border-radius:8px;padding:14px;display:flex;gap:12px;">
+        <span style="font-size:20px;flex-shrink:0;">🔒</span>
+        <div>
+          <div style="color:var(--danger);font-weight:600;font-size:13px;margin-bottom:4px;">Protocolo <code style="background:rgba(252,129,129,0.15);padding:1px 5px;border-radius:3px;">file://</code> bloqueado</div>
+          <div style="color:var(--text2);font-size:12px;line-height:1.6;">
+            El navegador bloquea las peticiones a Google Drive cuando el archivo se abre directamente desde el disco. Es necesario correr un servidor local.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">Solución rápida — ejecuta este comando en la carpeta del proyecto:</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <code style="flex:1;font-family:var(--mono);font-size:12px;color:var(--accent2);" id="server-cmd">python -m http.server 8080</code>
+          <button onclick="copyServerCmd()" style="padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s;" id="copy-cmd-btn">Copiar</button>
+        </div>
+        <div style="color:var(--text3);font-size:11px;font-family:var(--mono);">Luego abre: <a href="http://localhost:8080" target="_blank" style="color:var(--accent);">http://localhost:8080</a></div>
+      </div>
+
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Pasos en Windows</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="background:var(--accent);color:var(--bg);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;">1</span>
+            <span style="color:var(--text2);font-size:12px;">Abre el Explorador de archivos en la carpeta donde está el <code style="color:var(--accent3);">index6.html</code></span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="background:var(--accent);color:var(--bg);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;">2</span>
+            <span style="color:var(--text2);font-size:12px;">Escribe <code style="color:var(--accent3);">cmd</code> en la barra de dirección y presiona Enter</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="background:var(--accent);color:var(--bg);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;">3</span>
+            <span style="color:var(--text2);font-size:12px;">Pega el comando de arriba y presiona Enter</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="background:var(--accent);color:var(--bg);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;">4</span>
+            <span style="color:var(--text2);font-size:12px;">Abre Chrome y ve a <a href="http://localhost:8080" target="_blank" style="color:var(--accent);">http://localhost:8080</a></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-secondary" onclick="closeModal('file-protocol-modal')">Entendido</button>
+        <a href="http://localhost:8080" target="_blank" style="padding:8px 16px;background:var(--accent);color:var(--bg);border-radius:6px;font-family:var(--sans);font-weight:600;font-size:12px;text-decoration:none;display:flex;align-items:center;gap:6px;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Ir a localhost:8080
+        </a>
       </div>
     </div>
   </div>
@@ -1328,6 +1436,11 @@ window.refreshDrive = async function() {
 function renderProjectList(projects) {
   const list = document.getElementById('project-list');
   if(!projects.length) { list.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px;text-align:center;">Sin proyectos encontrados</div>'; return; }
+
+  // Guardar mapa de proyectos para acceder a modelUrl
+  window._projectRegistry = {};
+  projects.forEach(p => { window._projectRegistry[p.id] = p; });
+
   list.innerHTML = projects.map(p =>
     `<div class="project-item" onclick="selectProject('${escHtml(p.id)}','${escHtml(p.name)}')">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
@@ -1346,32 +1459,152 @@ window.selectProject = async function(id, name) {
   if(!projectData[name]) projectData[name] = {};
 
   setStatus(`Cargando proyecto "${name}"...`, 'loading');
+  console.log(`[BIM360] selectProject → id=${id}, name=${name}`);
+
+  // ── Caso A: Apps Script proveyó glbId o modelUrl ─────────────────────────
+  const registry = window._projectRegistry || {};
+  const projectMeta = registry[id];
+
+  if(projectMeta?.glbId && cfg.scriptList) {
+    // Extraer URL base limpia (sin parámetros)
+    const scriptBase = cfg.scriptList.split('?')[0].replace(/&.*$/, '');
+    const proxyUrl = `${scriptBase}?action=download&id=${projectMeta.glbId}`;
+    console.log('[BIM360] Descargando via proxy Apps Script:', proxyUrl);
+    setStatus('Descargando modelo via Apps Script...', 'loading');
+    try {
+      const res = await fetch(proxyUrl, { redirect: 'follow' });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if(json.error) throw new Error(json.error);
+      // Decodificar base64
+      const binary = Uint8Array.from(atob(json.data), c => c.charCodeAt(0));
+      console.log(`[BIM360] Modelo recibido via proxy: ${binary.byteLength} bytes`);
+      window._lastModelBuffer = binary.buffer.slice(0);
+      window._lastModelName   = json.name || name + '.glb';
+      const blob = new Blob([binary], { type: 'model/gltf-binary' });
+      window.loadModel(URL.createObjectURL(blob), name);
+    } catch(e) {
+      setStatus('Error al descargar modelo: ' + e.message, 'error');
+      console.error('[BIM360] Error proxy download:', e);
+    }
+    return;
+  }
+
+  if(projectMeta?.modelUrl) {
+    // Fallback: intentar fetch directo (solo funciona con servidor local + CORS OK)
+    console.log('[BIM360] Intentando fetch directo:', projectMeta.modelUrl);
+    setStatus('Descargando modelo...', 'loading');
+    try {
+      const res = await fetch(projectMeta.modelUrl);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buffer = await res.arrayBuffer();
+      window._lastModelBuffer = buffer.slice(0);
+      window._lastModelName   = name + '.glb';
+      const blob = new Blob([buffer], { type: 'model/gltf-binary' });
+      window.loadModel(URL.createObjectURL(blob), name);
+    } catch(e) {
+      setStatus('Error CORS — usa glbId en el Apps Script', 'error');
+      console.error('[BIM360] Error fetch directo (CORS):', e);
+      alert('Error de CORS al descargar el GLB.\n\nSolución: modifica el Apps Script para devolver "glbId" en lugar de "modelUrl".\n\nVer instrucciones en la documentación.');
+    }
+    return;
+  }
+
+  // ── Caso B: Buscar GLB via Drive API Key (fallback) ──────────────────────
+  if(location.protocol === 'file:') {
+    setStatus('Error: protocolo file:// bloquea Drive API', 'error');
+    showFileProtocolWarning();
+    return;
+  }
 
   // Find GLB file in folder
   if(cfg.driveApiKey && id) {
     try {
-      const url = `https://www.googleapis.com/drive/v3/files?q='${id}'+in+parents&key=${cfg.driveApiKey}&fields=files(id,name,mimeType)`;
+      // Intentar con supportsAllDrives para Shared Drives
+      const params = new URLSearchParams({
+        q: `'${id}' in parents and trashed=false`,
+        key: cfg.driveApiKey,
+        fields: 'files(id,name,mimeType,size)',
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
+        pageSize: '100',
+      });
+      const url = `https://www.googleapis.com/drive/v3/files?${params}`;
+      console.log('[BIM360] Listando archivos en carpeta:', url);
       const r = await fetch(url);
       const data = await r.json();
-      const glb = (data.files || []).find(f => f.name.endsWith('.glb') || f.name.endsWith('.gltf'));
-      const jsonFile = (data.files || []).find(f => f.name.endsWith('.json'));
+      console.log('[BIM360] Respuesta Drive listado:', JSON.stringify(data, null, 2));
+
+      if(data.error) {
+        setStatus('Error Drive API: ' + data.error.message, 'error');
+        console.error('[BIM360] Drive API error:', data.error);
+        // Mostrar ayuda específica según el código de error
+        if(data.error.code === 403) {
+          alert(`Error 403: API Key sin permisos de Drive.\n\nVerifica en Google Cloud Console:\n1. APIs & Services → Biblioteca → "Google Drive API" → Habilitar\n2. APIs & Services → Credenciales → tu API Key → Sin restricciones (o agrega googleapis.com)`);
+        } else if(data.error.code === 400) {
+          alert(`Error 400: ID de carpeta inválido.\n\nEl ID configurado es:\n${id}\n\nVerifica que sea el ID correcto de la carpeta en Drive.`);
+        }
+        return;
+      }
+
+      const files = data.files || [];
+      console.log(`[BIM360] Archivos encontrados (${files.length}):`, files.map(f => `${f.name} (${f.mimeType})`));
+
+      // Si no hay archivos, puede ser problema de permisos del contenido
+      if(files.length === 0) {
+        console.warn('[BIM360] Carpeta vacía o archivos sin acceso público.');
+        setStatus('Carpeta vacía o archivos sin permisos públicos', 'error');
+        alert(
+          `La carpeta "${name}" está vacía o sus archivos no son públicos.\n\n` +
+          `Para que funcione, cada archivo .glb dentro de la carpeta debe estar compartido:\n` +
+          `→ Clic derecho en el .glb → Compartir → "Cualquiera con el enlace" → Ver\n\n` +
+          `(No basta con que la carpeta sea pública, cada archivo debe serlo también)`
+        );
+        return;
+      }
+
+      const glb = files.find(f => f.name.endsWith('.glb') || f.name.endsWith('.gltf'));
+      const jsonFile = files.find(f => f.name.endsWith('.json'));
 
       if(jsonFile) {
+        console.log('[BIM360] Cargando JSON de propiedades:', jsonFile.name);
         const jr = await fetch(`https://www.googleapis.com/drive/v3/files/${jsonFile.id}?alt=media&key=${cfg.driveApiKey}`);
         const jdata = await jr.json();
         if(!projectData[name].jsonProps) projectData[name].jsonProps = {};
-        // Merge: expects { "ObjectName": { key: val, ... } }
         Object.assign(projectData[name].jsonProps, jdata);
         saveProjectData();
       }
 
       if(glb) {
+        setStatus(`Descargando ${glb.name} (${glb.size ? Math.round(glb.size/1024/1024*10)/10+' MB' : '?'})...`, 'loading');
+        console.log(`[BIM360] Descargando GLB: ${glb.name}, id=${glb.id}, size=${glb.size}`);
         const modelUrl = `https://www.googleapis.com/drive/v3/files/${glb.id}?alt=media&key=${cfg.driveApiKey}`;
-        window.loadModel(modelUrl, name);
+        try {
+          const res = await fetch(modelUrl);
+          console.log(`[BIM360] Fetch GLB → status=${res.status}, ok=${res.ok}, type=${res.headers.get('content-type')}`);
+          if(!res.ok) {
+            const errText = await res.text();
+            console.error('[BIM360] Respuesta error GLB:', errText);
+            throw new Error(`HTTP ${res.status}: ${errText.slice(0,200)}`);
+          }
+          setStatus('Procesando modelo...', 'loading');
+          const buffer = await res.arrayBuffer();
+          console.log(`[BIM360] Buffer recibido: ${buffer.byteLength} bytes`);
+          window._lastModelBuffer = buffer.slice(0);
+          window._lastModelName   = glb.name;
+          const blob = new Blob([buffer], { type: 'model/gltf-binary' });
+          const blobUrl = URL.createObjectURL(blob);
+          console.log('[BIM360] Blob URL creado, llamando loadModel...');
+          window.loadModel(blobUrl, name);
+        } catch(fetchErr) {
+          setStatus('Error al descargar GLB: ' + fetchErr.message, 'error');
+          console.error('[BIM360] Drive GLB fetch error:', fetchErr);
+        }
       } else {
         setStatus('No se encontró archivo .glb en el proyecto', 'error');
+        console.warn('[BIM360] No se encontró .glb. Archivos disponibles:', files.map(f=>f.name));
       }
-    } catch(e) { setStatus('Error al leer Drive: ' + e.message, 'error'); }
+    } catch(e) { setStatus('Error al leer Drive: ' + e.message, 'error'); console.error('[BIM360] Error general:', e); }
   }
 }
 
@@ -1464,6 +1697,20 @@ function saveProjectData() { try { localStorage.setItem('bim360_data', JSON.stri
 
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+window.showFileProtocolWarning = function() {
+  openModal('file-protocol-modal');
+}
+
+window.copyServerCmd = function() {
+  navigator.clipboard.writeText('python -m http.server 8080').then(() => {
+    const btn = document.getElementById('copy-cmd-btn');
+    btn.textContent = '✓ Copiado';
+    btn.style.color = 'var(--accent2)';
+    btn.style.borderColor = 'var(--accent2)';
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
 function onResize() {
   mainCamera.aspect = window.innerWidth / window.innerHeight;
   mainCamera.updateProjectionMatrix();
@@ -1486,15 +1733,7 @@ document.getElementById('btn-load-file').addEventListener('click', () => {
 
 document.getElementById('file-input-hidden').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      window._lastModelBuffer = ev.target.result.slice(0);
-      window._lastModelName   = file.name;
-    };
-    reader.readAsArrayBuffer(file);
-    window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
-  }
+  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
 });
 
 document.getElementById('btn-refresh-drive').addEventListener('click', refreshDrive);
@@ -1509,15 +1748,7 @@ document.getElementById('w-btn-drive').addEventListener('click', () => {
 
 document.getElementById('w-file-input').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      window._lastModelBuffer = ev.target.result.slice(0);
-      window._lastModelName   = file.name;
-    };
-    reader.readAsArrayBuffer(file);
-    window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
-  }
+  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
 });
 
 document.getElementById('w-btn-example').addEventListener('click', () => {
@@ -1532,12 +1763,6 @@ window.addEventListener('drop', e => {
   document.getElementById('drop-overlay').classList.remove('visible');
   const file = e.dataTransfer.files[0];
   if(file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      window._lastModelBuffer = ev.target.result.slice(0);
-      window._lastModelName   = file.name;
-    };
-    reader.readAsArrayBuffer(file);
     window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
   }
 });
@@ -1558,9 +1783,11 @@ window.switchSbTab = function(tab) {
   document.getElementById(`pane-${tab}`).classList.add('active');
 }
 
-// ── OBJECT LIST ───────────────────────────────────────────────────────────────
+// ── OBJECT LIST (ÁRBOL JERÁRQUICO) ────────────────────────────────────────────
 // Track per-mesh visibility state: uuid -> { visible, glass }
 const meshStates = {};
+// Track group collapse state: groupKey -> collapsed (bool)
+const groupCollapsed = {};
 
 // Color palette for object dots
 const OBJ_COLORS = ['#63b3ed','#48bb78','#f6ad55','#fc8181','#b794f4','#76e4f7','#fbd38d','#90cdf4','#9ae6b4','#feb2b2'];
@@ -1581,8 +1808,6 @@ function buildObjectList() {
   });
 
   renderObjectList(meshes);
-
-  // Switch to objects tab
   switchSbTab('objects');
 }
 
@@ -1592,33 +1817,127 @@ function getMeshes() {
   return meshes;
 }
 
+/** Returns display name cleaned up */
+function meshDisplayName(m, fallback) {
+  const raw = m.name || '';
+  return raw.replace(/_/g,' ').split('<')[0].trim() || fallback || 'Componente';
+}
+
+/** Returns the group name from a mesh's parent chain (first non-root, non-Scene group) */
+function getGroupKey(mesh) {
+  let node = mesh.parent;
+  while(node && node !== currentModel) {
+    if(node.isGroup || (node.isObject3D && !node.isMesh)) {
+      const name = (node.name || '').replace(/_/g,' ').split('<')[0].trim();
+      if(name) return { key: node.uuid, label: name, node };
+    }
+    node = node.parent;
+  }
+  return { key: '__root__', label: 'Sin subensamble', node: null };
+}
+
 function renderObjectList(meshesArg) {
   const meshes = meshesArg || getMeshes();
   const container = document.getElementById('obj-list-items');
   const q = document.getElementById('search-objects').value.toLowerCase();
 
-  container.innerHTML = meshes
-    .filter(m => !q || (m.name || 'Componente').toLowerCase().includes(q))
-    .map((m, i) => {
-      const state = meshStates[m.uuid] || { visible: true, glass: false };
-      const rawName = m.name || m.parent?.name || 'Componente';
-      const name = rawName.replace(/_/g,' ').split('<')[0].trim() || `Objeto ${i+1}`;
-      const color = OBJ_COLORS[i % OBJ_COLORS.length];
-      const isSelected = selectedObject?.uuid === m.uuid;
-      return `<div class="obj-list-item ${isSelected ? 'selected' : ''} ${!state.visible ? 'hidden-obj' : ''}"
-                   data-uuid="${m.uuid}"
-                   onclick="objListSelect('${m.uuid}')">
-        <div class="obj-color-dot" style="background:${color}"></div>
-        <div class="obj-item-name" title="${escHtml(name)}">${escHtml(name)}</div>
-        <button class="obj-glass-btn ${state.glass ? 'on' : ''}" title="Cristal" onclick="event.stopPropagation();toggleGlass('${m.uuid}')">◈</button>
-        <button class="obj-vis-btn" title="${state.visible ? 'Ocultar' : 'Mostrar'}" onclick="event.stopPropagation();toggleVisibility('${m.uuid}')">
-          ${state.visible
-            ? `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`
-            : `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`
+  // Group meshes by parent subasembly
+  const groups = new Map(); // key -> { label, node, meshes[] }
+
+  meshes.forEach((m, i) => {
+    const { key, label, node } = getGroupKey(m);
+    if(!groups.has(key)) groups.set(key, { label, node, meshes: [] });
+    groups.get(key).meshes.push({ mesh: m, idx: i });
+  });
+
+  // If search active: flat filtered list
+  if(q) {
+    const filtered = meshes.filter((m, i) => meshDisplayName(m, `Objeto ${i+1}`).toLowerCase().includes(q));
+    container.innerHTML = filtered.map((m, i) => leafHTML(m, i, meshes.indexOf(m))).join('');
+    return;
+  }
+
+  // Render tree
+  let html = '';
+  let groupIdx = 0;
+  groups.forEach(({ label, node, meshes: gMeshes }, key) => {
+    const isCollapsed = groupCollapsed[key] ?? true;
+    const allHidden = gMeshes.every(({ mesh }) => meshStates[mesh.uuid]?.visible === false);
+    const groupColor = OBJ_COLORS[groupIdx % OBJ_COLORS.length];
+    groupIdx++;
+
+    html += `<div class="tree-group" data-group="${escHtml(key)}">
+      <div class="tree-group-header" onclick="toggleGroup('${escHtml(key)}')">
+        <svg class="tree-chevron ${isCollapsed ? '' : 'open'}" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <div class="obj-color-dot" style="background:${groupColor}"></div>
+        <div class="tree-group-name" title="${escHtml(label)}">${escHtml(label)}</div>
+        <span class="tree-group-count">${gMeshes.length}</span>
+        <button class="tree-group-vis" title="${allHidden ? 'Mostrar grupo' : 'Ocultar grupo'}"
+          onclick="event.stopPropagation();toggleGroupVisibility('${escHtml(key)}')">
+          ${allHidden
+            ? `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`
+            : `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`
           }
         </button>
-      </div>`;
-    }).join('');
+      </div>
+      <div class="tree-children ${isCollapsed ? 'collapsed' : ''}">
+        ${gMeshes.map(({ mesh, idx }) => leafHTML(mesh, 0, idx)).join('')}
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function leafHTML(m, _unused, globalIdx) {
+  const state = meshStates[m.uuid] || { visible: true, glass: false };
+  const name = meshDisplayName(m, `Objeto ${globalIdx+1}`);
+  const color = OBJ_COLORS[globalIdx % OBJ_COLORS.length];
+  const isSelected = selectedObject?.uuid === m.uuid;
+  return `<div class="tree-leaf ${isSelected ? 'selected' : ''} ${!state.visible ? 'hidden-obj' : ''}"
+               data-uuid="${m.uuid}" onclick="objListSelect('${m.uuid}')">
+    <div class="obj-color-dot" style="background:${color}"></div>
+    <div class="obj-item-name" title="${escHtml(name)}">${escHtml(name)}</div>
+    <button class="obj-glass-btn ${state.glass ? 'on' : ''}" title="Cristal" onclick="event.stopPropagation();toggleGlass('${m.uuid}')">◈</button>
+    <button class="obj-vis-btn" title="${state.visible ? 'Ocultar' : 'Mostrar'}" onclick="event.stopPropagation();toggleVisibility('${m.uuid}')">
+      ${state.visible
+        ? `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`
+        : `<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`
+      }
+    </button>
+  </div>`;
+}
+
+/** Toggle group collapse */
+window.toggleGroup = function(key) {
+  groupCollapsed[key] = !(groupCollapsed[key] ?? true);
+  renderObjectList();
+}
+
+/** Expand or collapse all groups */
+window.setAllGroupsCollapsed = function(collapsed) {
+  const meshes = getMeshes();
+  meshes.forEach(m => {
+    const { key } = getGroupKey(m);
+    groupCollapsed[key] = collapsed;
+  });
+  renderObjectList();
+}
+
+/** Toggle visibility of all meshes in a group */
+window.toggleGroupVisibility = function(key) {
+  const meshes = getMeshes();
+  const grouped = meshes.filter(m => getGroupKey(m).key === key);
+  const allHidden = grouped.every(m => meshStates[m.uuid]?.visible === false);
+  const newVisible = allHidden; // if all hidden → show, else hide
+  grouped.forEach(m => {
+    if(!meshStates[m.uuid]) meshStates[m.uuid] = { visible: true, glass: false };
+    meshStates[m.uuid].visible = newVisible;
+    m.visible = newVisible;
+  });
+  renderObjectList();
 }
 
 window.objListSelect = function(uuid) {
@@ -1756,9 +2075,27 @@ window.abrirExplorador = function() {
 };
 
 // ── BOOT ────────────────────────────────────────────────────────────────────
+// Avisar si se abre desde file://
+if(location.protocol === 'file:') {
+  console.warn('[BIM360] Protocolo file:// detectado — Drive API no funcionará. Usa un servidor local.');
+  // Mostrar badge en el botón de Drive
+  setTimeout(() => {
+    const btn = document.getElementById('btn-refresh-drive');
+    if(btn) {
+      btn.title = 'Requiere servidor local (no file://)';
+      btn.style.opacity = '0.6';
+      btn.innerHTML = btn.innerHTML.replace('Actualizar desde Drive', '⚠ Requiere servidor local');
+    }
+  }, 500);
+}
 initMain();
 initMini();
 animate();
+
+// Auto-load project list if config is already saved
+if(cfg.scriptList || (cfg.driveFolderId && cfg.driveApiKey)) {
+  refreshDrive();
+}
 </script>
 </body>
 </html>
