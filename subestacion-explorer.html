@@ -231,6 +231,8 @@
   <div class="legend-row"><span class="key">Shift</span><span class="legend-label">Correr</span></div>
   <div class="legend-row"><span class="key">🖱 Drag</span><span class="legend-label">Rotar cámara</span></div>
   <div class="legend-row"><span class="key">R</span><span class="legend-label">Reiniciar posición</span></div>
+  <div class="legend-row" style="margin-top:4px;padding-top:6px;border-top:1px solid var(--border)"><span class="key">👆 Pantalla</span><span class="legend-label">Ángulo de cámara</span></div>
+  <div class="legend-row"><span class="key">🕹 Joystick</span><span class="legend-label">Mover personaje</span></div>
 </div>
 
 <div id="speed-badge"><div class="speed-dot"></div><span id="speed-label">Caminando</span></div>
@@ -532,34 +534,84 @@ window.setFloorManual = function(val) {
 // compat alias (usado por onModelReady al resetear)
 window.setFloorOffset = function(val) { applyFloor(parseFloat(val)); };
 
-// ── JOYSTICK ─────────────────────────────────────────────────────────────────
+// ── JOYSTICK (movimiento del personaje) ──────────────────────────────────────
 const joystickBase = document.getElementById('joystick-base');
 const joystickKnob = document.getElementById('joystick-knob');
 const JR = 33;
 
 joystickBase.addEventListener('touchstart', e => {
   e.preventDefault();
-  const t=e.changedTouches[0], r=joystickBase.getBoundingClientRect();
-  state.joy.active=true; state.joy.id=t.identifier;
-  state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2;
+  const t = e.changedTouches[0];
+  const r = joystickBase.getBoundingClientRect();
+  state.joy.active  = true;
+  state.joy.id      = t.identifier;
+  state.joy.startX  = r.left + r.width  / 2;
+  state.joy.startY  = r.top  + r.height / 2;
   joystickKnob.classList.add('active');
-}, {passive:false});
+}, { passive: false });
 
-window.addEventListener('touchmove', e => {
-  if (!state.joy.active) return;
+joystickBase.addEventListener('touchmove', e => {
+  e.preventDefault();
   for (const t of e.changedTouches) {
-    if (t.identifier!==state.joy.id) continue;
-    let dx=t.clientX-state.joy.startX, dy=t.clientY-state.joy.startY;
-    const d=Math.sqrt(dx*dx+dy*dy);
-    if (d>JR) {dx=dx/d*JR; dy=dy/d*JR;}
-    state.joy.dx=dx/JR; state.joy.dy=dy/JR;
-    joystickKnob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+    if (t.identifier !== state.joy.id) continue;
+    let dx = t.clientX - state.joy.startX;
+    let dy = t.clientY - state.joy.startY;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    if (d > JR) { dx = dx/d*JR; dy = dy/d*JR; }
+    state.joy.dx = dx / JR;
+    state.joy.dy = dy / JR;
+    joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
   }
-},{passive:true});
+}, { passive: false });
 
-function resetJoy() { state.joy.active=false; state.joy.dx=0; state.joy.dy=0; joystickKnob.style.transform='translate(-50%,-50%)'; joystickKnob.classList.remove('active'); }
-window.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===state.joy.id) resetJoy();});
-window.addEventListener('touchcancel', e=>{for(const t of e.changedTouches) if(t.identifier===state.joy.id) resetJoy();});
+function resetJoy() {
+  state.joy.active = false; state.joy.dx = 0; state.joy.dy = 0;
+  joystickKnob.style.transform = 'translate(-50%,-50%)';
+  joystickKnob.classList.remove('active');
+}
+joystickBase.addEventListener('touchend',    e => { for (const t of e.changedTouches) if (t.identifier === state.joy.id) resetJoy(); });
+joystickBase.addEventListener('touchcancel', e => { for (const t of e.changedTouches) if (t.identifier === state.joy.id) resetJoy(); });
+
+// ── CANVAS TOUCH (ángulo de cámara / rotación) ───────────────────────────────
+// Toque sobre el canvas (fuera del joystick) → ajusta camPitch y charRot,
+// exactamente igual que el drag de ratón.
+const camTouch = { id: null, x: 0, y: 0 };
+
+canvas.addEventListener('touchstart', e => {
+  // Ignorar si ya hay un toque de joystick activo con ese id
+  for (const t of e.changedTouches) {
+    // Si el toque empieza dentro del joystick, dejarlo al joystick
+    const jRect = joystickBase.getBoundingClientRect();
+    const inJoy = t.clientX >= jRect.left && t.clientX <= jRect.right &&
+                  t.clientY >= jRect.top  && t.clientY <= jRect.bottom;
+    if (!inJoy && camTouch.id === null) {
+      camTouch.id = t.identifier;
+      camTouch.x  = t.clientX;
+      camTouch.y  = t.clientY;
+      break;
+    }
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchmove', e => {
+  if (camTouch.id === null || !state.modelLoaded) return;
+  for (const t of e.changedTouches) {
+    if (t.identifier !== camTouch.id) continue;
+    const dx = t.clientX - camTouch.x;
+    const dy = t.clientY - camTouch.y;
+    camTouch.x = t.clientX;
+    camTouch.y = t.clientY;
+    // Horizontal → rota el personaje (igual que mouse drag X)
+    state.charRot -= dx * 0.005;
+    charGroup.rotation.y = state.charRot;
+    // Vertical → ajusta pitch de cámara (igual que mouse drag Y)
+    state.camPitch = Math.max(-0.05, Math.min(1.3, state.camPitch + dy * 0.004));
+  }
+}, { passive: true });
+
+function resetCamTouch() { camTouch.id = null; }
+canvas.addEventListener('touchend',    e => { for (const t of e.changedTouches) if (t.identifier === camTouch.id) resetCamTouch(); });
+canvas.addEventListener('touchcancel', e => { for (const t of e.changedTouches) if (t.identifier === camTouch.id) resetCamTouch(); });
 
 // ── MEASURE ───────────────────────────────────────────────────────────────────
 const markerGeo  = new THREE.SphereGeometry(0.08,10,10);
