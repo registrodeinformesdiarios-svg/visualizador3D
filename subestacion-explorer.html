@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorador de Subestación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c10;--bg2:#0f1219;--border:rgba(255,255,255,0.07);
+    --accent:#4fc3f7;--accent2:#81c784;--danger:#ef5350;--warn:#f6ad55;
+    --text:#e0e8f0;--text2:#8fa0b0;--text3:#3a4a5a;
+    --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;height:100vh;width:100vw;}
+  #canvas-wrap{position:absolute;inset:0;}
+  #main-canvas{display:block;width:100%!important;height:100%!important;cursor:grab;}
+  #main-canvas.dragging{cursor:grabbing;}
+  #main-canvas.measuring{cursor:crosshair;}
+
+  /* ── HUD TOP ── */
+  #hud-top{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
+    background:linear-gradient(to bottom,rgba(10,12,16,.92),transparent);
+    display:flex;align-items:center;padding:0 20px;gap:16px;pointer-events:none;}
+  .hud-logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.5px;}
+  .hud-sep{width:1px;height:18px;background:var(--border);}
+  .hud-title{font-size:12px;color:var(--text2);}
+  #hud-status{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:1px;}
+
+  /* ── LEGEND — bottom-left, above joystick ── */
+  #controls-legend{position:fixed;bottom:20px;left:20px;z-index:100;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;flex-direction:column;gap:8px;pointer-events:none;display:none;}
+  .legend-title{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
+  .legend-row{display:flex;align-items:center;gap:8px;}
+  .key{background:var(--bg2);border:1px solid rgba(255,255,255,.15);border-radius:4px;
+    padding:2px 6px;font-family:var(--mono);font-size:10px;color:var(--text);min-width:24px;text-align:center;}
+  .legend-label{font-size:11px;color:var(--text2);}
+
+  /* ── INFO PANEL ── */
+  #info-panel{position:fixed;top:58px;right:20px;z-index:100;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:200px;display:none;}
+  .info-title{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+  .info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .info-key{font-size:11px;color:var(--text2);}
+  .info-val{font-family:var(--mono);font-size:11px;color:var(--accent);}
+
+  /* ── ALTURA PANEL ── */
+  #height-panel{position:fixed;top:58px;left:20px;z-index:100;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    min-width:210px;display:none;flex-direction:column;gap:10px;}
+  .height-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+  .height-row{display:flex;align-items:center;gap:6px;}
+  .h-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);
+    background:var(--bg2);color:var(--text);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;line-height:1;}
+  .h-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .h-btn:active{background:rgba(79,195,247,.15);}
+  #floor-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+    color:var(--accent);font-family:var(--mono);font-size:13px;
+    padding:4px 8px;text-align:center;width:70px;outline:none;}
+  #floor-input:focus{border-color:var(--accent);}
+  .h-unit{font-family:var(--mono);font-size:11px;color:var(--text3);}
+  .h-speed{display:flex;gap:4px;}
+  .h-speed-btn{flex:1;padding:4px 0;border-radius:5px;border:1px solid var(--border);
+    background:var(--bg2);color:var(--text2);font-family:var(--mono);font-size:9px;
+    letter-spacing:.5px;cursor:pointer;text-align:center;transition:all .12s;}
+  .h-speed-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+  .h-speed-btn.active{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.12);}
+
+  /* ── MINIMAP — bottom-right, above compass ── */
+  #minimap-wrap{position:fixed;bottom:80px;right:20px;z-index:100;display:none;flex-direction:column;gap:4px;align-items:center;}
+  #minimap-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+  /* The minimap canvas is rendered by Three.js, sized via JS */
+  #minimap-canvas-wrap{position:relative;width:160px;height:160px;border-radius:10px;overflow:hidden;
+    border:1px solid var(--border);cursor:crosshair;}
+  #minimap-canvas-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
+  /* SVG overlay drawn on top for character dot + measure pts */
+  #minimap-overlay{position:absolute;top:0;left:0;width:160px;height:160px;pointer-events:none;}
+
+  /* ── TOOLBAR ── */
+  #toolbar{position:fixed;top:58px;right:20px;z-index:101;display:none;flex-direction:column;gap:6px;}
+  .tool-btn{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+    transition:all .15s;}
+  .tool-btn:hover{border-color:var(--warn);color:var(--warn);}
+  .tool-btn.active{border-color:var(--warn);color:var(--warn);background:rgba(246,173,85,.12);}
+
+  /* ── MEASURE PANEL ── */
+  #measure-panel{position:fixed;top:58px;right:64px;z-index:100;
+    background:rgba(10,12,16,.92);backdrop-filter:blur(12px);
+    border:1px solid rgba(246,173,85,.3);border-radius:10px;
+    padding:14px 16px;min-width:210px;display:none;flex-direction:column;gap:8px;}
+  .meas-title{font-family:var(--mono);font-size:9px;color:var(--warn);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
+  .meas-hint{font-size:11px;color:var(--text2);line-height:1.5;}
+  .meas-result{font-family:var(--mono);font-size:13px;color:var(--warn);margin-top:4px;}
+  .meas-breakdown{display:flex;flex-direction:column;gap:3px;margin-top:4px;}
+  .meas-row{display:flex;justify-content:space-between;}
+  .meas-k{font-size:10px;color:var(--text3);}
+  .meas-v{font-family:var(--mono);font-size:10px;color:var(--text2);}
+  .meas-clear{margin-top:6px;padding:5px 10px;background:rgba(246,173,85,.1);
+    border:1px solid rgba(246,173,85,.3);border-radius:5px;
+    color:var(--warn);font-family:var(--mono);font-size:10px;cursor:pointer;width:100%;transition:all .15s;}
+  .meas-clear:hover{background:rgba(246,173,85,.2);}
+
+  /* ── JOYSTICK — center-bottom, between legend and minimap ── */
+  #joystick-wrap{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:100;
+    display:none;
+    /* pushed left so it doesn't overlap cam-toggle which is centered too */
+    margin-left:-160px;
+  }
+  #joystick-base{width:110px;height:110px;border-radius:50%;
+    background:rgba(10,12,16,.7);backdrop-filter:blur(8px);
+    border:2px solid rgba(255,255,255,.12);
+    position:relative;touch-action:none;user-select:none;}
+  #joystick-knob{width:44px;height:44px;border-radius:50%;
+    background:rgba(79,195,247,.25);border:2px solid var(--accent);
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    pointer-events:none;transition:background .1s;}
+  #joystick-knob.active{background:rgba(79,195,247,.5);}
+
+  /* ── SPEED / CAM / COMPASS ── */
+  #speed-badge{position:fixed;top:58px;left:20px;z-index:100;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:8px;
+    padding:8px 14px;font-family:var(--mono);font-size:11px;
+    color:var(--text2);display:none;gap:8px;align-items:center;}
+  .speed-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);}
+  #cam-toggle{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:8px;display:none;}
+  .cam-btn{padding:8px 18px;font-family:var(--mono);font-size:11px;color:var(--text2);
+    cursor:pointer;border:none;background:none;transition:all .15s;border-radius:8px;}
+  .cam-btn.active{color:var(--accent);background:rgba(79,195,247,.1);}
+  #compass{position:fixed;bottom:20px;right:20px;z-index:100;width:52px;height:52px;
+    background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:50%;
+    align-items:center;justify-content:center;display:none;}
+  #crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:150;display:none;}
+
+  /* ── LOAD SCREEN ── */
+  #load-zone{position:fixed;inset:0;z-index:200;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
+  #load-zone.hidden{display:none;}
+  .load-logo{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);letter-spacing:-1px;}
+  .load-sub{font-size:13px;color:var(--text2);}
+  #drop-area{width:380px;max-width:90vw;border:2px dashed rgba(79,195,247,.3);border-radius:16px;
+    padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(79,195,247,.03);}
+  #drop-area:hover,#drop-area.drag-over{border-color:var(--accent);background:rgba(79,195,247,.07);}
+  .drop-icon{font-size:36px;margin-bottom:12px;opacity:.5;}
+  .drop-text{font-size:13px;color:var(--text2);line-height:1.6;}
+  .drop-text strong{color:var(--text);}
+  #file-input{display:none;}
+  #load-error{color:var(--danger);font-family:var(--mono);font-size:11px;
+    background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.3);
+    border-radius:6px;padding:8px 14px;display:none;max-width:380px;text-align:center;}
+  #loading-bar-wrap{position:fixed;bottom:0;left:0;right:0;height:3px;z-index:300;display:none;}
+  #loading-bar{height:100%;background:var(--accent);width:0%;transition:width .2s;}
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap"><canvas id="main-canvas"></canvas></div>
+
+<!-- HUD -->
+<div id="hud-top">
+  <span class="hud-logo">SUBSTATION<span style="color:var(--accent2)">·EXPLORER</span></span>
+  <div class="hud-sep"></div>
+  <span class="hud-title" id="model-name">Sin modelo cargado</span>
+  <span id="hud-status">LISTO</span>
+</div>
+
+<!-- Info posición -->
+<div id="info-panel">
+  <div class="info-title">Posición</div>
+  <div class="info-row"><span class="info-key">X</span><span class="info-val" id="pos-x">0.00</span></div>
+  <div class="info-row"><span class="info-key">Y</span><span class="info-val" id="pos-y">0.00</span></div>
+  <div class="info-row"><span class="info-key">Z</span><span class="info-val" id="pos-z">0.00</span></div>
+  <div class="info-row" style="margin-top:8px"><span class="info-key">Rumbo</span><span class="info-val" id="pos-heading">0°</span></div>
+</div>
+
+<!-- Altura -->
+<div id="height-panel">
+  <span class="height-label">Altura de piso</span>
+  <div class="height-row">
+    <button class="h-btn" onmousedown="startHold(-1)" onmouseup="stopHold()" onmouseleave="stopHold()" ontouchstart="startHold(-1)" ontouchend="stopHold()">−</button>
+    <input id="floor-input" type="number" value="0" step="0.5" onchange="setFloorManual(this.value)" onkeydown="if(event.key==='Enter')setFloorManual(this.value)">
+    <span class="h-unit">m</span>
+    <button class="h-btn" onmousedown="startHold(1)" onmouseup="stopHold()" onmouseleave="stopHold()" ontouchstart="startHold(1)" ontouchend="stopHold()">+</button>
+  </div>
+  <div class="h-speed">
+    <button class="h-speed-btn active" id="hspd-slow" onclick="setHSpeed('slow')">SUAVE 0.1m</button>
+    <button class="h-speed-btn" id="hspd-fast" onclick="setHSpeed('fast')">RÁPIDO 1m</button>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <button class="tool-btn" id="btn-measure" title="Medir distancia (M)" onclick="toggleMeasure()">📏</button>
+</div>
+
+<!-- Medición -->
+<div id="measure-panel">
+  <div class="meas-title">Medición de distancia</div>
+  <div class="meas-hint" id="meas-hint">Haz clic en el modelo para marcar el <strong>Punto A</strong></div>
+  <div class="meas-result" id="meas-total" style="display:none"></div>
+  <div class="meas-breakdown" id="meas-breakdown" style="display:none">
+    <div class="meas-row"><span class="meas-k">Horizontal (XZ)</span><span class="meas-v" id="meas-hz">—</span></div>
+    <div class="meas-row"><span class="meas-k">Vertical (Y)</span><span class="meas-v" id="meas-vt">—</span></div>
+    <div class="meas-row"><span class="meas-k">Total 3D</span><span class="meas-v" id="meas-3d">—</span></div>
+  </div>
+  <button class="meas-clear" onclick="clearMeasure()">✕ Limpiar puntos</button>
+</div>
+
+<!-- Leyenda controles -->
+<div id="controls-legend">
+  <div class="legend-title">Controles</div>
+  <div class="legend-row"><span class="key">↑</span><span class="key">↓</span><span class="legend-label">Avanzar / Retroceder</span></div>
+  <div class="legend-row"><span class="key">←</span><span class="key">→</span><span class="legend-label">Rotar personaje</span></div>
+  <div class="legend-row"><span class="key">Shift</span><span class="legend-label">Correr</span></div>
+  <div class="legend-row"><span class="key">🖱 Drag</span><span class="legend-label">Rotar cámara</span></div>
+  <div class="legend-row"><span class="key">R</span><span class="legend-label">Reiniciar posición</span></div>
+</div>
+
+<div id="speed-badge"><div class="speed-dot"></div><span id="speed-label">Caminando</span></div>
+
+<div id="cam-toggle">
+  <button class="cam-btn active" onclick="setCamMode('third')" id="btn-third">3ª Persona</button>
+  <button class="cam-btn" onclick="setCamMode('first')" id="btn-first">1ª Persona</button>
+</div>
+
+<!-- Minimap: Three.js renderer secundario + SVG overlay -->
+<div id="minimap-wrap">
+  <div id="minimap-label">Vista de Planta</div>
+  <div id="minimap-canvas-wrap">
+    <!-- canvas insertado por JS -->
+    <svg id="minimap-overlay" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<!-- Compass -->
+<div id="compass">
+  <svg id="compass-svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <polygon points="16,4 18,16 16,14 14,16" fill="#ef5350"/>
+    <polygon points="16,28 18,16 16,18 14,16" fill="#546e7a"/>
+    <text x="16" y="3" text-anchor="middle" fill="#ef5350" font-family="monospace" font-size="5" font-weight="bold">N</text>
+  </svg>
+</div>
+
+<div id="crosshair">
+  <svg width="20" height="20" viewBox="0 0 20 20">
+    <line x1="10" y1="2" x2="10" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="10" y1="12" x2="10" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="2" y1="10" x2="8" y2="10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="12" y1="10" x2="18" y2="10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<!-- Joystick táctil — centrado horizontalmente, fondo de pantalla -->
+<div id="joystick-wrap">
+  <div id="joystick-base">
+    <div id="joystick-knob"></div>
+  </div>
+</div>
+
+<div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+
+<div id="load-zone">
+  <div class="load-logo">SUBSTATION·EXPLORER</div>
+  <div class="load-sub">Herramienta de exploración para subestaciones eléctricas</div>
+  <div id="drop-area" onclick="document.getElementById('file-input').click()">
+    <div class="drop-icon">⚡</div>
+    <div class="drop-text">
+      <strong>Arrastra tu modelo GLB aquí</strong><br>
+      o haz click para seleccionarlo<br>
+      <span style="font-size:11px;margin-top:8px;display:block;color:var(--text3)">.glb / .gltf — con o sin compresión Draco</span>
+    </div>
+  </div>
+  <div id="load-error"></div>
+  <input type="file" id="file-input" accept=".glb,.gltf">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three":         "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// ── MAIN RENDERER ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('main-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setSize(innerWidth, innerHeight);
+
+// ── MINIMAP RENDERER (Three.js ortho, top-down) ───────────────────────────────
+const MM_SIZE = 160;
+const mmRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+mmRenderer.setPixelRatio(1);
+mmRenderer.setSize(MM_SIZE, MM_SIZE);
+mmRenderer.setClearColor(0x0a0c10, 1);
+// Inject canvas into DOM
+const mmWrap = document.getElementById('minimap-canvas-wrap');
+mmWrap.insertBefore(mmRenderer.domElement, mmWrap.querySelector('svg'));
+
+// Ortho camera looking straight down
+const mmCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
+mmCam.position.set(0, 500, 0);
+mmCam.lookAt(0, 0, 0);
+
+// Click minimap → teleport
+document.getElementById('minimap-canvas-wrap').addEventListener('click', e => {
+  if (!state.modelLoaded || !modelBox) return;
+  const rect = mmRenderer.domElement.getBoundingClientRect();
+  const nx = (e.clientX - rect.left) / MM_SIZE;
+  const ny = (e.clientY - rect.top)  / MM_SIZE;
+  const bw = modelBox.max.x - modelBox.min.x;
+  const bz = modelBox.max.z - modelBox.min.z;
+  const wx = modelBox.min.x + nx * bw;
+  const wz = modelBox.min.z + ny * bz;
+  charGroup.position.set(wx, state.modelFloor + state.floorOffset, wz);
+});
+
+function updateMinimapCamera() {
+  if (!modelBox) return;
+  const cx = (modelBox.min.x + modelBox.max.x) / 2;
+  const cz = (modelBox.min.z + modelBox.max.z) / 2;
+  const hw = (modelBox.max.x - modelBox.min.x) / 2 * 1.05;
+  const hh = (modelBox.max.z - modelBox.min.z) / 2 * 1.05;
+  const half = Math.max(hw, hh);
+  mmCam.left   = cx - half; mmCam.right  = cx + half;
+  mmCam.top    = cz + half; mmCam.bottom = cz - half;
+  mmCam.position.set(cx, modelBox.max.y + 100, cz);
+  mmCam.lookAt(cx, 0, cz);
+  mmCam.updateProjectionMatrix();
+}
+
+// SVG overlay (character dot + measure pts)
+const mmSvg = document.getElementById('minimap-overlay');
+function updateMinimapOverlay() {
+  if (!modelBox) return;
+  const bw = modelBox.max.x - modelBox.min.x;
+  const bz = modelBox.max.z - modelBox.min.z;
+  const cx = (modelBox.min.x + modelBox.max.x) / 2;
+  const cz = (modelBox.min.z + modelBox.max.z) / 2;
+  const half = Math.max(bw, bz) / 2 * 1.05;
+
+  function w2s(wx, wz) {
+    return {
+      x: ((wx - (cx - half)) / (half*2)) * MM_SIZE,
+      y: ((wz - (cz - half)) / (half*2)) * MM_SIZE
+    };
+  }
+
+  let svg = '';
+
+  // Measure line
+  if (state.measurePts.length === 2) {
+    const a = w2s(state.measurePts[0].x, state.measurePts[0].z);
+    const b = w2s(state.measurePts[1].x, state.measurePts[1].z);
+    svg += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(246,173,85,0.7)" stroke-width="1.5"/>`;
+  }
+  // Measure points
+  state.measurePts.forEach((pt, i) => {
+    const p = w2s(pt.x, pt.z);
+    svg += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${i===0?'#4fc3f7':'#f6ad55'}" stroke="#0a0c10" stroke-width="1"/>`;
+  });
+
+  // Character direction arrow
+  const pp = w2s(charGroup.position.x, charGroup.position.z);
+  const tx = pp.x + Math.sin(state.charRot) * 10;
+  const ty = pp.y + Math.cos(state.charRot) * 10;
+  svg += `<line x1="${pp.x}" y1="${pp.y}" x2="${tx}" y2="${ty}" stroke="#ef5350" stroke-width="2" stroke-linecap="round"/>`;
+  svg += `<circle cx="${pp.x}" cy="${pp.y}" r="5" fill="#ef5350" stroke="#0a0c10" stroke-width="1.5"/>`;
+
+  // N label
+  svg += `<text x="152" y="11" font-size="8" font-family="monospace" fill="rgba(239,83,80,0.7)">N</text>`;
+
+  mmSvg.innerHTML = svg;
+}
+
+// ── SCENE ────────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0c10);
+scene.fog = new THREE.Fog(0x0a0c10, 80, 200);
+
+// ── CAMERA ───────────────────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.01, 500);
+camera.position.set(0, 5, 10);
+
+// ── LIGHTS ───────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
+sun.position.set(30, 60, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 300;
+sun.shadow.camera.left = -80; sun.shadow.camera.right = 80;
+sun.shadow.camera.top = 80;   sun.shadow.camera.bottom = -80;
+sun.shadow.bias = -0.001;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x4fc3f7, 0.4); fill.position.set(-20, 10, -30); scene.add(fill);
+scene.add(new THREE.HemisphereLight(0x334466, 0x111120, 0.5));
+
+// ── GRID ─────────────────────────────────────────────────────────────────────
+const gridHelper = new THREE.GridHelper(200, 80, 0x1a2233, 0x111820);
+scene.add(gridHelper);
+
+// ── CHARACTER ────────────────────────────────────────────────────────────────
+const charGroup = new THREE.Group();
+scene.add(charGroup);
+(function buildCharacter() {
+  const bodyMat = new THREE.MeshStandardMaterial({ color:0x4fc3f7, roughness:0.5, metalness:0.1 });
+  const headMat = new THREE.MeshStandardMaterial({ color:0xffe0b2, roughness:0.8 });
+  const legMat  = new THREE.MeshStandardMaterial({ color:0x263238, roughness:0.8 });
+  const footMat = new THREE.MeshStandardMaterial({ color:0x1a1a2e, roughness:0.9 });
+  const hatMat  = new THREE.MeshStandardMaterial({ color:0xffca28, roughness:0.5 });
+  function part(geo, mat, px, py, pz, rz) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(px||0,py||0,pz||0);
+    if(rz) m.rotation.z=rz;
+    m.castShadow=true; charGroup.add(m); return m;
+  }
+  part(new THREE.SphereGeometry(0.18,12,10), headMat, 0, 1.72);
+  part(new THREE.CylinderGeometry(0.22,0.2,0.08,12), hatMat, 0, 1.87);
+  part(new THREE.BoxGeometry(0.22,0.06,0.1), new THREE.MeshStandardMaterial({color:0xffca28,roughness:0.3,metalness:0.5}), 0, 1.77, 0.14);
+  part(new THREE.BoxGeometry(0.38,0.52,0.22), bodyMat, 0, 1.22);
+  const armL=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8), bodyMat,-0.26,1.2,0, 0.3);
+  const armR=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8), bodyMat, 0.26,1.2,0,-0.3);
+  const legL=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8), legMat,-0.1,0.71);
+  const legR=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8), legMat, 0.1,0.71);
+  part(new THREE.BoxGeometry(0.12,0.08,0.2), footMat,-0.1,0.44,0.04);
+  part(new THREE.BoxGeometry(0.12,0.08,0.2), footMat, 0.1,0.44,0.04);
+  charGroup.userData.armL=armL; charGroup.userData.armR=armR;
+  charGroup.userData.legL=legL; charGroup.userData.legR=legR;
+})();
+
+// ── LOADERS ──────────────────────────────────────────────────────────────────
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+dracoLoader.setDecoderConfig({ type: 'js' });
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  modelLoaded:false, charRot:0, camMode:'third',
+  keys:{}, walkCycle:0, modelFloor:0, floorOffset:0,
+  camPitch:0.35,
+  mouse:{down:false, x:0, y:0},
+  joy:{active:false, id:null, dx:0, dy:0, startX:0, startY:0},
+  measuring:false, measurePts:[], measureMarkers:[], measureLine:null
+};
+const camCurrent = new THREE.Vector3();
+const camTarget  = new THREE.Vector3();
+const raycaster  = new THREE.Raycaster();
+let modelBox = null;
+
+// ── KEYBOARD ─────────────────────────────────────────────────────────────────
+window.addEventListener('keydown', e => {
+  state.keys[e.code] = true;
+  if (e.code==='KeyR') { charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
+  if (e.code==='KeyM') toggleMeasure();
+});
+window.addEventListener('keyup', e => { state.keys[e.code]=false; });
+
+// ── MOUSE DRAG ────────────────────────────────────────────────────────────────
+canvas.addEventListener('mousedown', e => {
+  if (state.measuring) return;
+  state.mouse.down=true; state.mouse.x=e.clientX; state.mouse.y=e.clientY;
+  canvas.classList.add('dragging');
+});
+window.addEventListener('mouseup', () => { state.mouse.down=false; canvas.classList.remove('dragging'); });
+window.addEventListener('mousemove', e => {
+  if (!state.mouse.down||!state.modelLoaded) return;
+  const dx=e.clientX-state.mouse.x, dy=e.clientY-state.mouse.y;
+  state.mouse.x=e.clientX; state.mouse.y=e.clientY;
+  state.charRot -= dx*0.005; charGroup.rotation.y=state.charRot;
+  state.camPitch = Math.max(-0.05,Math.min(1.3,state.camPitch+dy*0.004));
+});
+
+// ── FLOOR OFFSET ─────────────────────────────────────────────────────────────
+let hSpeed = 0.1;   // paso suave por defecto
+let holdTimer = null;
+
+window.setHSpeed = function(mode) {
+  hSpeed = mode === 'fast' ? 1.0 : 0.1;
+  document.getElementById('hspd-slow').classList.toggle('active', mode === 'slow');
+  document.getElementById('hspd-fast').classList.toggle('active', mode === 'fast');
+};
+
+function applyFloor(val) {
+  state.floorOffset = Math.round(val * 100) / 100;  // evitar drift de float
+  document.getElementById('floor-input').value = state.floorOffset.toFixed(2);
+}
+
+window.startHold = function(dir) {
+  applyFloor(state.floorOffset + dir * hSpeed);  // primer paso inmediato
+  holdTimer = setInterval(() => applyFloor(state.floorOffset + dir * hSpeed), 150);
+};
+window.stopHold = function() { clearInterval(holdTimer); holdTimer = null; };
+
+window.setFloorManual = function(val) {
+  const n = parseFloat(val);
+  if (!isNaN(n)) applyFloor(n);
+};
+
+// compat alias (usado por onModelReady al resetear)
+window.setFloorOffset = function(val) { applyFloor(parseFloat(val)); };
+
+// ── JOYSTICK ─────────────────────────────────────────────────────────────────
+const joystickBase = document.getElementById('joystick-base');
+const joystickKnob = document.getElementById('joystick-knob');
+const JR = 33;
+
+joystickBase.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t=e.changedTouches[0], r=joystickBase.getBoundingClientRect();
+  state.joy.active=true; state.joy.id=t.identifier;
+  state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2;
+  joystickKnob.classList.add('active');
+}, {passive:false});
+
+window.addEventListener('touchmove', e => {
+  if (!state.joy.active) return;
+  for (const t of e.changedTouches) {
+    if (t.identifier!==state.joy.id) continue;
+    let dx=t.clientX-state.joy.startX, dy=t.clientY-state.joy.startY;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if (d>JR) {dx=dx/d*JR; dy=dy/d*JR;}
+    state.joy.dx=dx/JR; state.joy.dy=dy/JR;
+    joystickKnob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+  }
+},{passive:true});
+
+function resetJoy() { state.joy.active=false; state.joy.dx=0; state.joy.dy=0; joystickKnob.style.transform='translate(-50%,-50%)'; joystickKnob.classList.remove('active'); }
+window.addEventListener('touchend',    e=>{for(const t of e.changedTouches) if(t.identifier===state.joy.id) resetJoy();});
+window.addEventListener('touchcancel', e=>{for(const t of e.changedTouches) if(t.identifier===state.joy.id) resetJoy();});
+
+// ── MEASURE ───────────────────────────────────────────────────────────────────
+const markerGeo  = new THREE.SphereGeometry(0.08,10,10);
+const markerMatA = new THREE.MeshBasicMaterial({color:0x4fc3f7,depthTest:false});
+const markerMatB = new THREE.MeshBasicMaterial({color:0xf6ad55,depthTest:false});
+const lineMat    = new THREE.LineBasicMaterial({color:0xf6ad55,depthTest:false,linewidth:2});
+
+window.toggleMeasure = function() {
+  state.measuring=!state.measuring;
+  document.getElementById('btn-measure').classList.toggle('active',state.measuring);
+  document.getElementById('measure-panel').style.display=state.measuring?'flex':'none';
+  canvas.classList.toggle('measuring',state.measuring);
+  if (!state.measuring) clearMeasure();
+};
+
+window.clearMeasure = function() {
+  state.measurePts=[];
+  state.measureMarkers.forEach(m=>scene.remove(m)); state.measureMarkers=[];
+  if (state.measureLine){scene.remove(state.measureLine);state.measureLine=null;}
+  document.getElementById('meas-hint').innerHTML='Haz clic en el modelo para marcar el <strong>Punto A</strong>';
+  document.getElementById('meas-total').style.display='none';
+  document.getElementById('meas-breakdown').style.display='none';
+};
+
+canvas.addEventListener('click', e => {
+  if (!state.measuring||!state.modelLoaded) return;
+  if (state.measurePts.length>=2) clearMeasure();
+  const rect=canvas.getBoundingClientRect();
+  const ndx=((e.clientX-rect.left)/rect.width)*2-1;
+  const ndy=-((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(new THREE.Vector2(ndx,ndy),camera);
+  const model=scene.getObjectByName('__model__');
+  if (!model) return;
+  const hits=raycaster.intersectObject(model,true);
+  if (!hits.length) return;
+  const pt=hits[0].point;
+  state.measurePts.push({x:pt.x,y:pt.y,z:pt.z});
+  const mat=state.measurePts.length===1?markerMatA:markerMatB;
+  const mesh=new THREE.Mesh(markerGeo,mat);
+  mesh.position.copy(pt); mesh.renderOrder=999; scene.add(mesh);
+  state.measureMarkers.push(mesh);
+  if (state.measurePts.length===1) {
+    document.getElementById('meas-hint').innerHTML='Ahora haz clic para marcar el <strong>Punto B</strong>';
+  } else {
+    const A=state.measurePts[0],B=state.measurePts[1];
+    const dx=B.x-A.x,dy=B.y-A.y,dz=B.z-A.z;
+    const hz=Math.sqrt(dx*dx+dz*dz), vt=Math.abs(dy), tot=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(A.x,A.y,A.z),new THREE.Vector3(B.x,B.y,B.z)]);
+    state.measureLine=new THREE.Line(geo,lineMat); state.measureLine.renderOrder=999; scene.add(state.measureLine);
+    document.getElementById('meas-hint').textContent='Clic para medir de nuevo';
+    document.getElementById('meas-total').textContent=`📐 ${tot.toFixed(3)} m`; document.getElementById('meas-total').style.display='block';
+    document.getElementById('meas-hz').textContent=hz.toFixed(3)+' m';
+    document.getElementById('meas-vt').textContent=vt.toFixed(3)+' m';
+    document.getElementById('meas-3d').textContent=tot.toFixed(3)+' m';
+    document.getElementById('meas-breakdown').style.display='flex';
+  }
+});
+
+// ── MODEL READY ───────────────────────────────────────────────────────────────
+function showError(msg){const el=document.getElementById('load-error');el.textContent='⚠ '+msg;el.style.display='block';}
+
+function onModelReady(gltf, name) {
+  const prev=scene.getObjectByName('__model__'); if(prev) scene.remove(prev);
+  const model=gltf.scene; model.name='__model__';
+  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+  scene.add(model);
+
+  const box=new THREE.Box3().setFromObject(model);
+  const center=box.getCenter(new THREE.Vector3()), size=box.getSize(new THREE.Vector3());
+  modelBox=box;
+
+  state.modelFloor=box.min.y; state.floorOffset=0;
+  document.getElementById('floor-input').value='0.00';
+
+  charGroup.position.set(center.x,box.min.y,center.z);
+  state.charRot=0; charGroup.rotation.y=0;
+  gridHelper.position.y=box.min.y-0.01;
+
+  const maxDim=Math.max(size.x,size.z);
+  const ip=new THREE.Vector3(center.x+maxDim*.8,box.min.y+size.y*.7,center.z+maxDim*.8);
+  camera.position.copy(ip); camCurrent.copy(ip); camera.lookAt(center);
+
+  sun.shadow.camera.far=Math.max(size.x,size.y,size.z)*4;
+  sun.shadow.camera.updateProjectionMatrix();
+
+
+
+  updateMinimapCamera();
+
+  state.modelLoaded=true;
+  document.getElementById('model-name').textContent=name;
+  document.getElementById('hud-status').textContent='EXPLORANDO';
+
+  const toFlex=['controls-legend','speed-badge','cam-toggle','compass','minimap-wrap','toolbar','joystick-wrap','height-panel'];
+  toFlex.forEach(id=>document.getElementById(id).style.display='flex');
+  document.getElementById('info-panel').style.display='block';
+  document.getElementById('load-zone').classList.add('hidden');
+  document.getElementById('loading-bar-wrap').style.display='none';
+  document.getElementById('loading-bar').style.width='0%';
+}
+
+// ── FILE LOAD ────────────────────────────────────────────────────────────────
+function loadFromFile(file){
+  const bar=document.getElementById('loading-bar'),barWrap=document.getElementById('loading-bar-wrap'),status=document.getElementById('hud-status');
+  const name=file.name.replace(/\.(glb|gltf)$/i,'');
+  document.getElementById('load-error').style.display='none';
+  barWrap.style.display='block'; bar.style.width='5%'; status.textContent='LEYENDO ARCHIVO...';
+  const r=new FileReader();
+  r.onprogress=e=>{if(e.lengthComputable)bar.style.width=(e.loaded/e.total*55+5)+'%';};
+  r.onload=ev=>{
+    bar.style.width='65%'; status.textContent='PROCESANDO MODELO...';
+    gltfLoader.parse(ev.target.result,'',
+      gltf=>{bar.style.width='95%';onModelReady(gltf,name);},
+      err=>{showError('Error: '+(err.message||String(err)));barWrap.style.display='none';status.textContent='ERROR';}
+    );
+  };
+  r.onerror=()=>{showError('No se pudo leer el archivo.');barWrap.style.display='none';status.textContent='ERROR';};
+  r.readAsArrayBuffer(file);
+}
+
+const dropArea=document.getElementById('drop-area'), fileInput=document.getElementById('file-input');
+dropArea.addEventListener('dragover',e=>{e.preventDefault();dropArea.classList.add('drag-over');});
+dropArea.addEventListener('dragleave',()=>dropArea.classList.remove('drag-over'));
+dropArea.addEventListener('drop',e=>{
+  e.preventDefault();dropArea.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f&&(f.name.endsWith('.glb')||f.name.endsWith('.gltf')))loadFromFile(f);
+  else showError('Por favor arrastra un archivo .glb o .gltf');
+});
+fileInput.addEventListener('change',e=>{const f=e.target.files[0];if(f)loadFromFile(f);fileInput.value='';});
+
+window.setCamMode=function(mode){
+  state.camMode=mode;
+  document.getElementById('btn-third').classList.toggle('active',mode==='third');
+  document.getElementById('btn-first').classList.toggle('active',mode==='first');
+  document.getElementById('crosshair').style.display=mode==='first'?'block':'none';
+};
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// ── LOOP ─────────────────────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+
+  if(state.modelLoaded){
+    const floorY=state.modelFloor+state.floorOffset;
+    const running=state.keys['ShiftLeft']||state.keys['ShiftRight'];
+    const speed=running?12:5;
+    let moving=false;
+
+    if(state.keys['ArrowLeft']) {state.charRot+=2.2*dt; charGroup.rotation.y=state.charRot;}
+    if(state.keys['ArrowRight']){state.charRot-=2.2*dt; charGroup.rotation.y=state.charRot;}
+
+    const dir=new THREE.Vector3(Math.sin(state.charRot),0,Math.cos(state.charRot));
+    if(state.keys['ArrowUp'])  {charGroup.position.addScaledVector(dir, speed*dt);    moving=true;}
+    if(state.keys['ArrowDown']){charGroup.position.addScaledVector(dir,-speed*.6*dt); moving=true;}
+
+    if(state.joy.active&&(Math.abs(state.joy.dx)>0.1||Math.abs(state.joy.dy)>0.1)){
+      state.charRot-=state.joy.dx*2.5*dt; charGroup.rotation.y=state.charRot;
+      if(Math.abs(state.joy.dy)>0.1){charGroup.position.addScaledVector(dir,-state.joy.dy*speed*dt);moving=true;}
+    }
+
+    if(moving){
+      state.walkCycle+=(running?8:4)*dt;
+      charGroup.position.y=floorY+Math.abs(Math.sin(state.walkCycle*2))*0.04;
+      const sw=Math.sin(state.walkCycle)*0.35;
+      charGroup.userData.legL.rotation.x= sw; charGroup.userData.legR.rotation.x=-sw;
+      charGroup.userData.armL.rotation.x=-sw*.5; charGroup.userData.armR.rotation.x=sw*.5;
+    } else {
+      charGroup.position.y=floorY;
+      charGroup.userData.legL.rotation.x*=0.85; charGroup.userData.legR.rotation.x*=0.85;
+      charGroup.userData.armL.rotation.x*=0.85; charGroup.userData.armR.rotation.x*=0.85;
+    }
+
+    document.getElementById('speed-label').textContent=running?'Corriendo':'Caminando';
+
+    const pos=charGroup.position;
+    if(state.camMode==='third'){
+      const dist=6,pitch=state.camPitch;
+      camTarget.set(pos.x-Math.sin(state.charRot)*dist*Math.cos(pitch),pos.y+dist*Math.sin(pitch),pos.z-Math.cos(state.charRot)*dist*Math.cos(pitch));
+      camCurrent.lerp(camTarget,Math.min(10*dt,1));
+      camera.position.copy(camCurrent); camera.lookAt(pos.x,pos.y+1.0,pos.z);
+    } else {
+      camera.position.set(pos.x+Math.sin(state.charRot)*.3,pos.y+1.65,pos.z+Math.cos(state.charRot)*.3);
+      const lh=new THREE.Vector3(pos.x+Math.sin(state.charRot)*10,pos.y+1.65,pos.z+Math.cos(state.charRot)*10);
+      lh.y+=(state.camPitch-0.35)*10; camera.lookAt(lh);
+    }
+
+    document.getElementById('pos-x').textContent=pos.x.toFixed(2);
+    document.getElementById('pos-y').textContent=pos.y.toFixed(2);
+    document.getElementById('pos-z').textContent=pos.z.toFixed(2);
+    document.getElementById('pos-heading').textContent=(((-state.charRot*180/Math.PI)%360+360)%360).toFixed(0)+'°';
+    document.getElementById('compass-svg').style.transform=`rotate(${state.charRot}rad)`;
+
+    // Minimap: render scene with ortho cam, then update SVG overlay
+    mmRenderer.render(scene, mmCam);
+    updateMinimapOverlay();
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ── POSTMESSAGE LISTENER (recibe GLB desde la plataforma padre) ───────────────
+// La ventana padre envía: { type: 'LOAD_GLB', buffer: ArrayBuffer, name: string }
+// También acepta: { type: 'LOAD_GLB', url: string, name: string }  (para URLs públicas)
+window.addEventListener('message', async (event) => {
+  const d = event.data;
+  if (!d || d.type !== 'LOAD_GLB') return;
+
+  const bar     = document.getElementById('loading-bar');
+  const barWrap = document.getElementById('loading-bar-wrap');
+  const status  = document.getElementById('hud-status');
+  const name    = (d.name || 'Modelo').replace(/\.(glb|gltf)$/i, '');
+
+  document.getElementById('load-error').style.display = 'none';
+  barWrap.style.display = 'block';
+  bar.style.width = '10%';
+  status.textContent = 'RECIBIENDO MODELO...';
+
+  // Confirm receipt to sender
+  event.source && event.source.postMessage({ type: 'EXPLORER_READY' }, '*');
+
+  try {
+    let buffer = d.buffer;
+
+    // If URL was sent instead of buffer, fetch it
+    if (!buffer && d.url) {
+      status.textContent = 'DESCARGANDO...';
+      const resp = await fetch(d.url);
+      buffer = await resp.arrayBuffer();
+    }
+
+    if (!buffer) { showError('No se recibió datos del modelo.'); barWrap.style.display='none'; return; }
+
+    bar.style.width = '60%';
+    status.textContent = 'PROCESANDO MODELO...';
+
+    gltfLoader.parse(
+      buffer, '',
+      gltf => { bar.style.width = '95%'; onModelReady(gltf, name); },
+      err  => { showError('Error: ' + (err.message || String(err))); barWrap.style.display='none'; status.textContent='ERROR'; }
+    );
+  } catch(err) {
+    showError('Error al recibir modelo: ' + (err.message || String(err)));
+    barWrap.style.display = 'none';
+    status.textContent = 'ERROR';
+  }
+});
+
+// Notify parent that the explorer is ready to receive
+window.addEventListener('load', () => {
+  if (window.opener) window.opener.postMessage({ type: 'EXPLORER_READY' }, '*');
+  if (window.parent !== window) window.parent.postMessage({ type: 'EXPLORER_READY' }, '*');
+});
+
+animate();
+</script>
+</body>
+</html>
