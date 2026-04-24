@@ -426,6 +426,11 @@
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
     Ajustes
   </button>
+  <div class="topbar-sep"></div>
+  <button class="tb-btn" id="btn-open-explorer" data-tip="Explorador de subestación" onclick="abrirExplorador()" style="border-color:rgba(72,187,120,0.4);color:var(--accent2);">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Explorador
+  </button>
   <input type="file" id="file-input-hidden" accept=".glb,.gltf" style="display:none">
 </div>
 
@@ -1481,7 +1486,15 @@ document.getElementById('btn-load-file').addEventListener('click', () => {
 
 document.getElementById('file-input-hidden').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+  if(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      window._lastModelBuffer = ev.target.result.slice(0);
+      window._lastModelName   = file.name;
+    };
+    reader.readAsArrayBuffer(file);
+    window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+  }
 });
 
 document.getElementById('btn-refresh-drive').addEventListener('click', refreshDrive);
@@ -1496,7 +1509,15 @@ document.getElementById('w-btn-drive').addEventListener('click', () => {
 
 document.getElementById('w-file-input').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(file) window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+  if(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      window._lastModelBuffer = ev.target.result.slice(0);
+      window._lastModelName   = file.name;
+    };
+    reader.readAsArrayBuffer(file);
+    window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
+  }
 });
 
 document.getElementById('w-btn-example').addEventListener('click', () => {
@@ -1511,6 +1532,12 @@ window.addEventListener('drop', e => {
   document.getElementById('drop-overlay').classList.remove('visible');
   const file = e.dataTransfer.files[0];
   if(file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      window._lastModelBuffer = ev.target.result.slice(0);
+      window._lastModelName   = file.name;
+    };
+    reader.readAsArrayBuffer(file);
     window.loadModel(URL.createObjectURL(file), file.name.replace(/\.(glb|gltf)$/i,''));
   }
 });
@@ -1664,6 +1691,69 @@ function findMeshByUUID(uuid) {
 }
 
 document.getElementById('search-objects').addEventListener('input', () => renderObjectList());
+
+// ── EXPLORADOR DE SUBESTACIÓN ─────────────────────────────────────────────────
+(function() {
+  const EXPLORER_URL = './subestacion-explorer.html';
+  const POPUP_W = Math.min(window.screen.width  * 0.92, 1400);
+  const POPUP_H = Math.min(window.screen.height * 0.92, 900);
+
+  let explorerWindow = null;
+  let pendingPayload  = null;
+
+  window.addEventListener('message', (event) => {
+    if (!event.data || event.data.type !== 'EXPLORER_READY') return;
+    if (!pendingPayload || !explorerWindow) return;
+    explorerWindow.postMessage(pendingPayload, '*');
+    pendingPayload = null;
+  });
+
+  window.openExplorer = function(arrayBuffer, modelName) {
+    _launchPopup({ type: 'LOAD_GLB', buffer: arrayBuffer, name: modelName || 'Modelo' });
+  };
+
+  window.openExplorerFromURL = function(url, modelName) {
+    _launchPopup({ type: 'LOAD_GLB', url: url, name: modelName || 'Modelo' });
+  };
+
+  function _launchPopup(payload) {
+    pendingPayload = payload;
+    const left = Math.round((window.screen.width  - POPUP_W) / 2);
+    const top  = Math.round((window.screen.height - POPUP_H) / 2);
+    const opts = `width=${POPUP_W},height=${POPUP_H},left=${left},top=${top},resizable=yes,scrollbars=no`;
+
+    if (explorerWindow && !explorerWindow.closed) {
+      explorerWindow.focus();
+      explorerWindow.postMessage(payload, '*');
+      pendingPayload = null;
+      return;
+    }
+
+    explorerWindow = window.open(EXPLORER_URL, 'SubstationExplorer', opts);
+
+    if (!explorerWindow) {
+      alert('El navegador bloqueó la ventana emergente.\nPermite los popups para este sitio e inténtalo de nuevo.');
+      pendingPayload = null;
+      return;
+    }
+
+    setTimeout(() => {
+      if (pendingPayload && explorerWindow && !explorerWindow.closed) {
+        explorerWindow.postMessage(pendingPayload, '*');
+        pendingPayload = null;
+      }
+    }, 3000);
+  }
+})();
+
+window.abrirExplorador = function() {
+  if (!window._lastModelBuffer) {
+    alert('Primero carga un modelo GLB en el visualizador.');
+    return;
+  }
+  const bufferCopy = window._lastModelBuffer.slice(0);
+  openExplorer(bufferCopy, window._lastModelName || 'Modelo');
+};
 
 // ── BOOT ────────────────────────────────────────────────────────────────────
 initMain();
