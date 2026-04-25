@@ -3,15 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Explorador de Subestación</title>
+<title>Explorador de Subestación + Módulo Grúas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#0a0c10;--bg2:#0f1219;--border:rgba(255,255,255,0.07);
+    --bg:#0a0c10;--bg2:#0f1219;--bg3:#181c24;--border:rgba(255,255,255,0.07);
     --accent:#4fc3f7;--accent2:#81c784;--danger:#ef5350;--warn:#f6ad55;
+    --crane:#f6ad55;
     --text:#e0e8f0;--text2:#8fa0b0;--text3:#3a4a5a;
     --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+    --panel-w:300px;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;height:100vh;width:100vw;}
@@ -19,17 +21,151 @@
   #main-canvas{display:block;width:100%!important;height:100%!important;cursor:grab;}
   #main-canvas.dragging{cursor:grabbing;}
   #main-canvas.measuring{cursor:crosshair;}
+  #main-canvas.pick-mode{cursor:crosshair;}
+  #main-canvas.free-cam{cursor:all-scroll;}
 
   /* ── HUD TOP ── */
   #hud-top{position:fixed;top:0;left:0;right:0;height:48px;z-index:100;
-    background:linear-gradient(to bottom,rgba(10,12,16,.92),transparent);
-    display:flex;align-items:center;padding:0 20px;gap:16px;pointer-events:none;}
+    background:linear-gradient(to bottom,rgba(10,12,16,.96),transparent);
+    display:flex;align-items:center;padding:0 16px;gap:12px;pointer-events:none;}
   .hud-logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.5px;}
   .hud-sep{width:1px;height:18px;background:var(--border);}
   .hud-title{font-size:12px;color:var(--text2);}
   #hud-status{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:1px;}
 
-  /* ── LEGEND — bottom-left, above joystick ── */
+  /* ── CRANE PANEL (right side, slides in) ── */
+  #crane-panel{
+    position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);z-index:110;
+    background:rgba(10,12,16,0.96);backdrop-filter:blur(16px);
+    border-left:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+    transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #crane-panel.open{transform:translateX(0);}
+
+  /* Panel topbar */
+  #crane-panel-top{
+    height:48px;display:flex;align-items:center;gap:10px;padding:0 14px;
+    border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  .cp-logo{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--crane);letter-spacing:.5px;}
+  #crane-count-badge{
+    font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--bg3);
+    border:1px solid var(--border);border-radius:10px;padding:2px 7px;
+  }
+  .cp-close{margin-left:auto;width:28px;height:28px;border-radius:6px;
+    border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+    transition:all .12s;}
+  .cp-close:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* Panel sections */
+  .cp-section{border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
+  .cp-section-title{
+    font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px;
+  }
+  .cp-section-title::before{content:'';display:block;width:3px;height:3px;border-radius:50%;background:var(--crane);}
+
+  /* Crane list */
+  #crane-list{display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto;}
+  .crane-item{
+    display:flex;align-items:center;gap:8px;padding:6px 8px;
+    border:1px solid var(--border);border-radius:5px;cursor:pointer;
+    transition:all .15s;background:var(--bg2);
+  }
+  .crane-item:hover{border-color:rgba(246,173,85,.3);}
+  .crane-item.active{border-color:var(--crane);background:rgba(246,173,85,.06);}
+  .crane-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .crane-name{font-family:var(--mono);font-size:11px;flex:1;}
+  .crane-payload{font-family:var(--mono);font-size:9px;color:var(--accent2);flex-shrink:0;}
+  .crane-del{color:var(--text3);font-size:11px;padding:2px 4px;cursor:pointer;transition:color .15s;}
+  .crane-del:hover{color:var(--danger);}
+
+  /* Add crane button */
+  #btn-add-crane{
+    width:100%;padding:7px 0;background:rgba(246,173,85,.08);border:1px solid rgba(246,173,85,.25);
+    border-radius:5px;color:var(--crane);font-family:var(--mono);font-size:10px;letter-spacing:.5px;
+    cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+    margin-top:6px;
+  }
+  #btn-add-crane:hover{background:rgba(246,173,85,.15);border-color:var(--crane);}
+
+  /* Pick target section */
+  #pick-target-section{background:rgba(246,173,85,.04);}
+  #pick-target-display{
+    font-family:var(--mono);font-size:11px;color:var(--crane);
+    padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+    margin-bottom:6px;min-height:28px;display:flex;align-items:center;gap:6px;
+  }
+  #pick-target-display .pt-label{color:var(--text3);font-size:9px;}
+  #pick-target-display .pt-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #pick-target-display .pt-badge{
+    font-size:8px;padding:2px 6px;border-radius:8px;border:1px solid;flex-shrink:0;
+  }
+  #pick-target-display .pt-badge.single{color:#81c784;border-color:rgba(129,199,132,.4);}
+  #pick-target-display .pt-badge.assembly{color:#4fc3f7;border-color:rgba(79,195,247,.4);}
+  .pick-btns{display:flex;gap:4px;}
+  .pick-btn{
+    flex:1;padding:6px 4px;background:var(--bg2);border:1px solid var(--border);
+    border-radius:5px;color:var(--text2);font-family:var(--mono);font-size:9px;
+    cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .pick-btn:hover{border-color:rgba(79,195,247,.4);color:var(--accent);}
+  .pick-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,195,247,.08);}
+
+  /* Attach/detach */
+  #btn-attach-crane{
+    width:100%;padding:7px 0;border-radius:5px;font-family:var(--mono);font-size:10px;
+    cursor:pointer;transition:all .15s;border:1px solid;margin-top:6px;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  #btn-attach-crane.detach{
+    background:rgba(239,83,80,.08);border-color:rgba(239,83,80,.35);color:var(--danger);
+  }
+  #btn-attach-crane.attach{
+    background:rgba(246,173,85,.08);border-color:rgba(246,173,85,.35);color:var(--crane);
+  }
+  #btn-attach-crane:hover.detach{background:rgba(239,83,80,.18);}
+  #btn-attach-crane:hover.attach{background:rgba(246,173,85,.18);}
+
+  /* Controls grid */
+  .ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+  .ctrl-btn{
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:7px 4px;background:var(--bg2);border:1px solid var(--border);
+    border-radius:5px;cursor:pointer;font-family:var(--mono);font-size:9px;
+    color:var(--text2);transition:all .15s;user-select:none;-webkit-user-select:none;
+  }
+  .ctrl-btn:hover{border-color:rgba(246,173,85,.35);color:var(--crane);background:rgba(246,173,85,.05);}
+  .ctrl-btn.pressed,.ctrl-btn:active{background:rgba(246,173,85,.12);border-color:var(--crane);color:var(--crane);}
+  .ctrl-btn.full{grid-column:1/-1;}
+
+  /* Sliders */
+  .slider-row{display:flex;flex-direction:column;gap:4px;margin-bottom:6px;}
+  .slider-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);}
+  .slider-label span{font-family:var(--mono);font-size:10px;color:var(--crane);}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:3px;
+    background:var(--bg3);border-radius:2px;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--crane);cursor:pointer;border:none;
+    box-shadow:0 0 0 2px rgba(246,173,85,.2);
+  }
+
+  /* Log */
+  #crane-log{flex:1;overflow-y:auto;padding:8px 14px;}
+  .log-entry{
+    font-family:var(--mono);font-size:9px;color:var(--text3);
+    padding:2px 0;border-bottom:1px solid rgba(255,255,255,.02);
+    display:flex;gap:8px;
+  }
+  .log-entry .ts{color:var(--accent2);flex-shrink:0;}
+  .log-entry .msg{color:var(--text2);}
+
+  /* ── LEGEND — bottom-left ── */
   #controls-legend{position:fixed;bottom:20px;left:20px;z-index:100;
     background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
     border:1px solid var(--border);border-radius:10px;
@@ -41,7 +177,7 @@
   .legend-label{font-size:11px;color:var(--text2);}
 
   /* ── INFO PANEL ── */
-  #info-panel{position:fixed;top:58px;right:20px;z-index:100;
+  #info-panel{position:fixed;top:58px;left:20px;z-index:100;
     background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
     border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:200px;display:none;}
   .info-title{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
@@ -73,30 +209,33 @@
   .h-speed-btn:hover{border-color:var(--accent2);color:var(--accent2);}
   .h-speed-btn.active{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.12);}
 
-  /* ── MINIMAP — bottom-right, above compass ── */
+  /* ── MINIMAP ── */
   #minimap-wrap{position:fixed;bottom:80px;right:20px;z-index:100;display:none;flex-direction:column;gap:4px;align-items:center;}
+  #minimap-wrap.panel-open{right:calc(var(--panel-w) + 20px);}
   #minimap-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
-  /* The minimap canvas is rendered by Three.js, sized via JS */
   #minimap-canvas-wrap{position:relative;width:160px;height:160px;border-radius:10px;overflow:hidden;
     border:1px solid var(--border);cursor:crosshair;}
   #minimap-canvas-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
-  /* SVG overlay drawn on top for character dot + measure pts */
   #minimap-overlay{position:absolute;top:0;left:0;width:160px;height:160px;pointer-events:none;}
 
   /* ── TOOLBAR ── */
   #toolbar{position:fixed;top:58px;right:20px;z-index:101;display:none;flex-direction:column;gap:6px;}
+  #toolbar.panel-open{right:calc(var(--panel-w) + 20px);}
   .tool-btn{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);
     background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
     color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
     transition:all .15s;}
   .tool-btn:hover{border-color:var(--warn);color:var(--warn);}
   .tool-btn.active{border-color:var(--warn);color:var(--warn);background:rgba(246,173,85,.12);}
+  .tool-btn.crane-tool{font-size:14px;}
+  .tool-btn.crane-tool:hover,.tool-btn.crane-tool.active{border-color:var(--crane);color:var(--crane);background:rgba(246,173,85,.12);}
 
   /* ── MEASURE PANEL ── */
   #measure-panel{position:fixed;top:58px;right:64px;z-index:100;
     background:rgba(10,12,16,.92);backdrop-filter:blur(12px);
     border:1px solid rgba(246,173,85,.3);border-radius:10px;
     padding:14px 16px;min-width:210px;display:none;flex-direction:column;gap:8px;}
+  #measure-panel.panel-open{right:calc(var(--panel-w) + 64px);}
   .meas-title{font-family:var(--mono);font-size:9px;color:var(--warn);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
   .meas-hint{font-size:11px;color:var(--text2);line-height:1.5;}
   .meas-result{font-family:var(--mono);font-size:13px;color:var(--warn);margin-top:4px;}
@@ -109,16 +248,22 @@
     color:var(--warn);font-family:var(--mono);font-size:10px;cursor:pointer;width:100%;transition:all .15s;}
   .meas-clear:hover{background:rgba(246,173,85,.2);}
 
-  /* ── JOYSTICK — center-bottom, between legend and minimap ── */
+  /* ── PICK OVERLAY ── */
+  #pick-overlay{
+    display:none;position:fixed;top:48px;left:0;right:0;bottom:26px;z-index:80;
+    border:2px dashed rgba(79,195,247,.4);pointer-events:none;
+  }
+  #pick-overlay.active{display:block;pointer-events:all;cursor:crosshair;}
+  #pick-label{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:var(--mono);font-size:12px;color:var(--accent);
+    text-align:center;pointer-events:none;background:rgba(10,12,16,.85);
+    padding:10px 18px;border-radius:8px;border:1px solid rgba(79,195,247,.3);
+  }
+
+  /* ── JOYSTICK ── */
   #joystick-wrap{
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:100;
-    display:none;
-    /* pushed left so it doesn't overlap cam-toggle which is centered too */
-    margin-left:-160px;
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;display:none;margin-left:-160px;
   }
   #joystick-base{width:110px;height:110px;border-radius:50%;
     background:rgba(10,12,16,.7);backdrop-filter:blur(8px);
@@ -147,7 +292,20 @@
     background:rgba(10,12,16,.85);backdrop-filter:blur(12px);
     border:1px solid var(--border);border-radius:50%;
     align-items:center;justify-content:center;display:none;}
+  #compass.panel-open{right:calc(var(--panel-w) + 20px);}
   #crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:150;display:none;}
+
+  /* ── STATUS BAR ── */
+  #crane-status-bar{
+    position:fixed;bottom:0;left:0;right:var(--panel-w);height:26px;z-index:90;
+    background:rgba(10,12,16,.92);border-top:1px solid var(--border);
+    display:none;align-items:center;gap:16px;padding:0 12px;
+    font-family:var(--mono);font-size:10px;color:var(--text3);
+  }
+  #crane-status-bar.visible{display:flex;}
+  .csb-item{display:flex;align-items:center;gap:5px;}
+  .csb-item .val{color:var(--text2);}
+  .csb-item .val.hooked{color:var(--crane);}
 
   /* ── LOAD SCREEN ── */
   #load-zone{position:fixed;inset:0;z-index:200;background:var(--bg);
@@ -167,6 +325,10 @@
     border-radius:6px;padding:8px 14px;display:none;max-width:380px;text-align:center;}
   #loading-bar-wrap{position:fixed;bottom:0;left:0;right:0;height:3px;z-index:300;display:none;}
   #loading-bar{height:100%;background:var(--accent);width:0%;transition:width .2s;}
+
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
 </head>
 <body>
@@ -176,6 +338,8 @@
 <!-- HUD -->
 <div id="hud-top">
   <span class="hud-logo">SUBSTATION<span style="color:var(--accent2)">·EXPLORER</span></span>
+  <div class="hud-sep"></div>
+  <span class="hud-logo" style="color:var(--crane);font-size:11px;">+ GRÚAS</span>
   <div class="hud-sep"></div>
   <span class="hud-title" id="model-name">Sin modelo cargado</span>
   <span id="hud-status">LISTO</span>
@@ -208,6 +372,7 @@
 <!-- Toolbar -->
 <div id="toolbar">
   <button class="tool-btn" id="btn-measure" title="Medir distancia (M)" onclick="toggleMeasure()">📏</button>
+  <button class="tool-btn crane-tool" id="btn-crane-panel" title="Módulo de grúas (G)" onclick="toggleCranePanel()">🏗</button>
 </div>
 
 <!-- Medición -->
@@ -229,10 +394,8 @@
   <div class="legend-row"><span class="key">↑</span><span class="key">↓</span><span class="legend-label">Avanzar / Retroceder</span></div>
   <div class="legend-row"><span class="key">←</span><span class="key">→</span><span class="legend-label">Rotar personaje</span></div>
   <div class="legend-row"><span class="key">Shift</span><span class="legend-label">Correr</span></div>
-  <div class="legend-row"><span class="key">🖱 Drag</span><span class="legend-label">Rotar cámara</span></div>
-  <div class="legend-row"><span class="key">R</span><span class="legend-label">Reiniciar posición</span></div>
-  <div class="legend-row" style="margin-top:4px;padding-top:6px;border-top:1px solid var(--border)"><span class="key">👆 Pantalla</span><span class="legend-label">Ángulo de cámara</span></div>
-  <div class="legend-row"><span class="key">🕹 Joystick</span><span class="legend-label">Mover personaje</span></div>
+  <div class="legend-row"><span class="key">G</span><span class="legend-label">Panel de grúas</span></div>
+  <div class="legend-row" id="free-cam-hint" style="display:none"><span class="key">E/Q</span><span class="legend-label">Subir/bajar cámara libre</span></div>
 </div>
 
 <div id="speed-badge"><div class="speed-dot"></div><span id="speed-label">Caminando</span></div>
@@ -240,13 +403,13 @@
 <div id="cam-toggle">
   <button class="cam-btn active" onclick="setCamMode('third')" id="btn-third">3ª Persona</button>
   <button class="cam-btn" onclick="setCamMode('first')" id="btn-first">1ª Persona</button>
+  <button class="cam-btn" onclick="setCamMode('free')" id="btn-free">Libre</button>
 </div>
 
-<!-- Minimap: Three.js renderer secundario + SVG overlay -->
+<!-- Minimap -->
 <div id="minimap-wrap">
   <div id="minimap-label">Vista de Planta</div>
   <div id="minimap-canvas-wrap">
-    <!-- canvas insertado por JS -->
     <svg id="minimap-overlay" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 </div>
@@ -270,18 +433,167 @@
   </svg>
 </div>
 
-<!-- Joystick táctil — centrado horizontalmente, fondo de pantalla -->
 <div id="joystick-wrap">
-  <div id="joystick-base">
-    <div id="joystick-knob"></div>
+  <div id="joystick-base"><div id="joystick-knob"></div></div>
+</div>
+
+<!-- PICK OVERLAY -->
+<div id="pick-overlay">
+  <div id="pick-label">Haz click sobre la pieza o ensamble a sujetar<br><small style="opacity:.6">ESC para cancelar</small></div>
+</div>
+
+<!-- ═══════════════ CRANE PANEL ═══════════════ -->
+<div id="crane-panel">
+  <div id="crane-panel-top">
+    <span class="cp-logo">🏗 MÓDULO GRÚAS</span>
+    <span id="crane-count-badge">0 grúas</span>
+    <button class="cp-close" onclick="toggleCranePanel()">✕</button>
   </div>
+
+  <!-- Fleet -->
+  <div class="cp-section">
+    <div class="cp-section-title">Flota en escena</div>
+    <div id="crane-list">
+      <div style="color:var(--text3);font-size:11px;text-align:center;padding:8px 0;">Añade tu primera grúa para comenzar</div>
+    </div>
+    <button id="btn-add-crane" onclick="addCrane()">
+      <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      Añadir grúa
+    </button>
+    <button id="btn-ride-crane" onclick="toggleRideCrane()" style="
+      width:100%;margin-top:5px;padding:6px 0;
+      background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.25);border-radius:5px;
+      color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:.4px;
+      cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;">
+      🧑 Montar en grúa activa
+    </button>
+  </div>
+
+  <!-- Target selection -->
+  <div class="cp-section" id="pick-target-section">
+    <div class="cp-section-title">Sujeción de carga</div>
+
+    <!-- Nearest-to-hook grab -->
+    <button id="btn-attach-crane" class="attach" onclick="toggleCraneAttach()" style="width:100%;padding:9px 0;font-size:11px;">
+      ⊕ Enganchar objeto más cercano
+    </button>
+
+    <div style="height:8px"></div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">O elige manualmente:</div>
+
+    <div class="pick-btns">
+      <button class="pick-btn" id="btn-pick-single" onclick="activatePick('single')">
+        🔲 Pieza sola
+      </button>
+      <button class="pick-btn" id="btn-pick-assembly" onclick="activatePick('assembly')">
+        📦 Ensamble completo
+      </button>
+    </div>
+
+    <div id="pick-target-display" style="margin-top:5px;display:none;">
+      <span class="pt-label">TARGET</span>
+      <span class="pt-name" id="pt-name-text" style="color:var(--crane);">Sin selección</span>
+    </div>
+
+    <div id="btn-pick-clear-wrap" style="display:none;margin-top:4px;">
+      <button class="pick-btn full" id="btn-pick-clear" onclick="clearPickTarget()" style="width:100%;color:var(--text3);">
+        ✕ Limpiar selección manual
+      </button>
+    </div>
+  </div>
+
+  <!-- Movement controls -->
+  <div class="cp-section">
+    <div class="cp-section-title">Desplazar vehículo</div>
+    <div class="ctrl-grid">
+      <button class="ctrl-btn" data-crane-action="fwd">▲ Adelante</button>
+      <button class="ctrl-btn" data-crane-action="back">▼ Atrás</button>
+      <button class="ctrl-btn" data-crane-action="left">◄ Izquierda</button>
+      <button class="ctrl-btn" data-crane-action="right">► Derecha</button>
+      <button class="ctrl-btn" data-crane-action="rotL">↺ Girar iz.</button>
+      <button class="ctrl-btn" data-crane-action="rotR">↻ Girar der.</button>
+    </div>
+    <!-- Crane height -->
+    <div style="height:8px"></div>
+    <div class="cp-section-title" style="margin-bottom:6px;">Altura de circulación</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="h-btn" id="crane-h-dn" style="width:28px;height:28px;font-size:16px;" title="Bajar grúa">−</button>
+      <input id="crane-h-input" type="number" step="0.5"
+        style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+               padding:4px 8px;text-align:center;font-family:var(--mono);font-size:12px;
+               color:var(--crane);outline:none;width:0;min-width:0;"
+        value="0" onchange="setCraneHeightManual(this.value)" onkeydown="if(event.key==='Enter')setCraneHeightManual(this.value)">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3);flex-shrink:0;">m</span>
+      <button class="h-btn" id="crane-h-up" style="width:28px;height:28px;font-size:16px;" title="Subir grúa">+</button>
+    </div>
+    <div style="display:flex;gap:4px;margin-top:5px;">
+      <button class="h-speed-btn active" id="crane-hspd-slow" onclick="setCraneHSpeed('slow')" style="flex:1;padding:3px 0;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;">0.5 m</button>
+      <button class="h-speed-btn" id="crane-hspd-fast" onclick="setCraneHSpeed('fast')" style="flex:1;padding:3px 0;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;">2.0 m</button>
+      <button class="h-speed-btn" id="crane-hspd-xfast" onclick="setCraneHSpeed('xfast')" style="flex:1;padding:3px 0;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;">5.0 m</button>
+    </div>
+  </div>
+
+  <!-- Arm controls -->
+  <div class="cp-section">
+    <div class="cp-section-title">Control de pluma</div>
+    <div class="ctrl-grid">
+      <button class="ctrl-btn" data-crane-action="giro">↻ Giro +</button>
+      <button class="ctrl-btn" data-crane-action="giroI">↺ Giro −</button>
+      <button class="ctrl-btn" data-crane-action="armAup">↑ Elevar brazo</button>
+      <button class="ctrl-btn" data-crane-action="armAdn">↓ Bajar brazo</button>
+      <button class="ctrl-btn" data-crane-action="armBext">→ Extender</button>
+      <button class="ctrl-btn" data-crane-action="armBret">← Retraer</button>
+    </div>
+  </div>
+
+  <!-- Hook controls -->
+  <div class="cp-section">
+    <div class="cp-section-title">Gancho y carga</div>
+    <div class="ctrl-grid">
+      <button class="ctrl-btn" data-crane-action="hookUp">↑ Subir gancho</button>
+      <button class="ctrl-btn" data-crane-action="hookDn">↓ Bajar gancho</button>
+      <button class="ctrl-btn" data-crane-action="hookRot">↻ Rotar carga</button>
+      <button class="ctrl-btn" data-crane-action="hookRotI">↺ Rotar carga</button>
+    </div>
+    <div style="height:6px"></div>
+    <div class="slider-row">
+      <div class="slider-label">Punto sujeción Y <span id="grip-y-val">0.0</span></div>
+      <input type="range" id="grip-y" min="-3" max="3" step="0.1" value="0">
+    </div>
+  </div>
+
+  <!-- Speeds -->
+  <div class="cp-section">
+    <div class="cp-section-title">Velocidades</div>
+    <div class="slider-row">
+      <div class="slider-label">Traslado <span id="spd-move-val">1.0</span></div>
+      <input type="range" id="spd-move" min="0.1" max="5" step="0.1" value="1">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Giro / pluma <span id="spd-rot-val">1.0</span></div>
+      <input type="range" id="spd-rot" min="0.1" max="5" step="0.1" value="1">
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:8px 14px 0;flex-shrink:0;">Registro</div>
+  <div id="crane-log"></div>
+</div>
+
+<!-- CRANE STATUS BAR -->
+<div id="crane-status-bar">
+  <div class="csb-item">Grúa <span class="val" id="csb-crane">—</span></div>
+  <div class="csb-item">Pos <span class="val" id="csb-pos">—</span></div>
+  <div class="csb-item">Pluma <span class="val" id="csb-arm">—</span></div>
+  <div class="csb-item">Gancho <span class="val" id="csb-hook">—</span></div>
+  <div class="csb-item">Carga <span class="val" id="csb-load">ninguna</span></div>
 </div>
 
 <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
 
 <div id="load-zone">
   <div class="load-logo">SUBSTATION·EXPLORER</div>
-  <div class="load-sub">Herramienta de exploración para subestaciones eléctricas</div>
+  <div class="load-sub">Con módulo de simulación de grúas integrado</div>
   <div id="drop-area" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">⚡</div>
     <div class="drop-text">
@@ -319,22 +631,17 @@ renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.setSize(innerWidth, innerHeight);
 
-// ── MINIMAP RENDERER (Three.js ortho, top-down) ───────────────────────────────
+// ── MINIMAP RENDERER ──────────────────────────────────────────────────────────
 const MM_SIZE = 160;
 const mmRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
 mmRenderer.setPixelRatio(1);
 mmRenderer.setSize(MM_SIZE, MM_SIZE);
 mmRenderer.setClearColor(0x0a0c10, 1);
-// Inject canvas into DOM
 const mmWrap = document.getElementById('minimap-canvas-wrap');
 mmWrap.insertBefore(mmRenderer.domElement, mmWrap.querySelector('svg'));
-
-// Ortho camera looking straight down
 const mmCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
-mmCam.position.set(0, 500, 0);
-mmCam.lookAt(0, 0, 0);
+mmCam.position.set(0, 500, 0); mmCam.lookAt(0, 0, 0);
 
-// Click minimap → teleport
 document.getElementById('minimap-canvas-wrap').addEventListener('click', e => {
   if (!state.modelLoaded || !modelBox) return;
   const rect = mmRenderer.domElement.getBoundingClientRect();
@@ -342,9 +649,7 @@ document.getElementById('minimap-canvas-wrap').addEventListener('click', e => {
   const ny = (e.clientY - rect.top)  / MM_SIZE;
   const bw = modelBox.max.x - modelBox.min.x;
   const bz = modelBox.max.z - modelBox.min.z;
-  const wx = modelBox.min.x + nx * bw;
-  const wz = modelBox.min.z + ny * bz;
-  charGroup.position.set(wx, state.modelFloor + state.floorOffset, wz);
+  charGroup.position.set(modelBox.min.x + nx * bw, state.modelFloor + state.floorOffset, modelBox.min.z + ny * bz);
 });
 
 function updateMinimapCamera() {
@@ -354,14 +659,13 @@ function updateMinimapCamera() {
   const hw = (modelBox.max.x - modelBox.min.x) / 2 * 1.05;
   const hh = (modelBox.max.z - modelBox.min.z) / 2 * 1.05;
   const half = Math.max(hw, hh);
-  mmCam.left   = cx - half; mmCam.right  = cx + half;
-  mmCam.top    = cz + half; mmCam.bottom = cz - half;
-  mmCam.position.set(cx, modelBox.max.y + 100, cz);
+  mmCam.left = cx-half; mmCam.right = cx+half;
+  mmCam.top  = cz+half; mmCam.bottom = cz-half;
+  mmCam.position.set(cx, modelBox.max.y+100, cz);
   mmCam.lookAt(cx, 0, cz);
   mmCam.updateProjectionMatrix();
 }
 
-// SVG overlay (character dot + measure pts)
 const mmSvg = document.getElementById('minimap-overlay');
 function updateMinimapOverlay() {
   if (!modelBox) return;
@@ -370,38 +674,33 @@ function updateMinimapOverlay() {
   const cx = (modelBox.min.x + modelBox.max.x) / 2;
   const cz = (modelBox.min.z + modelBox.max.z) / 2;
   const half = Math.max(bw, bz) / 2 * 1.05;
-
   function w2s(wx, wz) {
-    return {
-      x: ((wx - (cx - half)) / (half*2)) * MM_SIZE,
-      y: ((wz - (cz - half)) / (half*2)) * MM_SIZE
-    };
+    return { x: ((wx-(cx-half))/(half*2))*MM_SIZE, y: ((wz-(cz-half))/(half*2))*MM_SIZE };
   }
-
   let svg = '';
-
-  // Measure line
-  if (state.measurePts.length === 2) {
-    const a = w2s(state.measurePts[0].x, state.measurePts[0].z);
-    const b = w2s(state.measurePts[1].x, state.measurePts[1].z);
-    svg += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(246,173,85,0.7)" stroke-width="1.5"/>`;
+  if (state.measurePts.length===2) {
+    const a=w2s(state.measurePts[0].x,state.measurePts[0].z);
+    const b=w2s(state.measurePts[1].x,state.measurePts[1].z);
+    svg+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(246,173,85,0.7)" stroke-width="1.5"/>`;
   }
-  // Measure points
-  state.measurePts.forEach((pt, i) => {
-    const p = w2s(pt.x, pt.z);
-    svg += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${i===0?'#4fc3f7':'#f6ad55'}" stroke="#0a0c10" stroke-width="1"/>`;
+  state.measurePts.forEach((pt,i) => {
+    const p=w2s(pt.x,pt.z);
+    svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${i===0?'#4fc3f7':'#f6ad55'}" stroke="#0a0c10" stroke-width="1"/>`;
   });
-
-  // Character direction arrow
-  const pp = w2s(charGroup.position.x, charGroup.position.z);
-  const tx = pp.x + Math.sin(state.charRot) * 10;
-  const ty = pp.y + Math.cos(state.charRot) * 10;
-  svg += `<line x1="${pp.x}" y1="${pp.y}" x2="${tx}" y2="${ty}" stroke="#ef5350" stroke-width="2" stroke-linecap="round"/>`;
-  svg += `<circle cx="${pp.x}" cy="${pp.y}" r="5" fill="#ef5350" stroke="#0a0c10" stroke-width="1.5"/>`;
-
-  // N label
-  svg += `<text x="152" y="11" font-size="8" font-family="monospace" fill="rgba(239,83,80,0.7)">N</text>`;
-
+  // Draw cranes on minimap
+  cranes.forEach(c => {
+    const cp = w2s(c.object.position.x, c.object.position.z);
+    const col = c.color;
+    svg += `<circle cx="${cp.x}" cy="${cp.y}" r="4" fill="${col}" stroke="#0a0c10" stroke-width="1" opacity="0.9"/>`;
+    const tx = cp.x + Math.sin(c.object.rotation.y)*8;
+    const ty = cp.y + Math.cos(c.object.rotation.y)*8;
+    svg += `<line x1="${cp.x}" y1="${cp.y}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="1.5" opacity="0.7"/>`;
+  });
+  const pp=w2s(charGroup.position.x,charGroup.position.z);
+  const tx=pp.x+Math.sin(state.charRot)*10, ty=pp.y+Math.cos(state.charRot)*10;
+  svg+=`<line x1="${pp.x}" y1="${pp.y}" x2="${tx}" y2="${ty}" stroke="#ef5350" stroke-width="2" stroke-linecap="round"/>`;
+  svg+=`<circle cx="${pp.x}" cy="${pp.y}" r="5" fill="#ef5350" stroke="#0a0c10" stroke-width="1.5"/>`;
+  svg+=`<text x="152" y="11" font-size="8" font-family="monospace" fill="rgba(239,83,80,0.7)">N</text>`;
   mmSvg.innerHTML = svg;
 }
 
@@ -410,255 +709,843 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0c10);
 scene.fog = new THREE.Fog(0x0a0c10, 80, 200);
 
-// ── CAMERA ───────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.01, 500);
-camera.position.set(0, 5, 10);
+const camera = new THREE.PerspectiveCamera(65, innerWidth/innerHeight, 0.01, 500);
+camera.position.set(0,5,10);
 
-// ── LIGHTS ───────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
-sun.position.set(30, 60, 20);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 300;
-sun.shadow.camera.left = -80; sun.shadow.camera.right = 80;
-sun.shadow.camera.top = 80;   sun.shadow.camera.bottom = -80;
-sun.shadow.bias = -0.001;
+scene.add(new THREE.AmbientLight(0xffffff,0.6));
+const sun = new THREE.DirectionalLight(0xfff5e0,1.8);
+sun.position.set(30,60,20); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.near=0.5; sun.shadow.camera.far=300;
+sun.shadow.camera.left=-80; sun.shadow.camera.right=80;
+sun.shadow.camera.top=80; sun.shadow.camera.bottom=-80; sun.shadow.bias=-0.001;
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0x4fc3f7, 0.4); fill.position.set(-20, 10, -30); scene.add(fill);
-scene.add(new THREE.HemisphereLight(0x334466, 0x111120, 0.5));
+const fill=new THREE.DirectionalLight(0x4fc3f7,0.4); fill.position.set(-20,10,-30); scene.add(fill);
+scene.add(new THREE.HemisphereLight(0x334466,0x111120,0.5));
 
-// ── GRID ─────────────────────────────────────────────────────────────────────
-const gridHelper = new THREE.GridHelper(200, 80, 0x1a2233, 0x111820);
+const gridHelper=new THREE.GridHelper(200,80,0x1a2233,0x111820);
 scene.add(gridHelper);
 
 // ── CHARACTER ────────────────────────────────────────────────────────────────
-const charGroup = new THREE.Group();
-scene.add(charGroup);
-(function buildCharacter() {
-  const bodyMat = new THREE.MeshStandardMaterial({ color:0x4fc3f7, roughness:0.5, metalness:0.1 });
-  const headMat = new THREE.MeshStandardMaterial({ color:0xffe0b2, roughness:0.8 });
-  const legMat  = new THREE.MeshStandardMaterial({ color:0x263238, roughness:0.8 });
-  const footMat = new THREE.MeshStandardMaterial({ color:0x1a1a2e, roughness:0.9 });
-  const hatMat  = new THREE.MeshStandardMaterial({ color:0xffca28, roughness:0.5 });
-  function part(geo, mat, px, py, pz, rz) {
-    const m = new THREE.Mesh(geo, mat);
+const charGroup=new THREE.Group(); scene.add(charGroup);
+(function buildCharacter(){
+  const bodyMat=new THREE.MeshStandardMaterial({color:0x4fc3f7,roughness:0.5,metalness:0.1});
+  const headMat=new THREE.MeshStandardMaterial({color:0xffe0b2,roughness:0.8});
+  const legMat=new THREE.MeshStandardMaterial({color:0x263238,roughness:0.8});
+  const footMat=new THREE.MeshStandardMaterial({color:0x1a1a2e,roughness:0.9});
+  const hatMat=new THREE.MeshStandardMaterial({color:0xffca28,roughness:0.5});
+  function part(geo,mat,px,py,pz,rz){
+    const m=new THREE.Mesh(geo,mat);
     m.position.set(px||0,py||0,pz||0);
-    if(rz) m.rotation.z=rz;
-    m.castShadow=true; charGroup.add(m); return m;
+    if(rz)m.rotation.z=rz; m.castShadow=true; charGroup.add(m); return m;
   }
-  part(new THREE.SphereGeometry(0.18,12,10), headMat, 0, 1.72);
-  part(new THREE.CylinderGeometry(0.22,0.2,0.08,12), hatMat, 0, 1.87);
-  part(new THREE.BoxGeometry(0.22,0.06,0.1), new THREE.MeshStandardMaterial({color:0xffca28,roughness:0.3,metalness:0.5}), 0, 1.77, 0.14);
-  part(new THREE.BoxGeometry(0.38,0.52,0.22), bodyMat, 0, 1.22);
-  const armL=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8), bodyMat,-0.26,1.2,0, 0.3);
-  const armR=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8), bodyMat, 0.26,1.2,0,-0.3);
-  const legL=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8), legMat,-0.1,0.71);
-  const legR=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8), legMat, 0.1,0.71);
-  part(new THREE.BoxGeometry(0.12,0.08,0.2), footMat,-0.1,0.44,0.04);
-  part(new THREE.BoxGeometry(0.12,0.08,0.2), footMat, 0.1,0.44,0.04);
+  part(new THREE.SphereGeometry(0.18,12,10),headMat,0,1.72);
+  part(new THREE.CylinderGeometry(0.22,0.2,0.08,12),hatMat,0,1.87);
+  part(new THREE.BoxGeometry(0.22,0.06,0.1),new THREE.MeshStandardMaterial({color:0xffca28,roughness:0.3,metalness:0.5}),0,1.77,0.14);
+  part(new THREE.BoxGeometry(0.38,0.52,0.22),bodyMat,0,1.22);
+  const armL=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8),bodyMat,-0.26,1.2,0,0.3);
+  const armR=part(new THREE.CylinderGeometry(0.07,0.07,0.42,8),bodyMat,0.26,1.2,0,-0.3);
+  const legL=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8),legMat,-0.1,0.71);
+  const legR=part(new THREE.CylinderGeometry(0.08,0.07,0.52,8),legMat,0.1,0.71);
+  part(new THREE.BoxGeometry(0.12,0.08,0.2),footMat,-0.1,0.44,0.04);
+  part(new THREE.BoxGeometry(0.12,0.08,0.2),footMat,0.1,0.44,0.04);
   charGroup.userData.armL=armL; charGroup.userData.armR=armR;
   charGroup.userData.legL=legL; charGroup.userData.legR=legR;
 })();
 
 // ── LOADERS ──────────────────────────────────────────────────────────────────
-const dracoLoader = new DRACOLoader();
+const dracoLoader=new DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-dracoLoader.setDecoderConfig({ type: 'js' });
-const gltfLoader = new GLTFLoader();
-gltfLoader.setDRACOLoader(dracoLoader);
+dracoLoader.setDecoderConfig({type:'js'});
+const gltfLoader=new GLTFLoader(); gltfLoader.setDRACOLoader(dracoLoader);
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-const state = {
-  modelLoaded:false, charRot:0, camMode:'third',
-  keys:{}, walkCycle:0, modelFloor:0, floorOffset:0,
-  camPitch:0.35,
-  mouse:{down:false, x:0, y:0},
-  joy:{active:false, id:null, dx:0, dy:0, startX:0, startY:0},
-  measuring:false, measurePts:[], measureMarkers:[], measureLine:null
+const state={
+  modelLoaded:false,charRot:0,camMode:'third',
+  keys:{},walkCycle:0,modelFloor:0,floorOffset:0,camPitch:0.35,
+  mouse:{down:false,x:0,y:0},
+  joy:{active:false,id:null,dx:0,dy:0,startX:0,startY:0},
+  measuring:false,measurePts:[],measureMarkers:[],measureLine:null
 };
-const camCurrent = new THREE.Vector3();
-const camTarget  = new THREE.Vector3();
-const raycaster  = new THREE.Raycaster();
-let modelBox = null;
+const camCurrent=new THREE.Vector3(), camTarget=new THREE.Vector3();
+const raycaster=new THREE.Raycaster();
+let modelBox=null;
 
-// ── KEYBOARD ─────────────────────────────────────────────────────────────────
-window.addEventListener('keydown', e => {
-  state.keys[e.code] = true;
-  if (e.code==='KeyR') { charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
-  if (e.code==='KeyM') toggleMeasure();
-});
-window.addEventListener('keyup', e => { state.keys[e.code]=false; });
-
-// ── MOUSE DRAG ────────────────────────────────────────────────────────────────
-canvas.addEventListener('mousedown', e => {
-  if (state.measuring) return;
-  state.mouse.down=true; state.mouse.x=e.clientX; state.mouse.y=e.clientY;
-  canvas.classList.add('dragging');
-});
-window.addEventListener('mouseup', () => { state.mouse.down=false; canvas.classList.remove('dragging'); });
-window.addEventListener('mousemove', e => {
-  if (!state.mouse.down||!state.modelLoaded) return;
-  const dx=e.clientX-state.mouse.x, dy=e.clientY-state.mouse.y;
-  state.mouse.x=e.clientX; state.mouse.y=e.clientY;
-  state.charRot -= dx*0.005; charGroup.rotation.y=state.charRot;
-  state.camPitch = Math.max(-0.05,Math.min(1.3,state.camPitch+dy*0.004));
-});
-
-// ── FLOOR OFFSET ─────────────────────────────────────────────────────────────
-let hSpeed = 0.1;   // paso suave por defecto
-let holdTimer = null;
-
-window.setHSpeed = function(mode) {
-  hSpeed = mode === 'fast' ? 1.0 : 0.1;
-  document.getElementById('hspd-slow').classList.toggle('active', mode === 'slow');
-  document.getElementById('hspd-fast').classList.toggle('active', mode === 'fast');
+// ── FREE CAM state ────────────────────────────────────────────────────────
+const freeCam={
+  active:false,
+  yaw:0, pitch:0.3,      // radians — orbit angles
+  pos:new THREE.Vector3(),  // orbit pivot point (pan moves this)
+  orbitRadius:20,        // distance from pivot to camera
+  panSpeed:0.05,         // right-drag / two-finger pan speed
 };
 
-function applyFloor(val) {
-  state.floorOffset = Math.round(val * 100) / 100;  // evitar drift de float
-  document.getElementById('floor-input').value = state.floorOffset.toFixed(2);
+// ── RIDE CRANE state ──────────────────────────────────────────────────────
+let ridingCraneId=null;  // null = not riding
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── CRANE MODULE ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+const CRANE_COLORS = [0xf6ad55,0x63b3ed,0x68d391,0xfc8181,0xd6bcfa,0xfbd38d];
+let craneCounter=0, cranes=[], activeCraneId=null;
+let cranePickMode=false, cranePickType='single';
+
+// Attached load data
+let attachedObject=null;      // single mesh or group
+let attachedIsAssembly=false; // was it picked as assembly?
+let attachedCraneId=null;
+let attachedOrigParent=null;
+let attachedOrigPos=new THREE.Vector3();
+let attachedOffset=new THREE.Vector3(); // offset from hook to object center
+
+let spdMove=1.0, spdRot=1.0;
+
+// ── BUILD CRANE ──────────────────────────────────────────────────────────
+function buildCrane(id, color) {
+  const group=new THREE.Group(); group.name=`crane_${id}`;
+  const mat=new THREE.MeshStandardMaterial({color,roughness:0.4,metalness:0.6});
+  const darkMat=new THREE.MeshStandardMaterial({color:0x222530,roughness:0.8,metalness:0.2});
+  const bodyMat=new THREE.MeshStandardMaterial({color:0x1e2430,roughness:0.6,metalness:0.3});
+
+  // Vehicle body
+  const vehicle=new THREE.Group(); vehicle.name='vehicle';
+  const chassis=new THREE.Mesh(new THREE.BoxGeometry(3.2,0.6,7),bodyMat);
+  chassis.position.set(0,0.7,0); chassis.castShadow=true; vehicle.add(chassis);
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.2,2.2),bodyMat);
+  cab.position.set(0,1.6,2.2); cab.castShadow=true; vehicle.add(cab);
+  const wheelGeo=new THREE.CylinderGeometry(0.55,0.55,0.5,16);
+  const wheelMat=new THREE.MeshStandardMaterial({color:0x111418,roughness:0.9});
+  [[-1.85,0.55,2.5],[1.85,0.55,2.5],[-1.85,0.55,-2],[1.85,0.55,-2],[-1.85,0.55,-0.5],[1.85,0.55,-0.5]].forEach(([x,y,z])=>{
+    const w=new THREE.Mesh(wheelGeo,wheelMat); w.rotation.z=Math.PI/2;
+    w.position.set(x,y,z); w.castShadow=true; vehicle.add(w);
+  });
+
+  // Turret
+  const turret=new THREE.Group(); turret.name='turret'; turret.position.set(0,1.3,0);
+  turret.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.1,0.7,12),mat),{castShadow:true}));
+  const turretCap=new THREE.Mesh(new THREE.SphereGeometry(1.0,12,8,0,Math.PI*2,0,Math.PI/2),mat);
+  turretCap.position.y=0.35; turretCap.castShadow=true; turret.add(turretCap);
+
+  // Arm A
+  const armA=new THREE.Group(); armA.name='armA'; armA.position.set(0,0.5,0);
+  const boomA=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.4,7),mat);
+  boomA.position.set(0,0,3.5); boomA.castShadow=true; armA.add(boomA);
+  const boomACap=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.3),darkMat);
+  boomACap.position.set(0,0,7); armA.add(boomACap);
+
+  // Arm B (telescopic)
+  const armB=new THREE.Group(); armB.name='armB'; armB.position.set(0,0,3);
+  const boomB=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.28,4),darkMat);
+  boomB.position.set(0,0,2); boomB.castShadow=true; armB.add(boomB);
+  const tipMarker=new THREE.Object3D(); tipMarker.name='tipMarker';
+  tipMarker.position.set(0,-0.18,4); armB.add(tipMarker);
+
+  // Hook group
+  const hookGroup=new THREE.Group(); hookGroup.name='hookGroup';
+  const cable=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,3,6),new THREE.MeshStandardMaterial({color:0x444950}));
+  cable.name='cable'; cable.position.y=-1.5; hookGroup.add(cable);
+  const hookShape=new THREE.Group(); hookShape.name='hookShape'; hookShape.position.y=-3;
+  hookShape.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.6,8),mat)));
+  const hookCurve=new THREE.Mesh(new THREE.TorusGeometry(0.2,0.06,8,16,Math.PI*1.2),mat);
+  hookCurve.rotation.z=Math.PI/2; hookCurve.position.y=-0.5; hookShape.add(hookCurve);
+  hookGroup.add(hookShape);
+  const pulley=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.18,0.2,12),darkMat);
+  pulley.rotation.x=Math.PI/2; hookGroup.add(pulley);
+
+  armB.add(hookGroup); armA.add(armB); turret.add(armA);
+  vehicle.add(turret); group.add(vehicle);
+  armB.remove(hookGroup); group.add(hookGroup);
+
+  return group;
 }
 
-window.startHold = function(dir) {
-  applyFloor(state.floorOffset + dir * hSpeed);  // primer paso inmediato
-  holdTimer = setInterval(() => applyFloor(state.floorOffset + dir * hSpeed), 150);
-};
-window.stopHold = function() { clearInterval(holdTimer); holdTimer = null; };
-
-window.setFloorManual = function(val) {
-  const n = parseFloat(val);
-  if (!isNaN(n)) applyFloor(n);
-};
-
-// compat alias (usado por onModelReady al resetear)
-window.setFloorOffset = function(val) { applyFloor(parseFloat(val)); };
-
-// ── JOYSTICK (movimiento del personaje) ──────────────────────────────────────
-const joystickBase = document.getElementById('joystick-base');
-const joystickKnob = document.getElementById('joystick-knob');
-const JR = 33;
-
-joystickBase.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  const r = joystickBase.getBoundingClientRect();
-  state.joy.active  = true;
-  state.joy.id      = t.identifier;
-  state.joy.startX  = r.left + r.width  / 2;
-  state.joy.startY  = r.top  + r.height / 2;
-  joystickKnob.classList.add('active');
-}, { passive: false });
-
-joystickBase.addEventListener('touchmove', e => {
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (t.identifier !== state.joy.id) continue;
-    let dx = t.clientX - state.joy.startX;
-    let dy = t.clientY - state.joy.startY;
-    const d = Math.sqrt(dx*dx + dy*dy);
-    if (d > JR) { dx = dx/d*JR; dy = dy/d*JR; }
-    state.joy.dx = dx / JR;
-    state.joy.dy = dy / JR;
-    joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+// ── CRANE STATE APPLICATION ───────────────────────────────────────────────
+function applyCraneState(craneData) {
+  const obj=craneData.object, s=craneData.state;
+  const turret=obj.getObjectByName('turret');
+  const armA=obj.getObjectByName('armA');
+  const armB=obj.getObjectByName('armB');
+  const tipMarker=obj.getObjectByName('tipMarker');
+  const hookGroup=obj.getObjectByName('hookGroup');
+  const cable=obj.getObjectByName('cable');
+  const hookShape=obj.getObjectByName('hookShape');
+  if(turret) turret.rotation.y=s.turretRot;
+  if(armA) armA.rotation.x=-s.armAAngle;
+  if(armB) armB.position.z=3+s.armBExtension;
+  obj.updateMatrixWorld(true);
+  if(hookGroup&&tipMarker){
+    const tipWorld=new THREE.Vector3();
+    tipMarker.getWorldPosition(tipWorld);
+    obj.worldToLocal(tipWorld);
+    hookGroup.position.copy(tipWorld);
+    hookGroup.rotation.set(0,s.hookRot,0);
   }
-}, { passive: false });
+  if(cable){
+    const len=Math.max(0.05,s.hookDepth);
+    cable.scale.y=len/3; cable.position.y=-len/2;
+  }
+  if(hookShape) hookShape.position.y=-s.hookDepth;
 
-function resetJoy() {
-  state.joy.active = false; state.joy.dx = 0; state.joy.dy = 0;
-  joystickKnob.style.transform = 'translate(-50%,-50%)';
-  joystickKnob.classList.remove('active');
+  // Move attached object: hook world pos + world-space offset, converted to object's local space
+  if(attachedObject && attachedCraneId===craneData.id) {
+    const hs=obj.getObjectByName('hookShape');
+    if(hs){
+      const hookWorld=new THREE.Vector3();
+      hs.getWorldPosition(hookWorld);
+      // Desired world position = hook + original offset
+      const desiredWorld=hookWorld.clone().add(attachedOffset);
+      // Convert to local space of the object's parent
+      if(attachedObject.parent && attachedObject.parent !== scene){
+        attachedObject.parent.updateMatrixWorld(true);
+        attachedObject.parent.worldToLocal(desiredWorld);
+      }
+      attachedObject.position.copy(desiredWorld);
+      // Apply hookRot as extra Y rotation on top of original
+      attachedObject.rotation.y = s.hookRot;
+    }
+  }
 }
-joystickBase.addEventListener('touchend',    e => { for (const t of e.changedTouches) if (t.identifier === state.joy.id) resetJoy(); });
-joystickBase.addEventListener('touchcancel', e => { for (const t of e.changedTouches) if (t.identifier === state.joy.id) resetJoy(); });
 
-// ── CANVAS TOUCH (ángulo de cámara / rotación) ───────────────────────────────
-// Toque sobre el canvas (fuera del joystick) → ajusta camPitch y charRot,
-// exactamente igual que el drag de ratón.
-const camTouch = { id: null, x: 0, y: 0 };
+// ── ADD / REMOVE CRANES ───────────────────────────────────────────────────
+function addCrane() {
+  craneCounter++;
+  const id=craneCounter;
+  const colorHex=CRANE_COLORS[(id-1)%CRANE_COLORS.length];
+  const craneObj=buildCrane(id,colorHex);
+  // Place near character or scene center
+  const base=charGroup.position.clone();
+  craneObj.position.set(base.x+id*6-3, state.modelFloor||0, base.z+id*2-2);
+  scene.add(craneObj);
+  const craneData={
+    id, color:'#'+colorHex.toString(16).padStart(6,'0'),
+    object:craneObj,
+    state:{turretRot:0,armAAngle:0.6,armBExtension:0,hookDepth:1.5,hookRot:0,gripY:0}
+  };
+  cranes.push(craneData);
+  activeCraneId=id;
+  applyCraneState(craneData);
+  updateCraneList();
+  updateCraneStatusBar();
+  craneLog(`Grúa #${id} añadida a escena`);
+  document.getElementById('crane-count-badge').textContent=`${cranes.length} grúas`;
+}
 
-canvas.addEventListener('touchstart', e => {
-  // Ignorar si ya hay un toque de joystick activo con ese id
-  for (const t of e.changedTouches) {
-    // Si el toque empieza dentro del joystick, dejarlo al joystick
-    const jRect = joystickBase.getBoundingClientRect();
-    const inJoy = t.clientX >= jRect.left && t.clientX <= jRect.right &&
-                  t.clientY >= jRect.top  && t.clientY <= jRect.bottom;
-    if (!inJoy && camTouch.id === null) {
-      camTouch.id = t.identifier;
-      camTouch.x  = t.clientX;
-      camTouch.y  = t.clientY;
+function removeCrane(id) {
+  const idx=cranes.findIndex(c=>c.id===id);
+  if(idx<0)return;
+  if(attachedCraneId===id) releaseAttached();
+  scene.remove(cranes[idx].object);
+  cranes.splice(idx,1);
+  if(activeCraneId===id) activeCraneId=cranes.length>0?cranes[cranes.length-1].id:null;
+  updateCraneList();
+  updateCraneStatusBar();
+  craneLog(`Grúa #${id} eliminada`);
+  document.getElementById('crane-count-badge').textContent=`${cranes.length} grúas`;
+}
+
+function getActiveCrane(){ return cranes.find(c=>c.id===activeCraneId)||null; }
+
+function updateCraneList(){
+  const list=document.getElementById('crane-list');
+  if(cranes.length===0){
+    list.innerHTML='<div style="color:var(--text3);font-size:11px;text-align:center;padding:8px 0;">Añade tu primera grúa para comenzar</div>';
+    return;
+  }
+  list.innerHTML=cranes.map(c=>`
+    <div class="crane-item ${c.id===activeCraneId?'active':''}" onclick="window.__selectCrane(${c.id})">
+      <div class="crane-dot" style="background:${c.color}"></div>
+      <div class="crane-name">Grúa #${c.id}</div>
+      ${attachedCraneId===c.id?`<span class="crane-payload">⊕ ${attachedObject?'carga':'—'}</span>`:''}
+      <span class="crane-del" onclick="event.stopPropagation();window.__removeCrane(${c.id})">✕</span>
+    </div>
+  `).join('');
+}
+window.__selectCrane = id => { activeCraneId=id; updateCraneList(); updateCraneStatusBar(); const _sc=getActiveCrane(); if(_sc) document.getElementById('crane-h-input').value=_sc.object.position.y.toFixed(1); craneLog(`Grúa #${id} seleccionada`); };
+window.__removeCrane = id => removeCrane(id);
+
+// ── PICK TARGET ───────────────────────────────────────────────────────────
+let pickTargetObject=null;      // what we've selected to attach
+let pickTargetIsAssembly=false;
+let pickTargetName='';
+
+function activatePick(type) {
+  cranePickType=type;
+  cranePickMode=true;
+  document.getElementById('pick-overlay').classList.add('active');
+  canvas.classList.add('pick-mode');
+  document.getElementById('pick-label').innerHTML=
+    type==='assembly'
+    ? 'Haz click sobre cualquier pieza del <strong>ensamble completo</strong><br><small style="opacity:.6">Se sujetará el grupo/padre completo · ESC para cancelar</small>'
+    : 'Haz click sobre la <strong>pieza individual</strong> a sujetar<br><small style="opacity:.6">Solo se moverá esa malla · ESC para cancelar</small>';
+  craneLog(type==='assembly'?'Modo: selección de ensamble. Click en el modelo.':'Modo: selección de pieza individual. Click en el modelo.');
+  // Highlight buttons
+  document.getElementById('btn-pick-single').classList.toggle('active',type==='single');
+  document.getElementById('btn-pick-assembly').classList.toggle('active',type==='assembly');
+}
+
+function clearPickTarget() {
+  pickTargetObject=null; pickTargetName=''; pickTargetIsAssembly=false;
+  cranePickMode=false;
+  document.getElementById('pick-overlay').classList.remove('active');
+  canvas.classList.remove('pick-mode');
+  document.getElementById('btn-pick-single').classList.remove('active');
+  document.getElementById('btn-pick-assembly').classList.remove('active');
+  // Hide the manual-pick display
+  document.getElementById('pick-target-display').style.display='none';
+  document.getElementById('btn-pick-clear-wrap').style.display='none';
+  // Remove highlight
+  if(pickHighlight){ scene.remove(pickHighlight); pickHighlight=null; }
+}
+
+// Highlight box
+let pickHighlight=null;
+function highlightObject(obj) {
+  if(pickHighlight) scene.remove(pickHighlight);
+  const box=new THREE.Box3().setFromObject(obj);
+  const size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3());
+  const geo=new THREE.BoxGeometry(size.x+0.1,size.y+0.1,size.z+0.1);
+  const mat=new THREE.MeshBasicMaterial({color:0x4fc3f7,wireframe:true,transparent:true,opacity:0.5,depthTest:false});
+  pickHighlight=new THREE.Mesh(geo,mat);
+  pickHighlight.position.copy(center);
+  pickHighlight.renderOrder=999;
+  scene.add(pickHighlight);
+}
+
+// Handle canvas click for crane picking
+canvas.addEventListener('click', e => {
+  // Measure mode handled below
+  if(state.measuring && state.modelLoaded){
+    handleMeasureClick(e); return;
+  }
+  if(!cranePickMode || !state.modelLoaded) return;
+
+  const rect=canvas.getBoundingClientRect();
+  const ndx=((e.clientX-rect.left)/rect.width)*2-1;
+  const ndy=-((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(new THREE.Vector2(ndx,ndy), camera);
+
+  // Intersect everything (model + any extra objects)
+  const allMeshes=[];
+  scene.traverse(o=>{ if(o.isMesh && o.name!=='__char__') allMeshes.push(o); });
+  const hits=raycaster.intersectObjects(allMeshes,false);
+  if(!hits.length){ craneLog('Sin intersección. Intenta otra área.'); return; }
+
+  const hitMesh=hits[0].object;
+  let target=hitMesh;
+
+  if(cranePickType==='assembly') {
+    // Walk up the hierarchy to find a meaningful assembly root
+    // (skip if it's the model root or scene)
+    target = getAssemblyRoot(hitMesh);
+    pickTargetIsAssembly=true;
+    craneLog(`Ensamble seleccionado: "${target.name||'(grupo)'}"`);
+  } else {
+    pickTargetIsAssembly=false;
+    craneLog(`Pieza seleccionada: "${hitMesh.name||hitMesh.uuid.slice(0,8)}"`);
+  }
+
+  pickTargetObject=target;
+  pickTargetName=target.name||'(sin nombre)';
+
+  // Update UI — show the manual-pick display
+  const display=document.getElementById('pick-target-display');
+  display.style.display='flex';
+  document.getElementById('btn-pick-clear-wrap').style.display='block';
+  document.getElementById('pt-name-text').textContent=pickTargetName.replace(/_/g,' ');
+  const oldBadge=display.querySelector('.pt-badge'); if(oldBadge)oldBadge.remove();
+  const badge=document.createElement('span');
+  badge.className=`pt-badge ${pickTargetIsAssembly?'assembly':'single'}`;
+  badge.textContent=pickTargetIsAssembly?'ENSAMBLE':'PIEZA';
+  display.appendChild(badge);
+
+  // Highlight
+  highlightObject(target);
+
+  // Deactivate pick overlay
+  cranePickMode=false;
+  document.getElementById('pick-overlay').classList.remove('active');
+  canvas.classList.remove('pick-mode');
+  document.getElementById('btn-pick-single').classList.remove('active');
+  document.getElementById('btn-pick-assembly').classList.remove('active');
+  craneLog('Selección lista — presiona "Enganchar objeto más cercano" para levantar');
+});
+
+function getAssemblyRoot(mesh) {
+  // Walk up until we hit a "meaningful" group (named, or near-top of scene)
+  let current = mesh;
+  while(current.parent && current.parent !== scene && current.parent.name !== '__model__') {
+    // If parent has a useful name (not auto-generated), prefer it
+    if(current.parent.name && current.parent.name !== '' && current.parent.name !== 'Scene') {
+      current = current.parent;
+    } else {
       break;
     }
   }
-}, { passive: true });
+  return current;
+}
 
-canvas.addEventListener('touchmove', e => {
-  if (camTouch.id === null || !state.modelLoaded) return;
-  for (const t of e.changedTouches) {
-    if (t.identifier !== camTouch.id) continue;
-    const dx = t.clientX - camTouch.x;
-    const dy = t.clientY - camTouch.y;
-    camTouch.x = t.clientX;
-    camTouch.y = t.clientY;
-    // Horizontal → rota el personaje (igual que mouse drag X)
-    state.charRot -= dx * 0.005;
-    charGroup.rotation.y = state.charRot;
-    // Vertical → ajusta pitch de cámara (igual que mouse drag Y)
-    state.camPitch = Math.max(-0.05, Math.min(1.3, state.camPitch + dy * 0.004));
+// ── ATTACH / DETACH ───────────────────────────────────────────────────────
+function toggleCraneAttach() {
+  window.toggleCraneAttach();
+}
+window.toggleCraneAttach = function() {
+  const c=getActiveCrane();
+  if(!c){ craneLog('Selecciona una grúa primero'); return; }
+
+  if(attachedObject && attachedCraneId===c.id) {
+    // DETACH
+    releaseAttached();
+    craneLog(`Grúa #${c.id}: pieza soltada`);
+    updateAttachBtn(false);
+    updateCraneStatusBar();
+    return;
   }
-}, { passive: true });
 
-function resetCamTouch() { camTouch.id = null; }
-canvas.addEventListener('touchend',    e => { for (const t of e.changedTouches) if (t.identifier === camTouch.id) resetCamTouch(); });
-canvas.addEventListener('touchcancel', e => { for (const t of e.changedTouches) if (t.identifier === camTouch.id) resetCamTouch(); });
+  // If user manually picked something, attach that
+  if(pickTargetObject) {
+    doAttach(c, pickTargetObject, pickTargetName);
+    return;
+  }
+
+  // ── PROXIMITY ATTACH: grab the nearest object to the hook, no distance limit ──
+  // We try three strategies and pick the best one:
+  //   1. Nearest mesh by straight-line distance hook → mesh vertex (most accurate)
+  //   2. Nearest mesh by hook → bounding-box center (fallback for large objects)
+  const hs=c.object.getObjectByName('hookShape');
+  if(!hs){ craneLog('Error: no se encontró el gancho'); return; }
+  const hookPos=new THREE.Vector3();
+  hs.getWorldPosition(hookPos);
+
+  // Build exclusion set: all crane meshes + character
+  const excludeUUIDs=new Set();
+  cranes.forEach(cr=>{ cr.object.traverse(o=>{ if(o.isMesh) excludeUUIDs.add(o.uuid); }); });
+  charGroup.traverse(o=>{ if(o.isMesh) excludeUUIDs.add(o.uuid); });
+
+  let nearest=null, minDist=Infinity;
+  const _tmp=new THREE.Vector3();
+
+  scene.traverse(o=>{
+    if(!o.isMesh || excludeUUIDs.has(o.uuid)) return;
+
+    // Strategy A: closest point on the mesh geometry to hookPos
+    let d = Infinity;
+    try {
+      const geo=o.geometry;
+      if(geo && geo.attributes.position){
+        const pos=geo.attributes.position;
+        const mat=o.matrixWorld;
+        for(let i=0;i<pos.count;i+=3){ // sample every 3rd vertex for speed
+          _tmp.fromBufferAttribute(pos,i).applyMatrix4(mat);
+          const dd=hookPos.distanceTo(_tmp);
+          if(dd<d) d=dd;
+        }
+      }
+    } catch(e){}
+
+    // Strategy B: bounding box center (always computed as fallback)
+    const box=new THREE.Box3().setFromObject(o);
+    const center=box.getCenter(_tmp.clone());
+    const dCenter=hookPos.distanceTo(center);
+    // Also check box corners — closest corner can be very different from center
+    const dMin=Math.min(d, dCenter,
+      hookPos.distanceTo(new THREE.Vector3(box.min.x,box.min.y,box.min.z)),
+      hookPos.distanceTo(new THREE.Vector3(box.max.x,box.min.y,box.min.z)),
+      hookPos.distanceTo(new THREE.Vector3(box.min.x,box.max.y,box.min.z)),
+      hookPos.distanceTo(new THREE.Vector3(box.max.x,box.max.y,box.max.z))
+    );
+
+    if(dMin<minDist){ minDist=dMin; nearest=o; }
+  });
+
+  if(nearest){
+    craneLog(`Grúa #${c.id}: enganchando "${nearest.name||'objeto'}" (${minDist.toFixed(2)}m del gancho)`);
+    doAttach(c, nearest, nearest.name||'objeto');
+  } else {
+    craneLog('No hay objetos en la escena para enganchar.');
+  }
+};
+
+function doAttach(crane, target, name) {
+  // Get hook world position RIGHT NOW before any state changes
+  crane.object.updateMatrixWorld(true);
+  const hs=crane.object.getObjectByName('hookShape');
+  if(!hs){ craneLog('Error: hookShape no encontrado'); return; }
+
+  const hookWorld=new THREE.Vector3();
+  hs.getWorldPosition(hookWorld);
+
+  // Get the target's current world position
+  const targetWorld=new THREE.Vector3();
+  target.getWorldPosition(targetWorld);
+
+  // The offset is: where is the object relative to the hook, in WORLD space.
+  // We store this as a world-space delta so we can re-apply it each frame.
+  attachedOffset=targetWorld.clone().sub(hookWorld);
+
+  // Also remember the parent so we can convert back to local space each frame
+  attachedObject=target;
+  attachedCraneId=crane.id;
+
+  // Clear manual pick selection
+  pickTargetObject=null; pickTargetName='';
+  document.getElementById('pick-target-display').style.display='none';
+  document.getElementById('btn-pick-clear-wrap').style.display='none';
+  document.getElementById('btn-pick-single').classList.remove('active');
+  document.getElementById('btn-pick-assembly').classList.remove('active');
+
+  // Remove highlight wireframe
+  if(pickHighlight){ scene.remove(pickHighlight); pickHighlight=null; }
+
+  updateAttachBtn(true);
+  updateCraneList();
+  updateCraneStatusBar();
+  craneLog(`Grúa #${crane.id}: enganchado "${name}"`);
+  document.getElementById('csb-load').textContent=name.replace(/_/g,' ');
+  document.getElementById('csb-load').className='val hooked';
+}
+
+function releaseAttached() {
+  attachedObject=null; attachedCraneId=null;
+  document.getElementById('csb-load').textContent='ninguna';
+  document.getElementById('csb-load').className='val';
+  updateCraneList();
+  updateAttachBtn(false);
+}
+
+function updateAttachBtn(attached) {
+  const btn=document.getElementById('btn-attach-crane');
+  if(attached){
+    btn.textContent='⊗ Soltar carga';
+    btn.className='detach';
+    btn.style.cssText='width:100%;padding:9px 0;font-size:11px;';
+  } else {
+    btn.textContent='⊕ Enganchar objeto más cercano';
+    btn.className='attach';
+    btn.style.cssText='width:100%;padding:9px 0;font-size:11px;';
+  }
+}
+
+// ── CRANE ACTIONS ─────────────────────────────────────────────────────────
+const CRANE_ACTIONS = {
+  fwd:     c => { const a=c.object.rotation.y; c.object.position.x-=Math.sin(a)*0.08*spdMove; c.object.position.z-=Math.cos(a)*0.08*spdMove; },
+  back:    c => { const a=c.object.rotation.y; c.object.position.x+=Math.sin(a)*0.08*spdMove; c.object.position.z+=Math.cos(a)*0.08*spdMove; },
+  left:    c => { const a=c.object.rotation.y+Math.PI/2; c.object.position.x-=Math.sin(a)*0.06*spdMove; c.object.position.z-=Math.cos(a)*0.06*spdMove; },
+  right:   c => { const a=c.object.rotation.y-Math.PI/2; c.object.position.x-=Math.sin(a)*0.06*spdMove; c.object.position.z-=Math.cos(a)*0.06*spdMove; },
+  rotL:    c => { c.object.rotation.y+=0.025*spdRot; },
+  rotR:    c => { c.object.rotation.y-=0.025*spdRot; },
+  giro:    c => { c.state.turretRot+=0.025*spdRot; },
+  giroI:   c => { c.state.turretRot-=0.025*spdRot; },
+  armAup:  c => { c.state.armAAngle=Math.min(1.3,c.state.armAAngle+0.015*spdRot); },
+  armAdn:  c => { c.state.armAAngle=Math.max(-0.1,c.state.armAAngle-0.015*spdRot); },
+  armBext: c => { c.state.armBExtension=Math.min(5,c.state.armBExtension+0.06*spdMove); },
+  armBret: c => { c.state.armBExtension=Math.max(0,c.state.armBExtension-0.06*spdMove); },
+  hookUp:  c => { c.state.hookDepth=Math.max(0.1,c.state.hookDepth-0.06*spdMove); },
+  hookDn:  c => { c.state.hookDepth=Math.min(20,c.state.hookDepth+0.06*spdMove); },
+  hookRot: c => { c.state.hookRot+=0.04*spdRot; },
+  hookRotI:c => { c.state.hookRot-=0.04*spdRot; },
+};
+
+const CRANE_KEY_MAP = {
+  'KeyW':'fwd','KeyS':'back','KeyA':'left','KeyD':'right',
+  'KeyQ':'rotL','KeyE':'rotR',
+  'KeyU':'giro','KeyJ':'giroI',
+  'KeyR':'armAup','KeyF':'armAdn',
+  'KeyT':'armBext','KeyG':'armBret',
+  'KeyY':'hookUp','KeyH':'hookDn',
+  'Space':'attach',
+};
+
+const pressedCraneBtns=new Set();
+let cranePanelOpen=false;
+
+// Panel toggle
+window.toggleCranePanel=function(){
+  cranePanelOpen=!cranePanelOpen;
+  document.getElementById('crane-panel').classList.toggle('open',cranePanelOpen);
+  document.getElementById('btn-crane-panel').classList.toggle('active',cranePanelOpen);
+  document.getElementById('crane-status-bar').classList.toggle('visible',cranePanelOpen);
+  // Adjust adjacent UI
+  ['toolbar','measure-panel','minimap-wrap','compass'].forEach(id=>{
+    document.getElementById(id).classList.toggle('panel-open',cranePanelOpen);
+  });
+};
+
+// Slider controls
+document.getElementById('spd-move').addEventListener('input',e=>{
+  spdMove=parseFloat(e.target.value);
+  document.getElementById('spd-move-val').textContent=spdMove.toFixed(1);
+});
+document.getElementById('spd-rot').addEventListener('input',e=>{
+  spdRot=parseFloat(e.target.value);
+  document.getElementById('spd-rot-val').textContent=spdRot.toFixed(1);
+});
+document.getElementById('grip-y').addEventListener('input',e=>{
+  const c=getActiveCrane(); if(!c)return;
+  const newVal=parseFloat(e.target.value);
+  const delta=newVal-c.state.gripY;
+  c.state.gripY=newVal;
+  // Shift the world-space offset vertically so the object rides higher/lower on the hook
+  attachedOffset.y-=delta;
+  document.getElementById('grip-y-val').textContent=newVal.toFixed(1);
+});
+
+// ── CRANE HEIGHT CONTROLS ────────────────────────────────────────────────
+let craneHSpeed=0.5;
+window.setCraneHSpeed=function(mode){
+  craneHSpeed=mode==='xfast'?5.0:mode==='fast'?2.0:0.5;
+  ['crane-hspd-slow','crane-hspd-fast','crane-hspd-xfast'].forEach(id=>{
+    const el=document.getElementById(id);
+    const isActive=(mode==='slow'&&id==='crane-hspd-slow')||(mode==='fast'&&id==='crane-hspd-fast')||(mode==='xfast'&&id==='crane-hspd-xfast');
+    el.style.borderColor=isActive?'var(--crane)':'';
+    el.style.color=isActive?'var(--crane)':'';
+    el.style.background=isActive?'rgba(246,173,85,.12)':'';
+  });
+};
+(()=>{const el=document.getElementById('crane-hspd-slow');el.style.borderColor='var(--crane)';el.style.color='var(--crane)';el.style.background='rgba(246,173,85,.12)';})();
+
+function applyCraneHeight(delta){
+  const c=getActiveCrane(); if(!c)return;
+  c.object.position.y=parseFloat((c.object.position.y+delta).toFixed(2));
+  document.getElementById('crane-h-input').value=c.object.position.y.toFixed(1);
+}
+window.setCraneHeightManual=function(val){
+  const n=parseFloat(val);
+  if(isNaN(n)) return;
+  const c=getActiveCrane(); if(!c)return;
+  c.object.position.y=parseFloat(n.toFixed(2));
+  document.getElementById('crane-h-input').value=c.object.position.y.toFixed(1);
+};
+let craneHoldTimer=null;
+function startCraneHold(dir){ applyCraneHeight(dir*craneHSpeed); craneHoldTimer=setInterval(()=>applyCraneHeight(dir*craneHSpeed),150); }
+function stopCraneHold(){ clearInterval(craneHoldTimer); craneHoldTimer=null; }
+document.getElementById('crane-h-up').addEventListener('mousedown',()=>startCraneHold(1));
+document.getElementById('crane-h-dn').addEventListener('mousedown',()=>startCraneHold(-1));
+['mouseup','mouseleave'].forEach(ev=>{
+  document.getElementById('crane-h-up').addEventListener(ev,stopCraneHold);
+  document.getElementById('crane-h-dn').addEventListener(ev,stopCraneHold);
+});
+document.getElementById('crane-h-up').addEventListener('touchstart',e=>{e.preventDefault();startCraneHold(1);},{passive:false});
+document.getElementById('crane-h-dn').addEventListener('touchstart',e=>{e.preventDefault();startCraneHold(-1);},{passive:false});
+document.getElementById('crane-h-up').addEventListener('touchend',stopCraneHold);
+document.getElementById('crane-h-dn').addEventListener('touchend',stopCraneHold);
+
+
+// Button controls
+document.querySelectorAll('.ctrl-btn[data-crane-action]').forEach(btn=>{
+  const action=btn.dataset.craneAction;
+  btn.addEventListener('mousedown',()=>{ pressedCraneBtns.add(action); btn.classList.add('pressed'); });
+  btn.addEventListener('mouseup',()=>{ pressedCraneBtns.delete(action); btn.classList.remove('pressed'); });
+  btn.addEventListener('mouseleave',()=>{ pressedCraneBtns.delete(action); btn.classList.remove('pressed'); });
+  btn.addEventListener('touchstart',e=>{ e.preventDefault(); pressedCraneBtns.add(action); btn.classList.add('pressed'); },{passive:false});
+  btn.addEventListener('touchend',e=>{ e.preventDefault(); pressedCraneBtns.delete(action); btn.classList.remove('pressed'); });
+});
+
+// Crane status bar
+function updateCraneStatusBar() {
+  const c=getActiveCrane();
+  if(!c){ document.getElementById('csb-crane').textContent='—'; return; }
+  document.getElementById('csb-crane').textContent=`#${c.id}`;
+  const p=c.object.position;
+  document.getElementById('csb-pos').textContent=`${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
+  document.getElementById('csb-arm').textContent=`A:${(c.state.armAAngle*180/Math.PI).toFixed(0)}° ext:${c.state.armBExtension.toFixed(1)}m`;
+  document.getElementById('csb-hook').textContent=`${c.state.hookDepth.toFixed(1)}m`;
+}
+
+// Crane log
+function craneLog(msg) {
+  const log=document.getElementById('crane-log');
+  const now=new Date();
+  const ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  const entry=document.createElement('div');
+  entry.className='log-entry';
+  entry.innerHTML=`<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  log.insertBefore(entry,log.firstChild);
+  if(log.children.length>80)log.removeChild(log.lastChild);
+}
+
+// Expose addCrane globally
+window.addCrane=addCrane;
+
+// ── KEYBOARD ─────────────────────────────────────────────────────────────────
+window.addEventListener('keydown',e=>{
+  // Explorer controls
+  state.keys[e.code]=true;
+  if(e.code==='KeyR' && !cranePanelOpen){ charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
+  if(e.code==='KeyM') toggleMeasure();
+  if(e.code==='KeyG') window.toggleCranePanel();
+  // Crane keys (only when panel open)
+  if(cranePanelOpen){
+    if(e.code==='Space' && state.camMode!=='free'){ e.preventDefault(); window.toggleCraneAttach(); return; }
+    if(e.code==='Escape' && cranePickMode){ cranePickMode=false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); }
+  }
+});
+window.addEventListener('keyup',e=>{ state.keys[e.code]=false; });
+
+// ── MOUSE DRAG ────────────────────────────────────────────────────────────────
+// Tracks left and right button independently
+const mouse = { ldown:false, rdown:false, x:0, y:0 };
+
+canvas.addEventListener('mousedown', e => {
+  if(state.measuring || cranePickMode) return;
+  if(e.button === 0) mouse.ldown = true;
+  if(e.button === 2) mouse.rdown = true;
+  mouse.x = e.clientX; mouse.y = e.clientY;
+  canvas.classList.add('dragging');
+  if(e.button === 2) e.preventDefault(); // suppress context menu start
+});
+canvas.addEventListener('contextmenu', e => { if(state.camMode==='free') e.preventDefault(); });
+window.addEventListener('mouseup', e => {
+  if(e.button === 0) mouse.ldown = false;
+  if(e.button === 2) mouse.rdown = false;
+  if(!mouse.ldown && !mouse.rdown) canvas.classList.remove('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if(!state.modelLoaded) return;
+  const dx = e.clientX - mouse.x, dy = e.clientY - mouse.y;
+  mouse.x = e.clientX; mouse.y = e.clientY;
+  if(!dx && !dy) return;
+
+  if(state.camMode === 'free') {
+    // LEFT drag → orbit (yaw + pitch)
+    if(mouse.ldown) {
+      freeCam.yaw   += dx * 0.004;
+      freeCam.pitch  = Math.max(-1.5, Math.min(1.5, freeCam.pitch + dy * 0.004));
+    }
+    // RIGHT drag → pan (translate camera perpendicular to view)
+    if(mouse.rdown) {
+      const panSpd = freeCam.panSpeed;
+      const cy = Math.cos(freeCam.yaw), sy = Math.sin(freeCam.yaw);
+      const right = new THREE.Vector3(cy, 0, -sy);
+      const up    = new THREE.Vector3(0, 1, 0);
+      freeCam.pos.addScaledVector(right, -dx * panSpd);
+      freeCam.pos.addScaledVector(up,     dy * panSpd);
+    }
+  } else if(ridingCraneId !== null) {
+    // Riding crane: left drag rotates the view around the crane (orbit style)
+    if(mouse.ldown) {
+      freeCam.yaw   += dx * 0.004;
+      freeCam.pitch  = Math.max(-0.1, Math.min(1.5, freeCam.pitch + dy * 0.004));
+    }
+  } else {
+    // Normal walk mode: drag rotates character + camera pitch
+    if(mouse.ldown) {
+      state.charRot -= dx * 0.005;
+      charGroup.rotation.y = state.charRot;
+      state.camPitch = Math.max(-0.05, Math.min(1.3, state.camPitch + dy * 0.004));
+    }
+  }
+});
+// Also alias old state.mouse for any code still referencing it
+Object.defineProperty(state, 'mouse', { get(){ return mouse; } });
+
+// ── FLOOR OFFSET ─────────────────────────────────────────────────────────────
+let hSpeed=0.1, holdTimer=null;
+window.setHSpeed=function(mode){ hSpeed=mode==='fast'?1.0:0.1; document.getElementById('hspd-slow').classList.toggle('active',mode==='slow'); document.getElementById('hspd-fast').classList.toggle('active',mode==='fast'); };
+function applyFloor(val){ state.floorOffset=Math.round(val*100)/100; document.getElementById('floor-input').value=state.floorOffset.toFixed(2); }
+window.startHold=function(dir){ applyFloor(state.floorOffset+dir*hSpeed); holdTimer=setInterval(()=>applyFloor(state.floorOffset+dir*hSpeed),150); };
+window.stopHold=function(){ clearInterval(holdTimer); holdTimer=null; };
+window.setFloorManual=function(val){ const n=parseFloat(val); if(!isNaN(n))applyFloor(n); };
+window.setFloorOffset=function(val){ applyFloor(parseFloat(val)); };
+
+// ── JOYSTICK ──────────────────────────────────────────────────────────────────
+const joystickBase=document.getElementById('joystick-base');
+const joystickKnob=document.getElementById('joystick-knob');
+const JR=33;
+joystickBase.addEventListener('touchstart',e=>{ e.preventDefault(); const t=e.changedTouches[0]; const r=joystickBase.getBoundingClientRect(); state.joy.active=true; state.joy.id=t.identifier; state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2; joystickKnob.classList.add('active'); },{passive:false});
+joystickBase.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches){ if(t.identifier!==state.joy.id)continue; let dx=t.clientX-state.joy.startX,dy=t.clientY-state.joy.startY; const d=Math.sqrt(dx*dx+dy*dy); if(d>JR){dx=dx/d*JR;dy=dy/d*JR;} state.joy.dx=dx/JR; state.joy.dy=dy/JR; joystickKnob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }},{passive:false});
+function resetJoy(){ state.joy.active=false; state.joy.dx=0; state.joy.dy=0; joystickKnob.style.transform='translate(-50%,-50%)'; joystickKnob.classList.remove('active'); }
+joystickBase.addEventListener('touchend',e=>{ for(const t of e.changedTouches)if(t.identifier===state.joy.id)resetJoy(); });
+joystickBase.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches)if(t.identifier===state.joy.id)resetJoy(); });
+
+// ── CANVAS TOUCH ─────────────────────────────────────────────────────────────
+// 1 finger  → orbit (yaw/pitch)
+// 2 fingers → pan in free mode
+const touch1={id:null,x:0,y:0};
+const touch2={id:null,x:0,y:0};
+
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    const r=joystickBase.getBoundingClientRect();
+    const inJoy=t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
+    if(inJoy)continue;
+    if(touch1.id===null){touch1.id=t.identifier;touch1.x=t.clientX;touch1.y=t.clientY;}
+    else if(touch2.id===null){touch2.id=t.identifier;touch2.x=t.clientX;touch2.y=t.clientY;}
+  }
+},{passive:false});
+
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!state.modelLoaded)return;
+  const twoFinger=touch1.id!==null&&touch2.id!==null;
+
+  // Capture previous positions before updating
+  const prev1x=touch1.x, prev1y=touch1.y;
+  const prev2x=touch2.x, prev2y=touch2.y;
+
+  for(const t of e.changedTouches){
+    if(t.identifier===touch1.id){touch1.x=t.clientX;touch1.y=t.clientY;}
+    if(t.identifier===touch2.id){touch2.x=t.clientX;touch2.y=t.clientY;}
+  }
+
+  if(!twoFinger){
+    // Single finger: orbit
+    const dx=touch1.x-prev1x, dy=touch1.y-prev1y;
+    if(state.camMode==='free'||ridingCraneId!==null){
+      freeCam.yaw+=dx*0.005;
+      freeCam.pitch=Math.max(-1.5,Math.min(1.5,freeCam.pitch+dy*0.005));
+    } else {
+      state.charRot+=dx*0.005;
+      charGroup.rotation.y=state.charRot;
+      state.camPitch=Math.max(-0.05,Math.min(1.3,state.camPitch-dy*0.004));
+    }
+  } else if(state.camMode==='free'){
+    // Two fingers: pan using midpoint delta
+    const midDx=((touch1.x+touch2.x)-(prev1x+prev2x))/2;
+    const midDy=((touch1.y+touch2.y)-(prev1y+prev2y))/2;
+    const cy=Math.cos(freeCam.yaw),sy=Math.sin(freeCam.yaw);
+    const right=new THREE.Vector3(cy,0,-sy);
+    const up=new THREE.Vector3(0,1,0);
+    freeCam.pos.addScaledVector(right,-midDx*freeCam.panSpeed);
+    freeCam.pos.addScaledVector(up,midDy*freeCam.panSpeed);
+  }
+},{passive:false});
+
+function resetCanvasTouch(id){if(touch1.id===id)touch1.id=null;if(touch2.id===id)touch2.id=null;}
+canvas.addEventListener('touchend',e=>{for(const t of e.changedTouches)resetCanvasTouch(t.identifier);});
+canvas.addEventListener('touchcancel',e=>{for(const t of e.changedTouches)resetCanvasTouch(t.identifier);});
 
 // ── MEASURE ───────────────────────────────────────────────────────────────────
-const markerGeo  = new THREE.SphereGeometry(0.08,10,10);
-const markerMatA = new THREE.MeshBasicMaterial({color:0x4fc3f7,depthTest:false});
-const markerMatB = new THREE.MeshBasicMaterial({color:0xf6ad55,depthTest:false});
-const lineMat    = new THREE.LineBasicMaterial({color:0xf6ad55,depthTest:false,linewidth:2});
+const markerGeo=new THREE.SphereGeometry(0.08,10,10);
+const markerMatA=new THREE.MeshBasicMaterial({color:0x4fc3f7,depthTest:false});
+const markerMatB=new THREE.MeshBasicMaterial({color:0xf6ad55,depthTest:false});
+const lineMat=new THREE.LineBasicMaterial({color:0xf6ad55,depthTest:false,linewidth:2});
 
-window.toggleMeasure = function() {
-  state.measuring=!state.measuring;
-  document.getElementById('btn-measure').classList.toggle('active',state.measuring);
-  document.getElementById('measure-panel').style.display=state.measuring?'flex':'none';
-  canvas.classList.toggle('measuring',state.measuring);
-  if (!state.measuring) clearMeasure();
-};
+window.toggleMeasure=function(){ state.measuring=!state.measuring; document.getElementById('btn-measure').classList.toggle('active',state.measuring); document.getElementById('measure-panel').style.display=state.measuring?'flex':'none'; canvas.classList.toggle('measuring',state.measuring); if(!state.measuring)clearMeasure(); };
+window.clearMeasure=function(){ state.measurePts=[]; state.measureMarkers.forEach(m=>scene.remove(m)); state.measureMarkers=[]; if(state.measureLine){scene.remove(state.measureLine);state.measureLine=null;} document.getElementById('meas-hint').innerHTML='Haz clic en el modelo para marcar el <strong>Punto A</strong>'; document.getElementById('meas-total').style.display='none'; document.getElementById('meas-breakdown').style.display='none'; };
 
-window.clearMeasure = function() {
-  state.measurePts=[];
-  state.measureMarkers.forEach(m=>scene.remove(m)); state.measureMarkers=[];
-  if (state.measureLine){scene.remove(state.measureLine);state.measureLine=null;}
-  document.getElementById('meas-hint').innerHTML='Haz clic en el modelo para marcar el <strong>Punto A</strong>';
-  document.getElementById('meas-total').style.display='none';
-  document.getElementById('meas-breakdown').style.display='none';
-};
-
-canvas.addEventListener('click', e => {
-  if (!state.measuring||!state.modelLoaded) return;
-  if (state.measurePts.length>=2) clearMeasure();
+function handleMeasureClick(e) {
+  if(state.measurePts.length>=2)clearMeasure();
   const rect=canvas.getBoundingClientRect();
   const ndx=((e.clientX-rect.left)/rect.width)*2-1;
   const ndy=-((e.clientY-rect.top)/rect.height)*2+1;
   raycaster.setFromCamera(new THREE.Vector2(ndx,ndy),camera);
   const model=scene.getObjectByName('__model__');
-  if (!model) return;
+  if(!model)return;
   const hits=raycaster.intersectObject(model,true);
-  if (!hits.length) return;
+  if(!hits.length)return;
   const pt=hits[0].point;
   state.measurePts.push({x:pt.x,y:pt.y,z:pt.z});
   const mat=state.measurePts.length===1?markerMatA:markerMatB;
   const mesh=new THREE.Mesh(markerGeo,mat);
   mesh.position.copy(pt); mesh.renderOrder=999; scene.add(mesh);
   state.measureMarkers.push(mesh);
-  if (state.measurePts.length===1) {
+  if(state.measurePts.length===1){
     document.getElementById('meas-hint').innerHTML='Ahora haz clic para marcar el <strong>Punto B</strong>';
   } else {
     const A=state.measurePts[0],B=state.measurePts[1];
     const dx=B.x-A.x,dy=B.y-A.y,dz=B.z-A.z;
-    const hz=Math.sqrt(dx*dx+dz*dz), vt=Math.abs(dy), tot=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    const hz=Math.sqrt(dx*dx+dz*dz),vt=Math.abs(dy),tot=Math.sqrt(dx*dx+dy*dy+dz*dz);
     const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(A.x,A.y,A.z),new THREE.Vector3(B.x,B.y,B.z)]);
     state.measureLine=new THREE.Line(geo,lineMat); state.measureLine.renderOrder=999; scene.add(state.measureLine);
     document.getElementById('meas-hint').textContent='Clic para medir de nuevo';
@@ -668,43 +1555,33 @@ canvas.addEventListener('click', e => {
     document.getElementById('meas-3d').textContent=tot.toFixed(3)+' m';
     document.getElementById('meas-breakdown').style.display='flex';
   }
-});
+}
 
 // ── MODEL READY ───────────────────────────────────────────────────────────────
 function showError(msg){const el=document.getElementById('load-error');el.textContent='⚠ '+msg;el.style.display='block';}
 
-function onModelReady(gltf, name) {
-  const prev=scene.getObjectByName('__model__'); if(prev) scene.remove(prev);
+function onModelReady(gltf,name){
+  const prev=scene.getObjectByName('__model__'); if(prev)scene.remove(prev);
   const model=gltf.scene; model.name='__model__';
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
   scene.add(model);
-
   const box=new THREE.Box3().setFromObject(model);
-  const center=box.getCenter(new THREE.Vector3()), size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
   modelBox=box;
-
   state.modelFloor=box.min.y; state.floorOffset=0;
   document.getElementById('floor-input').value='0.00';
-
   charGroup.position.set(center.x,box.min.y,center.z);
   state.charRot=0; charGroup.rotation.y=0;
   gridHelper.position.y=box.min.y-0.01;
-
   const maxDim=Math.max(size.x,size.z);
   const ip=new THREE.Vector3(center.x+maxDim*.8,box.min.y+size.y*.7,center.z+maxDim*.8);
   camera.position.copy(ip); camCurrent.copy(ip); camera.lookAt(center);
-
   sun.shadow.camera.far=Math.max(size.x,size.y,size.z)*4;
   sun.shadow.camera.updateProjectionMatrix();
-
-
-
   updateMinimapCamera();
-
   state.modelLoaded=true;
   document.getElementById('model-name').textContent=name;
   document.getElementById('hud-status').textContent='EXPLORANDO';
-
   const toFlex=['controls-legend','speed-badge','cam-toggle','compass','minimap-wrap','toolbar','joystick-wrap','height-panel'];
   toFlex.forEach(id=>document.getElementById(id).style.display='flex');
   document.getElementById('info-panel').style.display='block';
@@ -732,7 +1609,7 @@ function loadFromFile(file){
   r.readAsArrayBuffer(file);
 }
 
-const dropArea=document.getElementById('drop-area'), fileInput=document.getElementById('file-input');
+const dropArea=document.getElementById('drop-area'),fileInput=document.getElementById('file-input');
 dropArea.addEventListener('dragover',e=>{e.preventDefault();dropArea.classList.add('drag-over');});
 dropArea.addEventListener('dragleave',()=>dropArea.classList.remove('drag-over'));
 dropArea.addEventListener('drop',e=>{
@@ -744,66 +1621,198 @@ dropArea.addEventListener('drop',e=>{
 fileInput.addEventListener('change',e=>{const f=e.target.files[0];if(f)loadFromFile(f);fileInput.value='';});
 
 window.setCamMode=function(mode){
+  // Leaving free cam: restore camera smoothly
+  if(state.camMode==='free' && mode!=='free'){
+    freeCam.active=false;
+    canvas.classList.remove('free-cam');
+  }
   state.camMode=mode;
   document.getElementById('btn-third').classList.toggle('active',mode==='third');
   document.getElementById('btn-first').classList.toggle('active',mode==='first');
+  document.getElementById('btn-free').classList.toggle('active',mode==='free');
   document.getElementById('crosshair').style.display=mode==='first'?'block':'none';
+  const fch=document.getElementById('free-cam-hint');
+  if(fch) fch.style.display=mode==='free'?'flex':'none';
+  if(mode==='free'){
+    // Seed pivot at the character, camera orbits around it
+    freeCam.pos.copy(charGroup.position).add(new THREE.Vector3(0,2,0));
+    // Extract yaw from current camera direction
+    const dir=new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    freeCam.yaw  = Math.atan2(dir.x,dir.z);
+    freeCam.pitch = 0.35;
+    freeCam.orbitRadius = camera.position.distanceTo(freeCam.pos);
+    if(freeCam.orbitRadius < 3) freeCam.orbitRadius = 20;
+    freeCam.active=true;
+    canvas.classList.add('free-cam');
+    craneLog('Vista libre — clic izq: orbitar · clic der: desplazar · 2 dedos: desplazar');
+  }
 };
+
+// (freeCamMouseMove replaced by unified mouse handler)
+
+// ── RIDE CRANE TOGGLE ─────────────────────────────────────────────────────
+window.toggleRideCrane=function(){
+  const c=getActiveCrane();
+  if(ridingCraneId!==null){
+    // Dismount
+    ridingCraneId=null;
+    document.getElementById('btn-ride-crane').textContent='🧑 Montar en grúa activa';
+    document.getElementById('btn-ride-crane').style.background='rgba(79,195,247,.08)';
+    document.getElementById('btn-ride-crane').style.borderColor='rgba(79,195,247,.25)';
+    document.getElementById('btn-ride-crane').style.color='var(--accent)';
+    craneLog('Desmontado de la grúa');
+  } else {
+    if(!c){ craneLog('Selecciona una grúa primero'); return; }
+    ridingCraneId=c.id;
+    // Seed orbit camera around crane
+    freeCam.pos.set(c.object.position.x, c.object.position.y+3, c.object.position.z);
+    freeCam.yaw = state.charRot + Math.PI; // look at crane from behind
+    freeCam.pitch = 0.35;
+    freeCam.orbitRadius = 14;
+    document.getElementById('btn-ride-crane').textContent='⏹ Desmontar de grúa';
+    document.getElementById('btn-ride-crane').style.background='rgba(239,83,80,.08)';
+    document.getElementById('btn-ride-crane').style.borderColor='rgba(239,83,80,.35)';
+    document.getElementById('btn-ride-crane').style.color='var(--danger)';
+    craneLog(`Montado en Grúa #${c.id} — flechas mueven la grúa · arrastrar para orbitar`);
+  }
+};
+
+// Mouse wheel → zoom (change orbit radius) in free cam
+canvas.addEventListener('wheel', e=>{
+  if(state.camMode==='free' || ridingCraneId!==null){
+    freeCam.orbitRadius = Math.max(2, Math.min(200, freeCam.orbitRadius + e.deltaY*0.05));
+    e.preventDefault();
+  }
+},{passive:false});
 
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
 
+// ── POSTMESSAGE LISTENER ─────────────────────────────────────────────────────
+window.addEventListener('message',async(event)=>{
+  const d=event.data;
+  if(!d||d.type!=='LOAD_GLB')return;
+  const bar=document.getElementById('loading-bar'),barWrap=document.getElementById('loading-bar-wrap'),status=document.getElementById('hud-status');
+  const name=(d.name||'Modelo').replace(/\.(glb|gltf)$/i,'');
+  document.getElementById('load-error').style.display='none';
+  barWrap.style.display='block'; bar.style.width='10%'; status.textContent='RECIBIENDO MODELO...';
+  event.source&&event.source.postMessage({type:'EXPLORER_READY'},'*');
+  try{
+    let buffer=d.buffer;
+    if(!buffer&&d.url){status.textContent='DESCARGANDO...'; const resp=await fetch(d.url); buffer=await resp.arrayBuffer();}
+    if(!buffer){showError('No se recibió datos del modelo.');barWrap.style.display='none';return;}
+    bar.style.width='60%'; status.textContent='PROCESANDO MODELO...';
+    gltfLoader.parse(buffer,'',gltf=>{bar.style.width='95%';onModelReady(gltf,name);},err=>{showError('Error: '+(err.message||String(err)));barWrap.style.display='none';status.textContent='ERROR';});
+  }catch(err){showError('Error al recibir modelo: '+(err.message||String(err)));barWrap.style.display='none';status.textContent='ERROR';}
+});
+
+window.addEventListener('load',()=>{
+  if(window.opener)window.opener.postMessage({type:'EXPLORER_READY'},'*');
+  if(window.parent!==window)window.parent.postMessage({type:'EXPLORER_READY'},'*');
+});
+
 // ── LOOP ─────────────────────────────────────────────────────────────────────
 const clock=new THREE.Clock();
+let lastStatusUpdate=0;
 
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),0.05);
+  const time=performance.now();
 
+  // ── EXPLORER CHARACTER + CAMERA ──
   if(state.modelLoaded){
     const floorY=state.modelFloor+state.floorOffset;
     const running=state.keys['ShiftLeft']||state.keys['ShiftRight'];
-    const speed=running?12:5;
-    let moving=false;
 
-    if(state.keys['ArrowLeft']) {state.charRot+=2.2*dt; charGroup.rotation.y=state.charRot;}
-    if(state.keys['ArrowRight']){state.charRot-=2.2*dt; charGroup.rotation.y=state.charRot;}
-
-    const dir=new THREE.Vector3(Math.sin(state.charRot),0,Math.cos(state.charRot));
-    if(state.keys['ArrowUp'])  {charGroup.position.addScaledVector(dir, speed*dt);    moving=true;}
-    if(state.keys['ArrowDown']){charGroup.position.addScaledVector(dir,-speed*.6*dt); moving=true;}
-
-    if(state.joy.active&&(Math.abs(state.joy.dx)>0.1||Math.abs(state.joy.dy)>0.1)){
-      state.charRot-=state.joy.dx*2.5*dt; charGroup.rotation.y=state.charRot;
-      if(Math.abs(state.joy.dy)>0.1){charGroup.position.addScaledVector(dir,-state.joy.dy*speed*dt);moving=true;}
-    }
-
-    if(moving){
-      state.walkCycle+=(running?8:4)*dt;
-      charGroup.position.y=floorY+Math.abs(Math.sin(state.walkCycle*2))*0.04;
-      const sw=Math.sin(state.walkCycle)*0.35;
-      charGroup.userData.legL.rotation.x= sw; charGroup.userData.legR.rotation.x=-sw;
-      charGroup.userData.armL.rotation.x=-sw*.5; charGroup.userData.armR.rotation.x=sw*.5;
+    // ── RIDING CRANE: arrow keys move the crane, character sits on it ──
+    if(ridingCraneId!==null){
+      const rc=cranes.find(c=>c.id===ridingCraneId);
+      if(rc){
+        const spd=running?spdMove*2:spdMove;
+        const a=rc.object.rotation.y;
+        if(state.keys['ArrowUp'])  { rc.object.position.x-=Math.sin(a)*0.08*spd; rc.object.position.z-=Math.cos(a)*0.08*spd; }
+        if(state.keys['ArrowDown']){ rc.object.position.x+=Math.sin(a)*0.08*spd; rc.object.position.z+=Math.cos(a)*0.08*spd; }
+        if(state.keys['ArrowLeft']) rc.object.rotation.y+=0.025*spdRot;
+        if(state.keys['ArrowRight'])rc.object.rotation.y-=0.025*spdRot;
+        // Sit character on top of the crane cab
+        charGroup.position.set(
+          rc.object.position.x + Math.sin(rc.object.rotation.y)*1.5,
+          rc.object.position.y + 2.2,
+          rc.object.position.z + Math.cos(rc.object.rotation.y)*1.5
+        );
+        charGroup.rotation.y=rc.object.rotation.y;
+        state.charRot=rc.object.rotation.y;
+        // Keep free-cam pivot on the crane so the orbit camera follows it
+        freeCam.pos.set(rc.object.position.x, rc.object.position.y+3, rc.object.position.z);
+      }
     } else {
-      charGroup.position.y=floorY;
-      charGroup.userData.legL.rotation.x*=0.85; charGroup.userData.legR.rotation.x*=0.85;
-      charGroup.userData.armL.rotation.x*=0.85; charGroup.userData.armR.rotation.x*=0.85;
+      // ── NORMAL CHARACTER MOVEMENT ──
+      let moving=false;
+      if(state.keys['ArrowLeft']){state.charRot+=2.2*dt;charGroup.rotation.y=state.charRot;}
+      if(state.keys['ArrowRight']){state.charRot-=2.2*dt;charGroup.rotation.y=state.charRot;}
+      const speed=running?12:5;
+      const dir=new THREE.Vector3(Math.sin(state.charRot),0,Math.cos(state.charRot));
+      if(state.keys['ArrowUp']){charGroup.position.addScaledVector(dir,speed*dt);moving=true;}
+      if(state.keys['ArrowDown']){charGroup.position.addScaledVector(dir,-speed*.6*dt);moving=true;}
+      if(state.joy.active&&(Math.abs(state.joy.dx)>0.1||Math.abs(state.joy.dy)>0.1)){
+        state.charRot-=state.joy.dx*2.5*dt;charGroup.rotation.y=state.charRot;
+        if(Math.abs(state.joy.dy)>0.1){charGroup.position.addScaledVector(dir,-state.joy.dy*speed*dt);moving=true;}
+      }
+      if(moving){
+        state.walkCycle+=(running?8:4)*dt;
+        charGroup.position.y=floorY+Math.abs(Math.sin(state.walkCycle*2))*0.04;
+        const sw=Math.sin(state.walkCycle)*0.35;
+        charGroup.userData.legL.rotation.x=sw;charGroup.userData.legR.rotation.x=-sw;
+        charGroup.userData.armL.rotation.x=-sw*.5;charGroup.userData.armR.rotation.x=sw*.5;
+      } else {
+        charGroup.position.y=floorY;
+        charGroup.userData.legL.rotation.x*=0.85;charGroup.userData.legR.rotation.x*=0.85;
+        charGroup.userData.armL.rotation.x*=0.85;charGroup.userData.armR.rotation.x*=0.85;
+      }
     }
-
     document.getElementById('speed-label').textContent=running?'Corriendo':'Caminando';
 
+    // ── CAMERA MODES ──
     const pos=charGroup.position;
-    if(state.camMode==='third'){
+
+    // When riding, camera always orbits the crane regardless of camMode
+    if(ridingCraneId!==null && state.camMode!=='free'){
+      const sy2=Math.sin(freeCam.yaw), cy2=Math.cos(freeCam.yaw);
+      const sp2=Math.sin(freeCam.pitch), cp2=Math.cos(freeCam.pitch);
+      const r2=freeCam.orbitRadius;
+      camera.position.set(
+        freeCam.pos.x + r2*sy2*cp2,
+        freeCam.pos.y + r2*sp2,
+        freeCam.pos.z + r2*cy2*cp2
+      );
+      camera.lookAt(freeCam.pos);
+    } else if(state.camMode==='free'){
+      // Free cam: mouse LEFT = orbit (yaw/pitch around a pivot), RIGHT = pan
+      // The camera orbits around freeCam.pos at a fixed radius
+      const radius = freeCam.orbitRadius;
+      const sy=Math.sin(freeCam.yaw), cy=Math.cos(freeCam.yaw);
+      const sp=Math.sin(freeCam.pitch), cp=Math.cos(freeCam.pitch);
+      camera.position.set(
+        freeCam.pos.x + radius * sy * cp,
+        freeCam.pos.y + radius * sp,
+        freeCam.pos.z + radius * cy * cp
+      );
+      camera.lookAt(freeCam.pos);
+      camera.rotation.order='YXZ';
+    } else if(state.camMode==='third'){
       const dist=6,pitch=state.camPitch;
       camTarget.set(pos.x-Math.sin(state.charRot)*dist*Math.cos(pitch),pos.y+dist*Math.sin(pitch),pos.z-Math.cos(state.charRot)*dist*Math.cos(pitch));
       camCurrent.lerp(camTarget,Math.min(10*dt,1));
-      camera.position.copy(camCurrent); camera.lookAt(pos.x,pos.y+1.0,pos.z);
+      camera.position.copy(camCurrent);camera.lookAt(pos.x,pos.y+1.0,pos.z);
     } else {
+      // First person
       camera.position.set(pos.x+Math.sin(state.charRot)*.3,pos.y+1.65,pos.z+Math.cos(state.charRot)*.3);
       const lh=new THREE.Vector3(pos.x+Math.sin(state.charRot)*10,pos.y+1.65,pos.z+Math.cos(state.charRot)*10);
-      lh.y+=(state.camPitch-0.35)*10; camera.lookAt(lh);
+      lh.y+=(state.camPitch-0.35)*10;camera.lookAt(lh);
     }
 
     document.getElementById('pos-x').textContent=pos.x.toFixed(2);
@@ -812,66 +1821,30 @@ function animate(){
     document.getElementById('pos-heading').textContent=(((-state.charRot*180/Math.PI)%360+360)%360).toFixed(0)+'°';
     document.getElementById('compass-svg').style.transform=`rotate(${state.charRot}rad)`;
 
-    // Minimap: render scene with ortho cam, then update SVG overlay
-    mmRenderer.render(scene, mmCam);
+    mmRenderer.render(scene,mmCam);
     updateMinimapOverlay();
   }
 
-  renderer.render(scene, camera);
-}
-
-// ── POSTMESSAGE LISTENER (recibe GLB desde la plataforma padre) ───────────────
-// La ventana padre envía: { type: 'LOAD_GLB', buffer: ArrayBuffer, name: string }
-// También acepta: { type: 'LOAD_GLB', url: string, name: string }  (para URLs públicas)
-window.addEventListener('message', async (event) => {
-  const d = event.data;
-  if (!d || d.type !== 'LOAD_GLB') return;
-
-  const bar     = document.getElementById('loading-bar');
-  const barWrap = document.getElementById('loading-bar-wrap');
-  const status  = document.getElementById('hud-status');
-  const name    = (d.name || 'Modelo').replace(/\.(glb|gltf)$/i, '');
-
-  document.getElementById('load-error').style.display = 'none';
-  barWrap.style.display = 'block';
-  bar.style.width = '10%';
-  status.textContent = 'RECIBIENDO MODELO...';
-
-  // Confirm receipt to sender
-  event.source && event.source.postMessage({ type: 'EXPLORER_READY' }, '*');
-
-  try {
-    let buffer = d.buffer;
-
-    // If URL was sent instead of buffer, fetch it
-    if (!buffer && d.url) {
-      status.textContent = 'DESCARGANDO...';
-      const resp = await fetch(d.url);
-      buffer = await resp.arrayBuffer();
+  // ── CRANE UPDATE ──
+  if(cranes.length>0){
+    const activeCrane=getActiveCrane();
+    if(activeCrane && cranePanelOpen){
+      pressedCraneBtns.forEach(action=>{
+        if(CRANE_ACTIONS[action])CRANE_ACTIONS[action](activeCrane);
+      });
     }
+    // Apply state for all cranes (not just active)
+    cranes.forEach(c=>applyCraneState(c));
 
-    if (!buffer) { showError('No se recibió datos del modelo.'); barWrap.style.display='none'; return; }
-
-    bar.style.width = '60%';
-    status.textContent = 'PROCESANDO MODELO...';
-
-    gltfLoader.parse(
-      buffer, '',
-      gltf => { bar.style.width = '95%'; onModelReady(gltf, name); },
-      err  => { showError('Error: ' + (err.message || String(err))); barWrap.style.display='none'; status.textContent='ERROR'; }
-    );
-  } catch(err) {
-    showError('Error al recibir modelo: ' + (err.message || String(err)));
-    barWrap.style.display = 'none';
-    status.textContent = 'ERROR';
+    // Throttle status bar
+    if(time-lastStatusUpdate>200 && cranePanelOpen){
+      updateCraneStatusBar();
+      lastStatusUpdate=time;
+    }
   }
-});
 
-// Notify parent that the explorer is ready to receive
-window.addEventListener('load', () => {
-  if (window.opener) window.opener.postMessage({ type: 'EXPLORER_READY' }, '*');
-  if (window.parent !== window) window.parent.postMessage({ type: 'EXPLORER_READY' }, '*');
-});
+  renderer.render(scene,camera);
+}
 
 animate();
 </script>
