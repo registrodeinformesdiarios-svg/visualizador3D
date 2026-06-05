@@ -250,7 +250,7 @@
 
   /* ── PICK OVERLAY ── */
   #pick-overlay{
-    display:none;position:fixed;top:48px;left:0;right:0;bottom:26px;z-index:80;
+    display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:80;
     border:2px dashed rgba(79,195,247,.4);pointer-events:none;
   }
   #pick-overlay.active{display:block;pointer-events:all;cursor:crosshair;}
@@ -326,9 +326,225 @@
   #loading-bar-wrap{position:fixed;bottom:0;left:0;right:0;height:3px;z-index:300;display:none;}
   #loading-bar{height:100%;background:var(--accent);width:0%;transition:width .2s;}
 
+  /* ── NEARBY OBJECT LIST ── */
+  .nearby-filter{
+    flex:1;padding:3px 0;border-radius:4px;border:1px solid var(--border);
+    background:var(--bg2);color:var(--text3);font-family:var(--mono);font-size:8px;
+    cursor:pointer;text-align:center;transition:all .12s;letter-spacing:.3px;
+  }
+  .nearby-filter.active{border-color:var(--crane);color:var(--crane);background:rgba(246,173,85,.08);}
+  .nearby-item{
+    display:flex;align-items:center;gap:6px;padding:5px 7px;
+    border:1px solid var(--border);border-radius:5px;cursor:pointer;
+    background:var(--bg2);transition:all .12s;
+  }
+  .nearby-item:hover{border-color:rgba(246,173,85,.4);background:rgba(246,173,85,.05);}
+  .nearby-item.selected{border-color:var(--crane);background:rgba(246,173,85,.1);}
+  .nearby-item-icon{font-size:12px;flex-shrink:0;}
+  .nearby-item-info{flex:1;min-width:0;}
+  .nearby-item-name{font-family:var(--mono);font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nearby-item-sub{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:1px;}
+  .nearby-item-dist{font-family:var(--mono);font-size:9px;flex-shrink:0;padding:2px 5px;border-radius:4px;border:1px solid;}
+  .nearby-item-dist.near{color:var(--accent2);border-color:rgba(129,199,132,.3);}
+  .nearby-item-dist.mid {color:var(--warn);border-color:rgba(246,173,85,.3);}
+  .nearby-item-dist.far {color:var(--text3);border-color:var(--border);}
+  .nearby-hook-btn{
+    flex-shrink:0;width:22px;height:22px;border-radius:4px;
+    border:1px solid rgba(246,173,85,.3);background:rgba(246,173,85,.06);
+    color:var(--crane);font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .12s;
+  }
+  .nearby-hook-btn:hover{background:rgba(246,173,85,.2);border-color:var(--crane);}
+
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  /* ── D-PAD CRANE CONTROLLER ── */
+  #crane-dpad-wrap{
+    position:fixed;bottom:100px;right:20px;z-index:120;display:none;
+    flex-direction:column;align-items:center;gap:2px;
+  }
+  #crane-dpad-wrap.panel-open{right:calc(var(--panel-w) + 20px);}
+  .dpad-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+  .dpad-tabs{display:flex;gap:2px;margin-bottom:4px;}
+  .dpad-tab{padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);
+    color:var(--text3);font-family:var(--mono);font-size:8px;cursor:pointer;transition:all .12s;letter-spacing:.5px;}
+  .dpad-tab.active{border-color:var(--crane);color:var(--crane);background:rgba(246,173,85,.1);}
+  .dpad-grid{display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:3px;}
+  .dp-btn{
+    width:44px;height:44px;border-radius:8px;border:1px solid var(--border);
+    background:rgba(10,12,16,.85);backdrop-filter:blur(8px);
+    color:var(--text2);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .1s;user-select:none;-webkit-user-select:none;touch-action:none;
+  }
+  .dp-btn:active,.dp-btn.pressed{background:rgba(246,173,85,.2);border-color:var(--crane);color:var(--crane);}
+  .dp-btn.center-btn{background:rgba(246,173,85,.06);border-color:rgba(246,173,85,.2);font-size:12px;color:var(--text3);}
+  .dp-btn.empty{visibility:hidden;pointer-events:none;}
+  .dpad-extra{display:flex;gap:3px;margin-top:3px;}
+  .dp-wide-btn{
+    flex:1;padding:6px 0;border-radius:7px;border:1px solid var(--border);
+    background:rgba(10,12,16,.85);backdrop-filter:blur(8px);
+    color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;
+    text-align:center;user-select:none;touch-action:none;transition:all .1s;
+  }
+  .dp-wide-btn:active,.dp-wide-btn.pressed{background:rgba(246,173,85,.2);border-color:var(--crane);color:var(--crane);}
+
+  /* ── FLOOR CONFIG PANEL ── */
+  #floor-config-panel{
+    position:fixed;top:58px;left:20px;z-index:105;
+    background:rgba(10,12,16,.92);backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;min-width:240px;display:none;flex-direction:column;gap:10px;
+  }
+  .fcp-title{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+  .fcp-row{display:flex;align-items:center;gap:6px;justify-content:space-between;}
+  .fcp-label{font-size:11px;color:var(--text2);}
+  .fcp-val{font-family:var(--mono);font-size:11px;color:var(--accent2);}
+  .fcp-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);
+    color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .12s;}
+  .fcp-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+  .fcp-btn.active{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.1);}
+
+  /* ── LIFT POSITION PANEL ── */
+  #lift-pos-panel{
+    position:fixed;top:0;left:0;bottom:0;width:280px;z-index:112;
+    background:rgba(10,12,16,0.96);backdrop-filter:blur(16px);
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+    transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #lift-pos-panel.open{transform:translateX(0);}
+  #lpp-top{height:48px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .lpp-logo{font-family:var(--mono);font-size:11px;font-weight:600;color:#a78bfa;letter-spacing:.5px;}
+  .lpp-close{margin-left:auto;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+    background:var(--bg3);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+  .lpp-close:hover{border-color:var(--danger);color:var(--danger);}
+  .lpp-section{border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
+  .lpp-section-title{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .lpp-section-title::before{content:'';display:block;width:3px;height:3px;border-radius:50%;background:#a78bfa;}
+  .lpp-item{border:1px solid var(--border);border-radius:6px;margin-bottom:5px;overflow:hidden;background:var(--bg2);}
+  .lpp-item-header{display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;user-select:none;}
+  .lpp-item-header:hover{background:rgba(167,139,250,.05);}
+  .lpp-item-name{font-family:var(--mono);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+  .lpp-item-badge{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:8px;border:1px solid rgba(167,139,250,.4);color:#a78bfa;flex-shrink:0;}
+  .lpp-item-body{padding:8px;border-top:1px solid var(--border);display:none;}
+  .lpp-item-body.open{display:block;}
+  .lpp-field{margin-bottom:6px;}
+  .lpp-field-label{font-size:10px;color:var(--text3);margin-bottom:3px;}
+  .lpp-input-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;}
+  .lpp-input{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+    color:var(--accent);font-family:var(--mono);font-size:11px;
+    padding:4px 6px;text-align:center;width:100%;outline:none;}
+  .lpp-input:focus{border-color:var(--accent);}
+  .lpp-input-label{font-family:var(--mono);font-size:8px;color:var(--text3);text-align:center;margin-top:2px;}
+  .lpp-rot-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;}
+  .lpp-set-btn{width:100%;padding:5px 0;border-radius:5px;border:1px solid rgba(167,139,250,.35);
+    background:rgba(167,139,250,.08);color:#a78bfa;font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s;margin-top:4px;}
+  .lpp-set-btn:hover{background:rgba(167,139,250,.18);}
+  .lpp-hint{font-size:10px;color:var(--text3);line-height:1.5;padding:8px 14px;flex:1;overflow-y:auto;}
+  #btn-lpp-pick{width:100%;padding:7px 0;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);
+    border-radius:5px;color:#a78bfa;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;
+    display:flex;align-items:center;justify-content:center;gap:6px;margin-top:5px;}
+  #btn-lpp-pick:hover{background:rgba(167,139,250,.15);border-color:#a78bfa;}
+  #btn-lpp-pick.active{background:rgba(167,139,250,.25);border-color:#a78bfa;}
+
+  /* Lift pos — pick mode tabs */
+  .lpp-tabs{display:flex;gap:3px;margin-bottom:6px;}
+  .lpp-tab{flex:1;padding:4px 0;border-radius:5px;border:1px solid var(--border);background:var(--bg2);
+    color:var(--text3);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;transition:all .12s;letter-spacing:.4px;}
+  .lpp-tab.active{border-color:#a78bfa;color:#a78bfa;background:rgba(167,139,250,.1);}
+
+  /* Pick type toggle (pieza / ensamble) */
+  .lpp-pick-type{display:flex;gap:3px;margin-top:5px;}
+  .lpp-pick-type-btn{flex:1;padding:3px 0;border-radius:4px;border:1px solid var(--border);
+    background:var(--bg2);color:var(--text3);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;transition:all .12s;}
+  .lpp-pick-type-btn.active{border-color:#a78bfa;color:#a78bfa;background:rgba(167,139,250,.1);}
+
+  /* Model hierarchy tree */
+  #lpp-tree-wrap{flex:1;overflow-y:auto;padding:4px 6px;}
+  #lpp-tree-search{
+    width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+    color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;
+    margin-bottom:5px;
+  }
+  #lpp-tree-search:focus{border-color:#a78bfa;}
+  .tree-node{user-select:none;}
+  .tree-row{
+    display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;
+    cursor:pointer;transition:background .1s;min-height:24px;
+  }
+  .tree-row:hover{background:rgba(167,139,250,.08);}
+  .tree-row.selected{background:rgba(167,139,250,.18);border-radius:4px;}
+  .tree-toggle{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:9px;color:var(--text3);transition:transform .15s;}
+  .tree-toggle.open{transform:rotate(90deg);}
+  .tree-toggle.leaf{opacity:0;pointer-events:none;}
+  .tree-icon{font-size:11px;flex-shrink:0;}
+  .tree-label{font-family:var(--mono);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tree-label.group{color:var(--accent);}
+  .tree-label.mesh{color:var(--text2);}
+  .tree-add-btn{
+    flex-shrink:0;width:18px;height:18px;border-radius:3px;border:1px solid rgba(167,139,250,.3);
+    background:transparent;color:#a78bfa;font-size:11px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .1s;opacity:0;
+  }
+  .tree-row:hover .tree-add-btn{opacity:1;}
+  .tree-add-btn:hover{background:rgba(167,139,250,.2);}
+  .tree-children{padding-left:14px;}
+
+  /* ── CRANE CONFIG PANEL ── */
+  #crane-config-panel{
+    position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:115;
+    background:rgba(10,12,16,.96);backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;min-width:320px;max-width:480px;display:none;flex-direction:column;gap:8px;
+  }
+  .ccp-title{font-family:var(--mono);font-size:10px;color:var(--crane);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
+  .ccp-close{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+  .ccp-close:hover{border-color:var(--danger);color:var(--danger);}
+  .ccp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .ccp-field{display:flex;flex-direction:column;gap:3px;}
+  .ccp-label{font-size:10px;color:var(--text3);}
+  .ccp-input{background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+    color:var(--crane);font-family:var(--mono);font-size:12px;
+    padding:5px 8px;outline:none;width:100%;}
+  .ccp-input:focus{border-color:var(--crane);}
+  .ccp-apply{width:100%;padding:7px 0;border-radius:6px;border:1px solid rgba(246,173,85,.3);
+    background:rgba(246,173,85,.08);color:var(--crane);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;}
+  .ccp-apply:hover{background:rgba(246,173,85,.2);}
+
+  /* ── LOAD MONITOR ── */
+  #load-monitor{
+    position:fixed;top:58px;right:20px;z-index:115;
+    background:rgba(10,12,16,.96);backdrop-filter:blur(20px);
+    border:1px solid rgba(246,173,85,.25);border-radius:12px;
+    padding:12px 14px;width:200px;display:none;flex-direction:column;gap:8px;
+  }
+  #load-monitor.panel-open{right:calc(var(--panel-w) + 20px);}
+  .lm-title{font-family:var(--mono);font-size:9px;color:var(--crane);letter-spacing:1.5px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+  .lm-toggle{width:18px;height:18px;border-radius:3px;border:1px solid var(--border);background:var(--bg3);
+    color:var(--text3);cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+  .lm-toggle:hover{border-color:var(--crane);color:var(--crane);}
+  .lm-weight-row{display:flex;gap:6px;align-items:center;}
+  .lm-weight-input{flex:1;background:var(--bg2);border:1px solid rgba(246,173,85,.3);border-radius:5px;
+    color:var(--crane);font-family:var(--mono);font-size:14px;font-weight:600;
+    padding:5px 8px;text-align:center;outline:none;}
+  .lm-weight-input:focus{border-color:var(--crane);}
+  .lm-unit{font-family:var(--mono);font-size:10px;color:var(--text3);}
+  .lm-divider{height:1px;background:var(--border);}
+  .lm-stat{display:flex;justify-content:space-between;align-items:center;}
+  .lm-stat-label{font-size:10px;color:var(--text3);}
+  .lm-stat-val{font-family:var(--mono);font-size:11px;}
+  .lm-stat-val.ok{color:var(--accent2);}
+  .lm-stat-val.warn{color:var(--warn);}
+  .lm-stat-val.danger{color:var(--danger);}
+  .lm-gauge-wrap{margin-top:2px;}
+  .lm-gauge-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:3px;}
+  .lm-gauge-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+  .lm-gauge-fill{height:100%;border-radius:3px;transition:width .3s, background .3s;}
 </style>
 </head>
 <body>
@@ -373,6 +589,36 @@
 <div id="toolbar">
   <button class="tool-btn" id="btn-measure" title="Medir distancia (M)" onclick="toggleMeasure()">📏</button>
   <button class="tool-btn crane-tool" id="btn-crane-panel" title="Módulo de grúas (G)" onclick="toggleCranePanel()">🏗</button>
+  <button class="tool-btn" id="btn-lift-pos" title="Posiciones de izaje" onclick="toggleLiftPosPanel()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);">⬆</button>
+  <button class="tool-btn" id="btn-floor-cfg" title="Configurar piso de proyecto" onclick="toggleFloorConfig()" style="font-size:13px;">⊟</button>
+</div>
+
+<!-- Floor config panel -->
+<div id="floor-config-panel">
+  <div class="fcp-title">⊟ Piso de Proyecto</div>
+  <div class="fcp-row">
+    <span class="fcp-label">Nivel Y detectado</span>
+    <span class="fcp-val" id="fcp-detected">—</span>
+  </div>
+  <div class="fcp-row">
+    <span class="fcp-label">Nivel activo</span>
+    <span class="fcp-val" id="fcp-active">—</span>
+  </div>
+  <div class="fcp-row">
+    <span class="fcp-label">Auto-detectar malla "piso"</span>
+    <button class="fcp-btn" onclick="autoDetectFloor()">🔍 Detectar</button>
+  </div>
+  <div class="fcp-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+    <span class="fcp-label">Nivel manual (m)</span>
+    <div style="display:flex;gap:4px;">
+      <input id="fcp-manual-input" type="number" step="0.1" value="0"
+        style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+               color:var(--accent2);font-family:var(--mono);font-size:12px;padding:4px 8px;outline:none;"
+        placeholder="Y en metros">
+      <button class="fcp-btn" onclick="applyManualFloor()" style="flex-shrink:0;">Aplicar</button>
+    </div>
+  </div>
+  <div id="fcp-status" style="font-family:var(--mono);font-size:9px;color:var(--text3);min-height:14px;"></div>
 </div>
 
 <!-- Medición -->
@@ -442,6 +688,217 @@
   <div id="pick-label">Haz click sobre la pieza o ensamble a sujetar<br><small style="opacity:.6">ESC para cancelar</small></div>
 </div>
 
+<!-- D-PAD CRANE CONTROLLER -->
+<div id="crane-dpad-wrap">
+  <div class="dpad-label">Control de grúa</div>
+  <div class="dpad-tabs">
+    <button class="dpad-tab active" id="dpad-tab-vehicle" onclick="setDpadMode('vehicle')">Vehículo</button>
+    <button class="dpad-tab" id="dpad-tab-turret" onclick="setDpadMode('turret')">Pluma</button>
+    <button class="dpad-tab" id="dpad-tab-hook" onclick="setDpadMode('hook')">Gancho</button>
+  </div>
+  <!-- Vehicle mode -->
+  <div id="dpad-vehicle">
+    <div class="dpad-grid">
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="fwd">▲</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="rotL">↺</button>
+      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">VEH</div>
+      <button class="dp-btn" data-dp-action="rotR">↻</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="back">▼</button>
+      <div class="dp-btn empty"></div>
+    </div>
+    <div class="dpad-extra">
+      <button class="dp-wide-btn" data-dp-action="left">◄ Lat. iz.</button>
+      <button class="dp-wide-btn" data-dp-action="right">Lat. der. ►</button>
+    </div>
+  </div>
+  <!-- Turret / arm mode -->
+  <div id="dpad-turret" style="display:none;">
+    <div class="dpad-grid">
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="armAup">▲</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="giroI">↺</button>
+      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">ARM</div>
+      <button class="dp-btn" data-dp-action="giro">↻</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="armAdn">▼</button>
+      <div class="dp-btn empty"></div>
+    </div>
+    <div class="dpad-extra">
+      <button class="dp-wide-btn" data-dp-action="armBret">⟵ Retraer</button>
+      <button class="dp-wide-btn" data-dp-action="armBext">Extender ⟶</button>
+    </div>
+  </div>
+  <!-- Hook mode -->
+  <div id="dpad-hook" style="display:none;">
+    <div class="dpad-grid">
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="hookUp">▲</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="hookRotI">↺</button>
+      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">HOOK</div>
+      <button class="dp-btn" data-dp-action="hookRot">↻</button>
+      <div class="dp-btn empty"></div>
+      <button class="dp-btn" data-dp-action="hookDn">▼</button>
+      <div class="dp-btn empty"></div>
+    </div>
+    <div class="dpad-extra">
+      <button class="dp-wide-btn" id="dp-attach-btn" onclick="window.toggleCraneAttach()" style="background:rgba(246,173,85,.08);border-color:rgba(246,173,85,.3);color:var(--crane);font-size:9px;">⊕ Enganchar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIFT POSITION PANEL -->
+<div id="lift-pos-panel">
+  <div id="lpp-top">
+    <span class="lpp-logo">⬆ POSICIONES DE IZAJE</span>
+    <button class="lpp-close" onclick="toggleLiftPosPanel()">✕</button>
+  </div>
+
+  <!-- Add element section: two tabs -->
+  <div class="lpp-section" style="flex-shrink:0;">
+    <div class="lpp-section-title">Agregar elemento</div>
+    <div class="lpp-tabs">
+      <button class="lpp-tab active" id="lpp-tab-click" onclick="setLppTab('click')">🖱 Clic en 3D</button>
+      <button class="lpp-tab" id="lpp-tab-tree"  onclick="setLppTab('tree')">🌳 Árbol del modelo</button>
+    </div>
+
+    <!-- Tab: click in 3D -->
+    <div id="lpp-tab-click-body">
+      <div class="lpp-pick-type">
+        <button class="lpp-pick-type-btn"         id="lpp-type-single"   onclick="setLppPickType('single')">🔲 Pieza</button>
+        <button class="lpp-pick-type-btn active"   id="lpp-type-assembly" onclick="setLppPickType('assembly')">📦 Ensamble</button>
+      </div>
+      <button id="btn-lpp-pick" onclick="activateLiftPosPick()" style="margin-top:6px;">
+        <span id="lpp-pick-label">🖱 Activar selección 3D</span>
+      </button>
+    </div>
+
+    <!-- Tab: hierarchy tree -->
+    <div id="lpp-tab-tree-body" style="display:none;">
+      <input id="lpp-tree-search" placeholder="🔍 Filtrar por nombre…" oninput="filterLppTree(this.value)">
+      <div id="lpp-tree-wrap">
+        <div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">
+          Carga un modelo para ver la jerarquía
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configured pieces list -->
+  <div class="lpp-section" style="flex:1;overflow-y:auto;border-bottom:none;min-height:0;">
+    <div class="lpp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Elementos configurados</span>
+      <span id="lpp-count-badge" style="font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1px 6px;">0</span>
+    </div>
+    <div id="lpp-pieces-list">
+      <div style="color:var(--text3);font-size:11px;text-align:center;padding:8px 0;">
+        Agrega elementos para configurar su posición inicial de izaje
+      </div>
+    </div>
+  </div>
+  <div style="padding:6px 14px 8px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:5px;">
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Importar / Exportar</div>
+    <div style="display:flex;gap:4px;">
+      <button onclick="exportLiftPositions()" style="
+        flex:1;padding:5px 0;border-radius:5px;border:1px solid rgba(79,195,247,.3);
+        background:rgba(79,195,247,.06);color:var(--accent);font-family:var(--mono);
+        font-size:9px;cursor:pointer;transition:all .12s;letter-spacing:.3px;">
+        ↓ Exportar JSON
+      </button>
+      <button onclick="document.getElementById('lpp-import-file').click()" style="
+        flex:1;padding:5px 0;border-radius:5px;border:1px solid rgba(129,199,132,.3);
+        background:rgba(129,199,132,.06);color:var(--accent2);font-family:var(--mono);
+        font-size:9px;cursor:pointer;transition:all .12s;letter-spacing:.3px;">
+        ↑ Importar JSON
+      </button>
+    </div>
+    <input type="file" id="lpp-import-file" accept=".json" style="display:none;" onchange="importLiftPositions(this)">
+    <div id="lpp-io-status" style="font-family:var(--mono);font-size:8px;color:var(--text3);min-height:12px;"></div>
+  </div>
+</div>
+
+<!-- CRANE CONFIG PANEL -->
+<div id="crane-config-panel">
+  <div class="ccp-title">
+    ⚙ Config. de Grúa Activa
+    <button class="ccp-close" onclick="toggleCraneConfig()">✕</button>
+  </div>
+  <div class="ccp-grid">
+    <div class="ccp-field">
+      <span class="ccp-label">Escala general (×)</span>
+      <input class="ccp-input" id="ccp-scale" type="number" min="0.2" max="10" step="0.1" value="1.0" placeholder="1.0">
+    </div>
+    <div class="ccp-field">
+      <span class="ccp-label">Long. brazo A (m)</span>
+      <input class="ccp-input" id="ccp-armA" type="number" min="3" max="30" step="0.5" value="7" placeholder="7">
+    </div>
+    <div class="ccp-field">
+      <span class="ccp-label">Long. brazo B (m)</span>
+      <input class="ccp-input" id="ccp-armB" type="number" min="2" max="20" step="0.5" value="4" placeholder="4">
+    </div>
+    <div class="ccp-field">
+      <span class="ccp-label">Cap. máx. (ton)</span>
+      <input class="ccp-input" id="ccp-capacity" type="number" min="1" max="1000" step="1" value="50" placeholder="50">
+    </div>
+    <div class="ccp-field">
+      <span class="ccp-label">Radio de acción (m)</span>
+      <input class="ccp-input" id="ccp-radius" type="number" min="5" max="100" step="1" value="15" placeholder="15">
+    </div>
+    <div class="ccp-field">
+      <span class="ccp-label">Nombre</span>
+      <input class="ccp-input" id="ccp-name" type="text" value="" placeholder="Grúa #1">
+    </div>
+  </div>
+  <button class="ccp-apply" onclick="applyCraneConfig()">✓ Aplicar configuración a grúa activa</button>
+</div>
+
+<!-- LOAD MONITOR -->
+<div id="load-monitor">
+  <div class="lm-title">
+    📊 Monitor de Izaje
+    <button class="lm-toggle" onclick="toggleLoadMonitor()" title="Cerrar">✕</button>
+  </div>
+  <div class="lm-weight-row">
+    <input class="lm-weight-input" id="lm-weight" type="number" min="0" step="0.1" value="0" placeholder="0.0" oninput="updateLoadMonitor()">
+    <span class="lm-unit">ton</span>
+  </div>
+  <div class="lm-divider"></div>
+  <div class="lm-stat">
+    <span class="lm-stat-label">Cap. máx. grúa</span>
+    <span class="lm-stat-val" id="lm-capacity">50 ton</span>
+  </div>
+  <div class="lm-stat">
+    <span class="lm-stat-label">Radio actual</span>
+    <span class="lm-stat-val" id="lm-radius">—</span>
+  </div>
+  <div class="lm-stat">
+    <span class="lm-stat-label">Cap. a radio</span>
+    <span class="lm-stat-val" id="lm-cap-at-radius">—</span>
+  </div>
+  <div class="lm-stat">
+    <span class="lm-stat-label">% de capacidad</span>
+    <span class="lm-stat-val ok" id="lm-pct">—</span>
+  </div>
+  <div class="lm-divider"></div>
+  <div class="lm-gauge-wrap">
+    <div class="lm-gauge-label">
+      <span>Carga</span>
+      <span id="lm-gauge-pct-label">0%</span>
+    </div>
+    <div class="lm-gauge-bar">
+      <div class="lm-gauge-fill" id="lm-gauge-fill" style="width:0%;background:var(--accent2);"></div>
+    </div>
+  </div>
+  <div class="lm-stat" style="margin-top:4px;">
+    <span class="lm-stat-label">Estado</span>
+    <span class="lm-stat-val ok" id="lm-status">OK</span>
+  </div>
+</div>
+
 <!-- ═══════════════ CRANE PANEL ═══════════════ -->
 <div id="crane-panel">
   <div id="crane-panel-top">
@@ -460,6 +917,10 @@
       <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
       Añadir grúa
     </button>
+    <div style="display:flex;gap:4px;margin-top:5px;">
+      <button onclick="toggleCraneConfig()" style="flex:1;padding:5px 0;background:rgba(246,173,85,.06);border:1px solid rgba(246,173,85,.2);border-radius:5px;color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--crane)'" onmouseout="this.style.color='var(--text2)'">⚙ Config. grúa</button>
+      <button onclick="toggleLoadMonitor()" style="flex:1;padding:5px 0;background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.2);border-radius:5px;color:var(--text2);font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">📊 Monitor</button>
+    </div>
     <button id="btn-ride-crane" onclick="toggleRideCrane()" style="
       width:100%;margin-top:5px;padding:6px 0;
       background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.25);border-radius:5px;
@@ -473,32 +934,49 @@
   <div class="cp-section" id="pick-target-section">
     <div class="cp-section-title">Sujeción de carga</div>
 
-    <!-- Nearest-to-hook grab -->
+    <!-- Attach / detach button -->
     <button id="btn-attach-crane" class="attach" onclick="toggleCraneAttach()" style="width:100%;padding:9px 0;font-size:11px;">
       ⊕ Enganchar objeto más cercano
     </button>
 
-    <div style="height:8px"></div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">O elige manualmente:</div>
-
-    <div class="pick-btns">
-      <button class="pick-btn" id="btn-pick-single" onclick="activatePick('single')">
-        🔲 Pieza sola
-      </button>
-      <button class="pick-btn" id="btn-pick-assembly" onclick="activatePick('assembly')">
-        📦 Ensamble completo
-      </button>
+    <!-- Nearby objects list -->
+    <div style="margin-top:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">Objetos cercanos al gancho</span>
+        <button onclick="refreshNearbyList()" id="btn-refresh-nearby" title="Actualizar lista" style="
+          width:20px;height:20px;border-radius:4px;border:1px solid var(--border);
+          background:var(--bg2);color:var(--text3);font-size:11px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;">↺</button>
+      </div>
+      <!-- Type filter -->
+      <div style="display:flex;gap:3px;margin-bottom:5px;">
+        <button class="nearby-filter active" id="nf-all"      onclick="setNearbyFilter('all')">Todo</button>
+        <button class="nearby-filter"        id="nf-assembly" onclick="setNearbyFilter('assembly')">📦 Ensamble</button>
+        <button class="nearby-filter"        id="nf-mesh"     onclick="setNearbyFilter('mesh')">🔲 Pieza</button>
+      </div>
+      <div id="nearby-list" style="display:flex;flex-direction:column;gap:3px;max-height:180px;overflow-y:auto;">
+        <div style="color:var(--text3);font-size:10px;text-align:center;padding:8px 0;">
+          Abre el panel de grúas para ver objetos cercanos
+        </div>
+      </div>
     </div>
 
-    <div id="pick-target-display" style="margin-top:5px;display:none;">
-      <span class="pt-label">TARGET</span>
-      <span class="pt-name" id="pt-name-text" style="color:var(--crane);">Sin selección</span>
-    </div>
-
-    <div id="btn-pick-clear-wrap" style="display:none;margin-top:4px;">
-      <button class="pick-btn full" id="btn-pick-clear" onclick="clearPickTarget()" style="width:100%;color:var(--text3);">
-        ✕ Limpiar selección manual
-      </button>
+    <!-- 3D pick fallback -->
+    <div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">O selecciona en 3D:</div>
+      <div class="pick-btns">
+        <button class="pick-btn" id="btn-pick-single"   onclick="activatePick('single')">🔲 Pieza</button>
+        <button class="pick-btn" id="btn-pick-assembly" onclick="activatePick('assembly')">📦 Ensamble</button>
+      </div>
+      <div id="pick-target-display" style="margin-top:5px;display:none;">
+        <span class="pt-label">TARGET</span>
+        <span class="pt-name" id="pt-name-text" style="color:var(--crane);">Sin selección</span>
+      </div>
+      <div id="btn-pick-clear-wrap" style="display:none;margin-top:4px;">
+        <button class="pick-btn full" id="btn-pick-clear" onclick="clearPickTarget()" style="width:100%;color:var(--text3);">
+          ✕ Limpiar selección
+        </button>
+      </div>
     </div>
   </div>
 
@@ -559,6 +1037,16 @@
     <div class="slider-row">
       <div class="slider-label">Punto sujeción Y <span id="grip-y-val">0.0</span></div>
       <input type="range" id="grip-y" min="-3" max="3" step="0.1" value="0">
+    </div>
+    <!-- Physics toggle -->
+    <div style="margin-top:6px;display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--border);">
+      <button id="btn-physics-toggle" onclick="toggleLiftPhysics()" style="
+        flex:1;padding:5px 0;border-radius:5px;border:1px solid rgba(129,199,132,.35);
+        background:rgba(129,199,132,.08);color:var(--accent2);
+        font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s;
+        display:flex;align-items:center;justify-content:center;gap:5px;">
+        ⚛ Física de peso: ON
+      </button>
     </div>
   </div>
 
@@ -788,6 +1276,9 @@ let ridingCraneId=null;  // null = not riding
 const CRANE_COLORS = [0xf6ad55,0x63b3ed,0x68d391,0xfc8181,0xd6bcfa,0xfbd38d];
 let craneCounter=0, cranes=[], activeCraneId=null;
 let cranePickMode=false, cranePickType='single';
+let projectFloorY = null; // project floor Y level, detected or manual
+let liftPosPickMode = false;
+const liftPositions = new Map(); // uuid -> lift position config
 
 // Attached load data
 let attachedObject=null;      // single mesh or group
@@ -828,13 +1319,16 @@ function buildCrane(id, color) {
   // Arm A
   const armA=new THREE.Group(); armA.name='armA'; armA.position.set(0,0.5,0);
   const boomA=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.4,7),mat);
+  boomA.name='boomA';
   boomA.position.set(0,0,3.5); boomA.castShadow=true; armA.add(boomA);
   const boomACap=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.3),darkMat);
+  boomACap.name='boomACap';
   boomACap.position.set(0,0,7); armA.add(boomACap);
 
   // Arm B (telescopic)
   const armB=new THREE.Group(); armB.name='armB'; armB.position.set(0,0,3);
   const boomB=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.28,4),darkMat);
+  boomB.name='boomB';
   boomB.position.set(0,0,2); boomB.castShadow=true; armB.add(boomB);
   const tipMarker=new THREE.Object3D(); tipMarker.name='tipMarker';
   tipMarker.position.set(0,-0.18,4); armB.add(tipMarker);
@@ -885,22 +1379,19 @@ function applyCraneState(craneData) {
   }
   if(hookShape) hookShape.position.y=-s.hookDepth;
 
-  // Move attached object: hook world pos + world-space offset, converted to object's local space
+  // Move attached object: pivot stays at hookPos + attachedOffset (constant)
   if(attachedObject && attachedCraneId===craneData.id) {
     const hs=obj.getObjectByName('hookShape');
     if(hs){
       const hookWorld=new THREE.Vector3();
       hs.getWorldPosition(hookWorld);
-      // Desired world position = hook + original offset
       const desiredWorld=hookWorld.clone().add(attachedOffset);
-      // Convert to local space of the object's parent
       if(attachedObject.parent && attachedObject.parent !== scene){
         attachedObject.parent.updateMatrixWorld(true);
         attachedObject.parent.worldToLocal(desiredWorld);
       }
       attachedObject.position.copy(desiredWorld);
-      // Apply hookRot as extra Y rotation on top of original
-      attachedObject.rotation.y = s.hookRot;
+      // hookRot Y is stored in liftPhys.baseRotY and applied there each frame
     }
   }
 }
@@ -911,13 +1402,15 @@ function addCrane() {
   const id=craneCounter;
   const colorHex=CRANE_COLORS[(id-1)%CRANE_COLORS.length];
   const craneObj=buildCrane(id,colorHex);
-  // Place near character or scene center
+  // Place near character, at project floor level
   const base=charGroup.position.clone();
-  craneObj.position.set(base.x+id*6-3, state.modelFloor||0, base.z+id*2-2);
+  const floorY = projectFloorY !== null ? projectFloorY : (state.modelFloor || 0);
+  craneObj.position.set(base.x+id*6-3, floorY, base.z+id*2-2);
   scene.add(craneObj);
   const craneData={
     id, color:'#'+colorHex.toString(16).padStart(6,'0'),
     object:craneObj,
+    maxCapacity: 50, maxRadius: 15, customScale: 1.0, customName: `Grúa #${id}`,
     state:{turretRot:0,armAAngle:0.6,armBExtension:0,hookDepth:1.5,hookRot:0,gripY:0}
   };
   cranes.push(craneData);
@@ -925,7 +1418,7 @@ function addCrane() {
   applyCraneState(craneData);
   updateCraneList();
   updateCraneStatusBar();
-  craneLog(`Grúa #${id} añadida a escena`);
+  craneLog(`Grúa #${id} añadida en Y=${floorY.toFixed(2)}m`);
   document.getElementById('crane-count-badge').textContent=`${cranes.length} grúas`;
 }
 
@@ -953,13 +1446,22 @@ function updateCraneList(){
   list.innerHTML=cranes.map(c=>`
     <div class="crane-item ${c.id===activeCraneId?'active':''}" onclick="window.__selectCrane(${c.id})">
       <div class="crane-dot" style="background:${c.color}"></div>
-      <div class="crane-name">Grúa #${c.id}</div>
+      <div class="crane-name">${c.customName||'Grúa #'+c.id}</div>
+      <span style="font-family:var(--mono);font-size:8px;color:var(--text3);">${c.maxCapacity||50}t</span>
       ${attachedCraneId===c.id?`<span class="crane-payload">⊕ ${attachedObject?'carga':'—'}</span>`:''}
       <span class="crane-del" onclick="event.stopPropagation();window.__removeCrane(${c.id})">✕</span>
     </div>
   `).join('');
 }
-window.__selectCrane = id => { activeCraneId=id; updateCraneList(); updateCraneStatusBar(); const _sc=getActiveCrane(); if(_sc) document.getElementById('crane-h-input').value=_sc.object.position.y.toFixed(1); craneLog(`Grúa #${id} seleccionada`); };
+window.__selectCrane = id => {
+  activeCraneId=id;
+  updateCraneList();
+  updateCraneStatusBar();
+  const _sc=getActiveCrane();
+  if(_sc) document.getElementById('crane-h-input').value=_sc.object.position.y.toFixed(1);
+  craneLog(`Grúa #${id} seleccionada`);
+  refreshNearbyList();
+};
 window.__removeCrane = id => removeCrane(id);
 
 // ── PICK TARGET ───────────────────────────────────────────────────────────
@@ -1166,7 +1668,6 @@ window.toggleCraneAttach = function() {
 };
 
 function doAttach(crane, target, name) {
-  // Get hook world position RIGHT NOW before any state changes
   crane.object.updateMatrixWorld(true);
   const hs=crane.object.getObjectByName('hookShape');
   if(!hs){ craneLog('Error: hookShape no encontrado'); return; }
@@ -1174,26 +1675,25 @@ function doAttach(crane, target, name) {
   const hookWorld=new THREE.Vector3();
   hs.getWorldPosition(hookWorld);
 
-  // Get the target's current world position
-  const targetWorld=new THREE.Vector3();
-  target.getWorldPosition(targetWorld);
+  // Record where the object pivot is relative to the hook at attach time.
+  // This offset is kept CONSTANT — the hook stays at the exact same spot on the object.
+  target.updateMatrixWorld(true);
+  const targetPivot=new THREE.Vector3();
+  target.getWorldPosition(targetPivot);
+  attachedOffset=targetPivot.clone().sub(hookWorld);
 
-  // The offset is: where is the object relative to the hook, in WORLD space.
-  // We store this as a world-space delta so we can re-apply it each frame.
-  attachedOffset=targetWorld.clone().sub(hookWorld);
+  // Clear bbox-top concept — physics uses pivot offset only
+  if (liftPhys) liftPhys.pivotToBboxTop = null;
 
-  // Also remember the parent so we can convert back to local space each frame
   attachedObject=target;
   attachedCraneId=crane.id;
 
-  // Clear manual pick selection
   pickTargetObject=null; pickTargetName='';
   document.getElementById('pick-target-display').style.display='none';
   document.getElementById('btn-pick-clear-wrap').style.display='none';
   document.getElementById('btn-pick-single').classList.remove('active');
   document.getElementById('btn-pick-assembly').classList.remove('active');
 
-  // Remove highlight wireframe
   if(pickHighlight){ scene.remove(pickHighlight); pickHighlight=null; }
 
   updateAttachBtn(true);
@@ -1202,9 +1702,15 @@ function doAttach(crane, target, name) {
   craneLog(`Grúa #${crane.id}: enganchado "${name}"`);
   document.getElementById('csb-load').textContent=name.replace(/_/g,' ');
   document.getElementById('csb-load').className='val hooked';
+  if (typeof initLiftPhysics === 'function') initLiftPhysics(target);
 }
 
 function releaseAttached() {
+  // Settle physics tilt on release
+  if (typeof liftPhys !== 'undefined') {
+    liftPhys.tiltXVel = 0;
+    liftPhys.tiltZVel = 0;
+  }
   attachedObject=null; attachedCraneId=null;
   document.getElementById('csb-load').textContent='ninguna';
   document.getElementById('csb-load').className='val';
@@ -1223,7 +1729,200 @@ function updateAttachBtn(attached) {
     btn.className='attach';
     btn.style.cssText='width:100%;padding:9px 0;font-size:11px;';
   }
+  refreshNearbyList();
 }
+
+// ── NEARBY OBJECTS LIST ───────────────────────────────────────────────────────
+let nearbyFilter = 'all'; // 'all' | 'assembly' | 'mesh'
+let nearbySelected = null; // uuid of currently highlighted item
+
+window.setNearbyFilter = function(f) {
+  nearbyFilter = f;
+  ['all','assembly','mesh'].forEach(id => {
+    document.getElementById('nf-' + id).classList.toggle('active', id === f);
+  });
+  refreshNearbyList();
+};
+
+window.refreshNearbyList = function() {
+  const list = document.getElementById('nearby-list');
+  if (!list) return;
+
+  if (!state.modelLoaded) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:8px 0;">Sin modelo cargado</div>';
+    return;
+  }
+
+  const c = getActiveCrane();
+  if (!c) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:8px 0;">Selecciona una grúa</div>';
+    return;
+  }
+
+  // Hook world position
+  c.object.updateMatrixWorld(true);
+  const hs = c.object.getObjectByName('hookShape');
+  const hookPos = new THREE.Vector3();
+  if (hs) hs.getWorldPosition(hookPos);
+  else c.object.getWorldPosition(hookPos);
+
+  // Exclusion: crane meshes + character
+  const excludeUUIDs = new Set();
+  cranes.forEach(cr => cr.object.traverse(o => { if (o.isMesh) excludeUUIDs.add(o.uuid); }));
+  charGroup.traverse(o => { if (o.isMesh) excludeUUIDs.add(o.uuid); });
+
+  // Walk every named ancestor up to __model__ root
+  const modelRoot = scene.getObjectByName('__model__');
+  function getAncestorGroups(obj) {
+    const groups = [];
+    let cur = obj.parent;
+    while (cur && cur !== scene && cur !== modelRoot) {
+      if (cur.name && cur.name !== '' && cur.name !== 'Scene') groups.push(cur);
+      cur = cur.parent;
+    }
+    return groups; // child-first order
+  }
+
+  // candidateMap: uuid -> {object, dist, isGroup, name, depth}
+  const candidateMap = new Map();
+  const _tmp = new THREE.Vector3();
+
+  scene.traverse(o => {
+    if (!o.isMesh || excludeUUIDs.has(o.uuid)) return;
+
+    const meshBox  = new THREE.Box3().setFromObject(o);
+    const meshDist = hookPos.distanceTo(meshBox.clampPoint(hookPos, _tmp.clone()));
+
+    // Individual meshes (for mesh and all filters)
+    if (nearbyFilter === 'mesh' || nearbyFilter === 'all') {
+      if (!candidateMap.has(o.uuid)) {
+        candidateMap.set(o.uuid, { object: o, dist: meshDist, isGroup: false, name: o.name || o.uuid.slice(0, 8), depth: 0 });
+      } else if (meshDist < candidateMap.get(o.uuid).dist) {
+        candidateMap.get(o.uuid).dist = meshDist;
+      }
+    }
+
+    // Every named ancestor group (for assembly and all filters)
+    if (nearbyFilter === 'assembly' || nearbyFilter === 'all') {
+      const ancestors = getAncestorGroups(o);
+      ancestors.forEach((grp, idx) => {
+        if (!candidateMap.has(grp.uuid)) {
+          grp.updateMatrixWorld(true);
+          const grpBox  = new THREE.Box3().setFromObject(grp);
+          const grpDist = hookPos.distanceTo(grpBox.clampPoint(hookPos, _tmp.clone()));
+          candidateMap.set(grp.uuid, { object: grp, dist: grpDist, isGroup: true, name: grp.name, depth: idx + 1 });
+        } else {
+          // a closer mesh updated the distance
+          if (meshDist < candidateMap.get(grp.uuid).dist) {
+            candidateMap.get(grp.uuid).dist = meshDist;
+          }
+        }
+      });
+    }
+  });
+
+  // Sort by distance
+  let items = Array.from(candidateMap.values()).sort((a, b) => a.dist - b.dist);
+
+  // In 'all' mode: suppress individual meshes whose ancestor group is already listed
+  if (nearbyFilter === 'all') {
+    const groupUUIDs = new Set(items.filter(i => i.isGroup).map(i => i.object.uuid));
+    items = items.filter(i => {
+      if (i.isGroup) return true;
+      return !getAncestorGroups(i.object).some(g => groupUUIDs.has(g.uuid));
+    });
+  }
+
+  items = items.slice(0, 20);
+
+  if (items.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:8px 0;">Sin objetos en escena</div>';
+    return;
+  }
+
+  const maxDist    = Math.max(...items.map(i => i.dist), 1);
+  const nearThresh = maxDist * 0.33;
+  const midThresh  = maxDist * 0.66;
+
+  list.innerHTML = '';
+  items.forEach(item => {
+    const isAttached = attachedObject && attachedObject.uuid === item.object.uuid;
+    const isSelected = nearbySelected === item.object.uuid;
+    const distClass  = item.dist <= nearThresh ? 'near' : item.dist <= midThresh ? 'mid' : 'far';
+    const indent     = item.isGroup ? Math.min(item.depth - 1, 3) * 8 : 0;
+
+    const row = document.createElement('div');
+    row.className = 'nearby-item' + (isSelected || isAttached ? ' selected' : '');
+    if (indent > 0) row.style.paddingLeft = (7 + indent) + 'px';
+
+    const icon = document.createElement('span');
+    icon.className = 'nearby-item-icon';
+    icon.textContent = item.isGroup ? '\u{1F4E6}' : '\u25AA';
+
+    const info = document.createElement('div');
+    info.className = 'nearby-item-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'nearby-item-name';
+    nameEl.textContent = (item.name || '').replace(/_/g, ' ') || '(sin nombre)';
+    const subEl = document.createElement('div');
+    subEl.className = 'nearby-item-sub';
+    subEl.textContent = item.isGroup ? 'Ensamble · nivel ' + item.depth : 'Pieza individual';
+    info.appendChild(nameEl); info.appendChild(subEl);
+
+    const distEl = document.createElement('span');
+    distEl.className = 'nearby-item-dist ' + distClass;
+    distEl.textContent = item.dist.toFixed(1) + 'm';
+
+    const hookBtn = document.createElement('button');
+    hookBtn.className = 'nearby-hook-btn';
+    hookBtn.title = isAttached ? 'Soltar' : 'Enganchar';
+    hookBtn.textContent = isAttached ? '\u2297' : '\u2295';
+    if (isAttached) {
+      hookBtn.style.color = 'var(--danger)';
+      hookBtn.style.borderColor = 'rgba(239,83,80,.4)';
+      hookBtn.style.background  = 'rgba(239,83,80,.08)';
+    }
+
+    row.appendChild(icon); row.appendChild(info);
+    row.appendChild(distEl); row.appendChild(hookBtn);
+    list.appendChild(row);
+
+    // Row click => select as manual target + highlight
+    row.addEventListener('click', e => {
+      if (e.target === hookBtn || hookBtn.contains(e.target)) return;
+      nearbySelected       = item.object.uuid;
+      pickTargetObject     = item.object;
+      pickTargetName       = item.name;
+      pickTargetIsAssembly = item.isGroup;
+      highlightObject(item.object);
+      const display = document.getElementById('pick-target-display');
+      display.style.display = 'flex';
+      document.getElementById('btn-pick-clear-wrap').style.display = 'block';
+      document.getElementById('pt-name-text').textContent = item.name.replace(/_/g, ' ');
+      const old = display.querySelector('.pt-badge'); if (old) old.remove();
+      const badge = document.createElement('span');
+      badge.className = 'pt-badge ' + (item.isGroup ? 'assembly' : 'single');
+      badge.textContent = item.isGroup ? 'ENSAMBLE' : 'PIEZA';
+      display.appendChild(badge);
+      refreshNearbyList();
+    });
+
+    // Hook btn => attach / detach immediately
+    hookBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const crane = getActiveCrane();
+      if (!crane) { craneLog('Selecciona una grúa primero'); return; }
+      if (isAttached) {
+        releaseAttached(); updateAttachBtn(false);
+        craneLog('Gru\u00faa #' + crane.id + ': pieza soltada');
+      } else {
+        if (attachedObject) releaseAttached();
+        nearbySelected = item.object.uuid;
+        doAttach(crane, item.object, item.name);
+      }
+    });
+  });
+};
 
 // ── CRANE ACTIONS ─────────────────────────────────────────────────────────
 const CRANE_ACTIONS = {
@@ -1237,7 +1936,7 @@ const CRANE_ACTIONS = {
   giroI:   c => { c.state.turretRot-=0.025*spdRot; },
   armAup:  c => { c.state.armAAngle=Math.min(1.3,c.state.armAAngle+0.015*spdRot); },
   armAdn:  c => { c.state.armAAngle=Math.max(-0.1,c.state.armAAngle-0.015*spdRot); },
-  armBext: c => { c.state.armBExtension=Math.min(5,c.state.armBExtension+0.06*spdMove); },
+  armBext: c => { const maxExt = c.armBMaxExt !== undefined ? c.armBMaxExt : 5; c.state.armBExtension=Math.min(maxExt,c.state.armBExtension+0.06*spdMove); },
   armBret: c => { c.state.armBExtension=Math.max(0,c.state.armBExtension-0.06*spdMove); },
   hookUp:  c => { c.state.hookDepth=Math.max(0.1,c.state.hookDepth-0.06*spdMove); },
   hookDn:  c => { c.state.hookDepth=Math.min(20,c.state.hookDepth+0.06*spdMove); },
@@ -1265,9 +1964,15 @@ window.toggleCranePanel=function(){
   document.getElementById('btn-crane-panel').classList.toggle('active',cranePanelOpen);
   document.getElementById('crane-status-bar').classList.toggle('visible',cranePanelOpen);
   // Adjust adjacent UI
-  ['toolbar','measure-panel','minimap-wrap','compass'].forEach(id=>{
+  ['toolbar','measure-panel','minimap-wrap','compass','load-monitor','crane-dpad-wrap'].forEach(id=>{
     document.getElementById(id).classList.toggle('panel-open',cranePanelOpen);
   });
+  // Show/hide dpad
+  const dpad = document.getElementById('crane-dpad-wrap');
+  dpad.style.display = cranePanelOpen ? 'flex' : 'none';
+  updateDpadAttachBtn();
+  // Refresh nearby list when panel opens
+  if (cranePanelOpen) refreshNearbyList();
 };
 
 // Slider controls
@@ -1344,11 +2049,12 @@ document.querySelectorAll('.ctrl-btn[data-crane-action]').forEach(btn=>{
 function updateCraneStatusBar() {
   const c=getActiveCrane();
   if(!c){ document.getElementById('csb-crane').textContent='—'; return; }
-  document.getElementById('csb-crane').textContent=`#${c.id}`;
+  document.getElementById('csb-crane').textContent=c.customName||`#${c.id}`;
   const p=c.object.position;
   document.getElementById('csb-pos').textContent=`${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
   document.getElementById('csb-arm').textContent=`A:${(c.state.armAAngle*180/Math.PI).toFixed(0)}° ext:${c.state.armBExtension.toFixed(1)}m`;
   document.getElementById('csb-hook').textContent=`${c.state.hookDepth.toFixed(1)}m`;
+  updateDpadAttachBtn();
 }
 
 // Crane log
@@ -1570,9 +2276,33 @@ function onModelReady(gltf,name){
   modelBox=box;
   state.modelFloor=box.min.y; state.floorOffset=0;
   document.getElementById('floor-input').value='0.00';
-  charGroup.position.set(center.x,box.min.y,center.z);
+
+  // ── AUTO-DETECT FLOOR MESH ──
+  let autoFloorY = null;
+  let bestArea = 0;
+  let bestMeshName = '';
+  model.traverse(o => {
+    if (!o.isMesh) return;
+    const n = (o.name || '').toLowerCase();
+    if (!n.includes('piso') && !n.includes('floor') && !n.includes('suelo') && !n.includes('ground')) return;
+    const b2 = new THREE.Box3().setFromObject(o);
+    const area = (b2.max.x - b2.min.x) * (b2.max.z - b2.min.z);
+    if (area > bestArea) { bestArea = area; autoFloorY = b2.max.y; bestMeshName = o.name || ''; }
+  });
+  if (autoFloorY !== null) {
+    projectFloorY = autoFloorY;
+    state.modelFloor = autoFloorY;
+    document.getElementById('fcp-detected').textContent = autoFloorY.toFixed(3) + ' m (' + bestMeshName + ')';
+    document.getElementById('fcp-active').textContent = autoFloorY.toFixed(3) + ' m';
+    craneLog(`Piso detectado automáticamente: "${bestMeshName}" Y=${autoFloorY.toFixed(3)}m`);
+  } else {
+    document.getElementById('fcp-detected').textContent = 'No encontrado';
+    document.getElementById('fcp-active').textContent = box.min.y.toFixed(3) + ' m (caja)';
+  }
+  gridHelper.position.y=(projectFloorY !== null ? projectFloorY : box.min.y)-0.01;
+
+  charGroup.position.set(center.x,state.modelFloor,center.z);
   state.charRot=0; charGroup.rotation.y=0;
-  gridHelper.position.y=box.min.y-0.01;
   const maxDim=Math.max(size.x,size.z);
   const ip=new THREE.Vector3(center.x+maxDim*.8,box.min.y+size.y*.7,center.z+maxDim*.8);
   camera.position.copy(ip); camCurrent.copy(ip); camera.lookAt(center);
@@ -1580,6 +2310,7 @@ function onModelReady(gltf,name){
   sun.shadow.camera.updateProjectionMatrix();
   updateMinimapCamera();
   state.modelLoaded=true;
+  rebuildLppTreeIfOpen();
   document.getElementById('model-name').textContent=name;
   document.getElementById('hud-status').textContent='EXPLORANDO';
   const toFlex=['controls-legend','speed-badge','cam-toggle','compass','minimap-wrap','toolbar','joystick-wrap','height-panel'];
@@ -1714,13 +2445,845 @@ window.addEventListener('load',()=>{
   if(window.parent!==window)window.parent.postMessage({type:'EXPLORER_READY'},'*');
 });
 
-// ── LOOP ─────────────────────────────────────────────────────────────────────
-const clock=new THREE.Clock();
+// ── D-PAD CONTROLLER ─────────────────────────────────────────────────────────
+let dpadMode = 'vehicle';
+window.setDpadMode = function(mode) {
+  dpadMode = mode;
+  ['vehicle','turret','hook'].forEach(m => {
+    const el = document.getElementById(`dpad-${m}`);
+    const tab = document.getElementById(`dpad-tab-${m}`);
+    if (el) el.style.display = m === mode ? 'block' : 'none';
+    if (tab) tab.classList.toggle('active', m === mode);
+  });
+};
+
+// Wire all D-pad buttons
+document.querySelectorAll('.dp-btn[data-dp-action], .dp-wide-btn[data-dp-action]').forEach(btn => {
+  const action = btn.dataset.dpAction;
+  const press = () => { pressedCraneBtns.add(action); btn.classList.add('pressed'); };
+  const release = () => { pressedCraneBtns.delete(action); btn.classList.remove('pressed'); };
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('touchstart', e => { e.preventDefault(); press(); }, {passive:false});
+  btn.addEventListener('touchend', e => { e.preventDefault(); release(); });
+  btn.addEventListener('touchcancel', e => { e.preventDefault(); release(); });
+});
+
+// Show/hide dpad is now handled in main toggleCranePanel
+function updateDpadAttachBtn() {
+  const btn = document.getElementById('dp-attach-btn');
+  if (!btn) return;
+  const attached = attachedObject && attachedCraneId === activeCraneId;
+  btn.textContent = attached ? '⊗ Soltar' : '⊕ Enganchar';
+  btn.style.color = attached ? 'var(--danger)' : 'var(--crane)';
+  btn.style.borderColor = attached ? 'rgba(239,83,80,.3)' : 'rgba(246,173,85,.3)';
+  btn.style.background = attached ? 'rgba(239,83,80,.08)' : 'rgba(246,173,85,.08)';
+}
+
+// ── FLOOR DETECTION & CONFIG ──────────────────────────────────────────────────
+
+window.toggleFloorConfig = function() {
+  const panel = document.getElementById('floor-config-panel');
+  const isOpen = panel.style.display === 'flex';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  document.getElementById('btn-floor-cfg').classList.toggle('active', !isOpen);
+  if (!isOpen) updateFloorConfigUI();
+};
+
+function updateFloorConfigUI() {
+  document.getElementById('fcp-active').textContent = projectFloorY !== null ? projectFloorY.toFixed(3) + ' m' : (state.modelFloor.toFixed(3) + ' m (caja)');
+}
+
+window.autoDetectFloor = function() {
+  if (!state.modelLoaded) { document.getElementById('fcp-status').textContent = 'Carga un modelo primero'; return; }
+  const model = scene.getObjectByName('__model__');
+  if (!model) return;
+
+  let bestFloorMesh = null, bestArea = 0, bestY = null;
+
+  model.traverse(o => {
+    if (!o.isMesh) return;
+    const name = (o.name || '').toLowerCase();
+    if (!name.includes('piso') && !name.includes('floor') && !name.includes('suelo') && !name.includes('ground')) return;
+
+    // Compute bounding box top surface Y and XZ area
+    const box = new THREE.Box3().setFromObject(o);
+    const area = (box.max.x - box.min.x) * (box.max.z - box.min.z);
+    if (area > bestArea) {
+      bestArea = area;
+      bestFloorMesh = o;
+      bestY = box.max.y; // top surface
+    }
+  });
+
+  if (bestFloorMesh) {
+    document.getElementById('fcp-detected').textContent = bestY.toFixed(3) + ' m (' + (bestFloorMesh.name || 'mesh') + ')';
+    document.getElementById('fcp-status').textContent = `✓ Piso detectado: "${bestFloorMesh.name}" — aplicado`;
+    applyProjectFloor(bestY);
+  } else {
+    document.getElementById('fcp-detected').textContent = 'No encontrado';
+    document.getElementById('fcp-status').textContent = '⚠ No se encontraron mallas con "piso/floor/suelo" en el nombre';
+  }
+};
+
+window.applyManualFloor = function() {
+  const val = parseFloat(document.getElementById('fcp-manual-input').value);
+  if (isNaN(val)) return;
+  applyProjectFloor(val);
+  document.getElementById('fcp-status').textContent = `✓ Nivel de piso aplicado: ${val.toFixed(3)} m`;
+};
+
+function applyProjectFloor(y) {
+  projectFloorY = y;
+  state.modelFloor = y;
+  state.floorOffset = 0;
+  document.getElementById('floor-input').value = '0.00';
+  gridHelper.position.y = y - 0.01;
+  // Move character to new floor
+  charGroup.position.y = y;
+  // Update cranes Y if they were at old floor
+  cranes.forEach(c => {
+    if (Math.abs(c.object.position.y - (projectFloorY || 0)) < 0.5) {
+      c.object.position.y = y;
+    }
+  });
+  updateFloorConfigUI();
+  document.getElementById('fcp-active').textContent = y.toFixed(3) + ' m';
+}
+
+// ── LIFT POSITION PANEL ────────────────────────────────────────────────────────
+
+let lppTab = 'click';          // 'click' | 'tree'
+let lppPickType = 'assembly';  // 'single' | 'assembly' — default assembly
+let lppTreeFilter = '';
+
+window.setLppTab = function(tab) {
+  lppTab = tab;
+  document.getElementById('lpp-tab-click').classList.toggle('active', tab === 'click');
+  document.getElementById('lpp-tab-tree').classList.toggle('active', tab === 'tree');
+  document.getElementById('lpp-tab-click-body').style.display = tab === 'click' ? 'block' : 'none';
+  document.getElementById('lpp-tab-tree-body').style.display = tab === 'tree'  ? 'block' : 'none';
+  if (tab === 'tree' && state.modelLoaded) buildLppTree();
+};
+
+window.setLppPickType = function(type) {
+  lppPickType = type;
+  document.getElementById('lpp-type-single').classList.toggle('active', type === 'single');
+  document.getElementById('lpp-type-assembly').classList.toggle('active', type === 'assembly');
+};
+
+window.toggleLiftPosPanel = function() {
+  const panel = document.getElementById('lift-pos-panel');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  document.getElementById('btn-lift-pos').classList.toggle('active', !isOpen);
+  if (!isOpen && lppTab === 'tree' && state.modelLoaded) buildLppTree();
+};
+
+window.activateLiftPosPick = function() {
+  liftPosPickMode = true;
+  document.getElementById('pick-overlay').classList.add('active');
+  canvas.classList.add('pick-mode');
+  const typeLabel = lppPickType === 'assembly' ? 'ensamble completo' : 'pieza individual';
+  document.getElementById('pick-label').innerHTML =
+    `⬆ Haz click para seleccionar <strong>${typeLabel}</strong> para izaje<br><small style="opacity:.6">ESC para cancelar</small>`;
+  document.getElementById('lpp-pick-label').textContent = '⏳ Haz clic en la escena…';
+  document.getElementById('btn-lpp-pick').classList.add('active');
+};
+
+// Overlay click handler — used by both 3D pick and activated programmatically
+document.getElementById('pick-overlay').addEventListener('click', e => {
+  if (!liftPosPickMode || !state.modelLoaded) return;
+  e.stopPropagation();
+
+  const rect = canvas.getBoundingClientRect();
+  const ndx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ndy = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(new THREE.Vector2(ndx, ndy), camera);
+
+  const allMeshes = [];
+  scene.traverse(o => { if (o.isMesh && o.name !== '__char__') allMeshes.push(o); });
+  const hits = raycaster.intersectObjects(allMeshes, false);
+
+  if (!hits.length) {
+    document.getElementById('lpp-pick-label').textContent = '⚠ Sin intersección, intenta otra zona';
+    return;
+  }
+
+  const hitMesh = hits[0].object;
+  // Choose target based on pick type
+  const target = lppPickType === 'assembly' ? getAssemblyRoot(hitMesh) : hitMesh;
+  registerLiftObject(target);
+  cancelLiftPick();
+});
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Escape' && liftPosPickMode) cancelLiftPick();
+});
+
+function cancelLiftPick() {
+  liftPosPickMode = false;
+  document.getElementById('pick-overlay').classList.remove('active');
+  canvas.classList.remove('pick-mode');
+  document.getElementById('lpp-pick-label').textContent = '🖱 Activar selección 3D';
+  document.getElementById('btn-lpp-pick').classList.remove('active');
+}
+
+// ── Register any Three.js object (mesh or group) as a lift position ──
+function registerLiftObject(obj) {
+  const key = obj.uuid;
+  if (liftPositions.has(key)) {
+    renderLiftPosList(key);
+    return;
+  }
+  obj.updateMatrixWorld(true);
+  const worldPos = new THREE.Vector3();
+  obj.getWorldPosition(worldPos);
+
+  const displayName = obj.name || obj.uuid.slice(0, 8);
+  const isGroup = !obj.isMesh;
+
+  liftPositions.set(key, {
+    name: displayName,
+    isGroup,
+    object: obj,
+    x: parseFloat(worldPos.x.toFixed(3)),
+    y: parseFloat(worldPos.y.toFixed(3)),
+    z: parseFloat(worldPos.z.toFixed(3)),
+    rx: 0, ry: 0, rz: 0,
+    // Store original world position so user can reset
+    origX: parseFloat(worldPos.x.toFixed(3)),
+    origY: parseFloat(worldPos.y.toFixed(3)),
+    origZ: parseFloat(worldPos.z.toFixed(3)),
+    origRx: 0, origRy: 0, origRz: 0,
+  });
+
+  renderLiftPosList(key);
+}
+
+window.resetLiftPosToOriginal = function(key) {
+  const cfg = liftPositions.get(key);
+  if (!cfg) return;
+  cfg.x = cfg.origX; cfg.y = cfg.origY; cfg.z = cfg.origZ;
+  cfg.rx = cfg.origRx; cfg.ry = cfg.origRy; cfg.rz = cfg.origRz;
+  applyLiftPos(key);
+  renderLiftPosList(key);   // re-render to update input values
+};
+
+// ── MODEL HIERARCHY TREE ──────────────────────────────────────────────────────
+function buildLppTree() {
+  const wrap = document.getElementById('lpp-tree-wrap');
+  const model = scene.getObjectByName('__model__');
+  if (!model) {
+    wrap.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">Sin modelo cargado</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  // Build tree starting from model's children (skip __model__ itself)
+  model.children.forEach(child => {
+    const node = buildTreeNode(child, 0);
+    if (node) wrap.appendChild(node);
+  });
+}
+
+function buildTreeNode(obj, depth) {
+  // Skip crane objects and character
+  if (obj.name && (obj.name.startsWith('crane_') || obj.name === '__char__')) return null;
+
+  const isGroup = !obj.isMesh;
+  const hasChildren = obj.children && obj.children.length > 0;
+  const name = obj.name || (isGroup ? '(grupo)' : '(mesh)');
+
+  // Filter
+  if (lppTreeFilter && !name.toLowerCase().includes(lppTreeFilter.toLowerCase())) {
+    // Still show if any descendant matches
+    if (!hasDescendantMatch(obj, lppTreeFilter)) return null;
+  }
+
+  const node = document.createElement('div');
+  node.className = 'tree-node';
+
+  const row = document.createElement('div');
+  row.className = 'tree-row' + (liftPositions.has(obj.uuid) ? ' selected' : '');
+  row.dataset.uuid = obj.uuid;
+
+  const toggle = document.createElement('span');
+  toggle.className = 'tree-toggle' + (hasChildren && isGroup ? '' : ' leaf');
+  toggle.textContent = '▶';
+
+  const icon = document.createElement('span');
+  icon.className = 'tree-icon';
+  icon.textContent = isGroup ? '📁' : '▪';
+
+  const label = document.createElement('span');
+  label.className = 'tree-label ' + (isGroup ? 'group' : 'mesh');
+  label.textContent = name.replace(/_/g, ' ');
+  label.title = name;
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tree-add-btn';
+  addBtn.textContent = '+';
+  addBtn.title = liftPositions.has(obj.uuid) ? 'Ya configurado' : 'Agregar a posiciones de izaje';
+  if (liftPositions.has(obj.uuid)) {
+    addBtn.style.color = 'var(--accent2)';
+    addBtn.style.borderColor = 'rgba(129,199,132,.4)';
+    addBtn.style.opacity = '1';
+    addBtn.textContent = '✓';
+  }
+
+  row.appendChild(toggle);
+  row.appendChild(icon);
+  row.appendChild(label);
+  row.appendChild(addBtn);
+  node.appendChild(row);
+
+  // Children container (collapsed by default)
+  let childWrap = null;
+  let expanded = false;
+
+  if (hasChildren && isGroup) {
+    childWrap = document.createElement('div');
+    childWrap.className = 'tree-children';
+    childWrap.style.display = 'none';
+    node.appendChild(childWrap);
+
+    toggle.style.cursor = 'pointer';
+    const expand = () => {
+      expanded = !expanded;
+      childWrap.style.display = expanded ? 'block' : 'none';
+      toggle.classList.toggle('open', expanded);
+      if (expanded && childWrap.children.length === 0) {
+        obj.children.forEach(child => {
+          const cn = buildTreeNode(child, depth + 1);
+          if (cn) childWrap.appendChild(cn);
+        });
+      }
+    };
+    toggle.addEventListener('click', e => { e.stopPropagation(); expand(); });
+    // Click on row (not add btn) also expands
+    row.addEventListener('click', e => {
+      if (e.target === addBtn) return;
+      expand();
+    });
+  }
+
+  // Add button: register this object
+  addBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    registerLiftObject(obj);
+    // Update button appearance
+    addBtn.textContent = '✓';
+    addBtn.style.color = 'var(--accent2)';
+    addBtn.style.borderColor = 'rgba(129,199,132,.4)';
+    addBtn.style.opacity = '1';
+    row.classList.add('selected');
+  });
+
+  return node;
+}
+
+function hasDescendantMatch(obj, filter) {
+  if ((obj.name || '').toLowerCase().includes(filter.toLowerCase())) return true;
+  if (obj.children) {
+    for (const c of obj.children) { if (hasDescendantMatch(c, filter)) return true; }
+  }
+  return false;
+}
+
+window.filterLppTree = function(val) {
+  lppTreeFilter = val;
+  buildLppTree();
+};
+
+// Rebuild tree when model loads (called from onModelReady)
+function rebuildLppTreeIfOpen() {
+  if (lppTab === 'tree' && document.getElementById('lift-pos-panel').classList.contains('open')) {
+    buildLppTree();
+  }
+}
+
+// ── Configured pieces list ────────────────────────────────────────────────────
+function renderLiftPosList(highlightKey) {
+  const list = document.getElementById('lpp-pieces-list');
+  document.getElementById('lpp-count-badge').textContent = liftPositions.size;
+
+  if (liftPositions.size === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:11px;text-align:center;padding:8px 0;">Sin elementos configurados</div>';
+    return;
+  }
+  list.innerHTML = '';
+  liftPositions.forEach((cfg, key) => {
+    const item = document.createElement('div');
+    item.className = 'lpp-item';
+    if (key === highlightKey) item.style.border = '1px solid #a78bfa';
+
+    const typeTag = cfg.isGroup
+      ? '<span class="lpp-item-badge" style="border-color:rgba(79,195,247,.4);color:var(--accent);">ENSAMBLE</span>'
+      : '<span class="lpp-item-badge">PIEZA</span>';
+
+    item.innerHTML = `
+      <div class="lpp-item-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span style="font-size:12px;margin-right:2px;">${cfg.isGroup ? '📁' : '▪'}</span>
+        <span class="lpp-item-name">${cfg.name.replace(/_/g,' ')}</span>
+        ${typeTag}
+        <span style="color:var(--text3);font-size:10px;margin-left:4px;">▾</span>
+      </div>
+      <div class="lpp-item-body">
+        <div class="lpp-field">
+          <div class="lpp-field-label">Posición inicial (m)</div>
+          <div class="lpp-input-row">
+            <div><input class="lpp-input" type="number" step="0.1" value="${cfg.x.toFixed(2)}" oninput="updateLiftPos('${key}','x',this.value)"><div class="lpp-input-label">X</div></div>
+            <div><input class="lpp-input" type="number" step="0.1" value="${cfg.y.toFixed(2)}" oninput="updateLiftPos('${key}','y',this.value)"><div class="lpp-input-label">Y</div></div>
+            <div><input class="lpp-input" type="number" step="0.1" value="${cfg.z.toFixed(2)}" oninput="updateLiftPos('${key}','z',this.value)"><div class="lpp-input-label">Z</div></div>
+          </div>
+        </div>
+        <div class="lpp-field">
+          <div class="lpp-field-label">Rotación inicial (°)</div>
+          <div class="lpp-rot-row" style="grid-template-columns:1fr 1fr 1fr;">
+            <div><input class="lpp-input" type="number" step="1" value="${cfg.rx.toFixed(0)}" oninput="updateLiftPos('${key}','rx',this.value)"><div class="lpp-input-label">Giro X</div></div>
+            <div><input class="lpp-input" type="number" step="1" value="${cfg.ry.toFixed(0)}" oninput="updateLiftPos('${key}','ry',this.value)"><div class="lpp-input-label">Giro Y</div></div>
+            <div><input class="lpp-input" type="number" step="1" value="${cfg.rz.toFixed(0)}" oninput="updateLiftPos('${key}','rz',this.value)"><div class="lpp-input-label">Giro Z</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:4px;align-items:center;">
+          <div style="flex:1;padding:4px 7px;border-radius:4px;background:rgba(129,199,132,.08);border:1px solid rgba(129,199,132,.2);font-family:var(--mono);font-size:8px;color:var(--accent2);letter-spacing:.5px;">⚡ Posición en vivo</div>
+          <button class="lpp-set-btn" style="flex:none;width:auto;padding:4px 8px;font-size:9px;" onclick="resetLiftPosToOriginal('${key}')">↺ Original</button>
+        </div>
+        <button style="width:100%;padding:4px 0;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);font-family:var(--mono);font-size:9px;cursor:pointer;margin-top:3px;" onclick="removeLiftPos('${key}')">✕ Quitar de lista</button>
+      </div>
+    `;
+    // Auto-open the newly added one
+    if (key === highlightKey) {
+      const body = item.querySelector('.lpp-item-body');
+      if (body) body.classList.add('open');
+    }
+    list.appendChild(item);
+  });
+}
+
+window.updateLiftPos = function(key, field, val) {
+  if (!liftPositions.has(key)) return;
+  const parsed = parseFloat(val);
+  if (isNaN(parsed)) return;          // don't apply incomplete values while typing
+  liftPositions.get(key)[field] = parsed;
+  applyLiftPos(key);                  // live preview
+};
+
+window.applyLiftPos = function(key) {
+  const cfg = liftPositions.get(key);
+  if (!cfg || !cfg.object) return;
+  const obj = cfg.object;
+  obj.updateMatrixWorld(true);
+  const targetWorld = new THREE.Vector3(cfg.x, cfg.y, cfg.z);
+  if (obj.parent && obj.parent !== scene) {
+    obj.parent.updateMatrixWorld(true);
+    obj.parent.worldToLocal(targetWorld);
+  }
+  obj.position.copy(targetWorld);
+  obj.rotation.set(cfg.rx * Math.PI/180, cfg.ry * Math.PI/180, cfg.rz * Math.PI/180);
+};
+
+window.removeLiftPos = function(key) {
+  liftPositions.delete(key);
+  renderLiftPosList();
+  if (lppTab === 'tree') buildLppTree();
+};
+
+// ── IMPORT / EXPORT ───────────────────────────────────────────────────────────
+window.exportLiftPositions = function() {
+  if (liftPositions.size === 0) {
+    document.getElementById('lpp-io-status').textContent = '⚠ Sin elementos para exportar';
+    return;
+  }
+  const data = [];
+  liftPositions.forEach((cfg, key) => {
+    data.push({
+      name:    cfg.name,
+      isGroup: cfg.isGroup,
+      x: cfg.x, y: cfg.y, z: cfg.z,
+      rx: cfg.rx, ry: cfg.ry, rz: cfg.rz,
+    });
+  });
+  const json = JSON.stringify({ liftPositions: data, version: 1 }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'posiciones-izaje.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('lpp-io-status').textContent = `✓ Exportado: ${data.length} elemento(s)`;
+};
+
+window.importLiftPositions = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const entries = parsed.liftPositions || parsed; // support bare array too
+      if (!Array.isArray(entries)) throw new Error('Formato inválido');
+
+      let matched = 0, skipped = 0;
+      entries.forEach(entry => {
+        // Try to find the object in the current scene by name
+        let found = null;
+        scene.traverse(o => {
+          if (found) return;
+          if (o.name && o.name === entry.name) found = o;
+        });
+
+        if (!found) { skipped++; return; }
+
+        const key = found.uuid;
+        found.updateMatrixWorld(true);
+        const worldPos = new THREE.Vector3();
+        found.getWorldPosition(worldPos);
+
+        const cfg = liftPositions.get(key) || {
+          name: entry.name, isGroup: entry.isGroup ?? !found.isMesh,
+          object: found,
+          origX: worldPos.x, origY: worldPos.y, origZ: worldPos.z,
+          origRx: 0, origRy: 0, origRz: 0,
+        };
+
+        cfg.x  = entry.x  ?? cfg.origX;
+        cfg.y  = entry.y  ?? cfg.origY;
+        cfg.z  = entry.z  ?? cfg.origZ;
+        cfg.rx = entry.rx ?? 0;
+        cfg.ry = entry.ry ?? 0;
+        cfg.rz = entry.rz ?? 0;
+
+        liftPositions.set(key, cfg);
+        applyLiftPos(key);
+        matched++;
+      });
+
+      renderLiftPosList();
+      if (lppTab === 'tree') buildLppTree();
+      document.getElementById('lpp-io-status').textContent =
+        `✓ Importado: ${matched} · no encontrado: ${skipped}`;
+    } catch (err) {
+      document.getElementById('lpp-io-status').textContent = '⚠ Error: ' + err.message;
+    }
+    input.value = ''; // reset so same file can be re-imported
+  };
+  reader.readAsText(file);
+};
+
+// ── CRANE CONFIG ──────────────────────────────────────────────────────────────
+let craneConfigOpen = false;
+window.toggleCraneConfig = function() {
+  craneConfigOpen = !craneConfigOpen;
+  const panel = document.getElementById('crane-config-panel');
+  panel.style.display = craneConfigOpen ? 'flex' : 'none';
+  if (craneConfigOpen) {
+    const c = getActiveCrane();
+    if (c) {
+      document.getElementById('ccp-name').value = c.customName || `Grúa #${c.id}`;
+      document.getElementById('ccp-scale').value = (c.customScale || 1.0).toFixed(1);
+      document.getElementById('ccp-capacity').value = c.maxCapacity || 50;
+      document.getElementById('ccp-radius').value = c.maxRadius || 15;
+      document.getElementById('ccp-armA').value = c.armALength || 7;
+      document.getElementById('ccp-armB').value = c.armBLength || 4;
+    }
+  }
+};
+
+window.applyCraneConfig = function() {
+  const c = getActiveCrane();
+  if (!c) { alert('Selecciona una grúa primero'); return; }
+
+  const scale  = Math.max(0.2, Math.min(10, parseFloat(document.getElementById('ccp-scale').value) || 1));
+  const cap    = Math.max(1, parseFloat(document.getElementById('ccp-capacity').value) || 50);
+  const radius = Math.max(5, parseFloat(document.getElementById('ccp-radius').value) || 15);
+  const name   = document.getElementById('ccp-name').value || `Grúa #${c.id}`;
+  const armALen = Math.max(3, parseFloat(document.getElementById('ccp-armA').value) || 7);
+  const armBLen = Math.max(2, parseFloat(document.getElementById('ccp-armB').value) || 4);
+
+  c.customScale = scale;
+  c.maxCapacity = cap;
+  c.maxRadius = radius;
+  c.customName = name;
+  c.armALength = armALen;
+  c.armBLength = armBLen;
+
+  // ── Apply scale to the crane group ──
+  c.object.scale.setScalar(scale);
+
+  // ── Rebuild Arm A geometry using named meshes ──
+  const boomAMesh = c.object.getObjectByName('boomA');
+  const boomACapMesh = c.object.getObjectByName('boomACap');
+  const armBGroupForRepos = c.object.getObjectByName('armB');
+
+  if (boomAMesh) {
+    boomAMesh.geometry.dispose();
+    boomAMesh.geometry = new THREE.BoxGeometry(0.4, 0.4, armALen);
+    boomAMesh.position.set(0, 0, armALen / 2);
+  }
+  if (boomACapMesh) {
+    boomACapMesh.position.set(0, 0, armALen);
+  }
+  if (armBGroupForRepos) {
+    // armB base position along armA: keep it proportional (default is z=3 for armA=7)
+    armBGroupForRepos.position.set(0, 0, Math.max(2, armALen * 0.43));
+  }
+
+  // ── Rebuild Arm B geometry using named mesh ──
+  const boomBMesh = c.object.getObjectByName('boomB');
+  const tipMarkerObj = c.object.getObjectByName('tipMarker');
+
+  if (boomBMesh) {
+    boomBMesh.geometry.dispose();
+    boomBMesh.geometry = new THREE.BoxGeometry(0.28, 0.28, armBLen);
+    boomBMesh.position.set(0, 0, armBLen / 2);
+  }
+  if (tipMarkerObj) {
+    tipMarkerObj.position.set(0, -0.18, armBLen);
+  }
+
+  // ── Update CRANE_ACTIONS limits to reflect new arm lengths ──
+  // Store on the craneData so applyCraneState and actions can use them
+  c.armBMaxExt = armBLen - 2; // max telescopic extension
+  // Reset extension if beyond new max
+  if (c.state.armBExtension > c.armBMaxExt) c.state.armBExtension = c.armBMaxExt;
+
+  applyCraneState(c);
+  updateCraneList();
+  updateCraneStatusBar();
+  updateLoadMonitor();
+
+  document.getElementById('crane-config-panel').style.display = 'none';
+  craneConfigOpen = false;
+  craneLog(`Grúa #${c.id} "${name}": cap:${cap}t brazo:${armALen}+${armBLen}m escala:${scale}×`);
+};
+
+// ── LOAD MONITOR ──────────────────────────────────────────────────────────────
+let loadMonitorOpen = false;
+
+window.toggleLoadMonitor = function() {
+  loadMonitorOpen = !loadMonitorOpen;
+  const panel = document.getElementById('load-monitor');
+  panel.style.display = loadMonitorOpen ? 'flex' : 'none';
+  if (cranePanelOpen) panel.classList.add('panel-open');
+  if (loadMonitorOpen) updateLoadMonitor();
+};
+
+window.updateLoadMonitor = function() {
+  if (!loadMonitorOpen) return;
+  const c = getActiveCrane();
+  const weight = parseFloat(document.getElementById('lm-weight').value) || 0;
+  const maxCap = c ? (c.maxCapacity || 50) : 50;
+  const maxRad = c ? (c.maxRadius || 15) : 15;
+
+  // Compute current hook radius from crane center
+  let currentRadius = 0;
+  if (c) {
+    c.object.updateMatrixWorld(true);
+    const hs = c.object.getObjectByName('hookShape');
+    if (hs) {
+      const hookW = new THREE.Vector3(); hs.getWorldPosition(hookW);
+      const craneW = new THREE.Vector3(); c.object.getWorldPosition(craneW);
+      currentRadius = Math.sqrt(Math.pow(hookW.x - craneW.x, 2) + Math.pow(hookW.z - craneW.z, 2));
+    }
+  }
+
+  // Capacity at radius: linear reduction from 100% at r=0 to ~20% at max radius
+  const radFactor = Math.max(0.2, 1 - (currentRadius / maxRad) * 0.8);
+  const capAtRadius = maxCap * radFactor;
+  const pct = capAtRadius > 0 ? (weight / capAtRadius) * 100 : 0;
+
+  document.getElementById('lm-capacity').textContent = maxCap + ' ton';
+  document.getElementById('lm-radius').textContent = currentRadius.toFixed(1) + ' m';
+  document.getElementById('lm-cap-at-radius').textContent = capAtRadius.toFixed(1) + ' ton';
+
+  let statusClass = 'ok', statusText = 'SEGURO';
+  if (pct >= 100) { statusClass = 'danger'; statusText = '⚠ EXCESO'; }
+  else if (pct >= 85) { statusClass = 'warn'; statusText = '⚡ PRECAUCIÓN'; }
+
+  const pctStr = pct.toFixed(1) + '%';
+  document.getElementById('lm-pct').textContent = pctStr;
+  document.getElementById('lm-pct').className = 'lm-stat-val ' + statusClass;
+  document.getElementById('lm-gauge-pct-label').textContent = pctStr;
+  document.getElementById('lm-status').textContent = statusText;
+  document.getElementById('lm-status').className = 'lm-stat-val ' + statusClass;
+
+  const fillW = Math.min(100, pct);
+  const fillColor = pct >= 100 ? 'var(--danger)' : pct >= 85 ? 'var(--warn)' : 'var(--accent2)';
+  document.getElementById('lm-gauge-fill').style.width = fillW + '%';
+  document.getElementById('lm-gauge-fill').style.background = fillColor;
+};
+
+// ── LIFT PHYSICS ─────────────────────────────────────────────────────────────
+let liftPhysicsEnabled = true;
+
+// Per-attached-object physics state
+const liftPhys = {
+  // Current tilt angles (world-space Euler, applied on top of hookRot)
+  tiltX: 0,   // rotation around X axis (fore-aft lean)
+  tiltZ: 0,   // rotation around Z axis (side lean)
+  tiltXVel: 0,
+  tiltZVel: 0,
+  // Target tilt: computed each frame from geometry
+  targetTiltX: 0,
+  targetTiltZ: 0,
+  // Bounding box of the attached object in its local space (cached on attach)
+  localBox: null,
+  // Which axis is "longest" in local space: 'x'|'y'|'z'
+  longAxis: 'y',
+  // Floor Y in world space (cached)
+  floorY: 0,
+  // Whether ground contact was detected this frame
+  grounded: false,
+};
+
+window.toggleLiftPhysics = function() {
+  liftPhysicsEnabled = !liftPhysicsEnabled;
+  const btn = document.getElementById('btn-physics-toggle');
+  if (liftPhysicsEnabled) {
+    btn.textContent = '⚛ Física de peso: ON';
+    btn.style.borderColor = 'rgba(129,199,132,.35)';
+    btn.style.background  = 'rgba(129,199,132,.08)';
+    btn.style.color       = 'var(--accent2)';
+  } else {
+    btn.textContent = '⚛ Física de peso: OFF';
+    btn.style.borderColor = 'rgba(239,83,80,.3)';
+    btn.style.background  = 'rgba(239,83,80,.06)';
+    btn.style.color       = 'var(--danger)';
+    // Reset tilt on the attached object
+    if (attachedObject) {
+      attachedObject.rotation.x = 0;
+      attachedObject.rotation.z = 0;
+    }
+    liftPhys.tiltX = liftPhys.tiltZ = 0;
+    liftPhys.tiltXVel = liftPhys.tiltZVel = 0;
+  }
+};
+
+// Called when an object is freshly attached — cache its geometry info
+function initLiftPhysics(obj) {
+  liftPhys.tiltXVel = 0;
+  liftPhys.tiltZVel = 0;
+  liftPhys.grounded = false;
+
+  // Save the rotation the object already has (from lift position config or original pose).
+  // Physics will add a DELTA on top of this — starting from 0 extra tilt.
+  liftPhys.baseRotX = obj.rotation.x;
+  liftPhys.baseRotY = obj.rotation.y;
+  liftPhys.baseRotZ = obj.rotation.z;
+
+  // Extra tilt added by gravity — starts at 0 regardless of current pose
+  liftPhys.tiltX = 0;
+  liftPhys.tiltZ = 0;
+
+  // Measure geometry in the object's CURRENT orientation (not neutralised),
+  // so longAxis reflects how the piece actually sits in space right now.
+  obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj);
+  liftPhys.localBox = box;
+  const size = box.getSize(new THREE.Vector3());
+
+  // The "long axis" in world space: which world dimension is largest?
+  const mx = Math.max(size.x, size.y, size.z);
+  // If the piece is lying on its side, the world-space X or Z will be largest.
+  // If it's standing up, Y will be largest.
+  liftPhys.longAxis   = (mx === size.x) ? 'x' : (mx === size.z) ? 'z' : 'y';
+  liftPhys.halfLength = mx * 0.5;
+
+  liftPhys.floorY = projectFloorY !== null ? projectFloorY : state.modelFloor;
+}
+
+function updateLiftPhysics(obj, hookWorldPos, dt) {
+  if (!liftPhysicsEnabled || !attachedObject) return;
+
+  const floorY   = liftPhys.floorY;
+  const box      = liftPhys.localBox;
+  const longAxis = liftPhys.longAxis;
+  const halfLen  = liftPhys.halfLength || 1;
+  if (!box) return;
+
+  // ── 1. Hook height above floor — the physical constraint ──────────────────
+  // The piece hangs from the hook. The lowest its free end can go is the floor.
+  // So the maximum tilt possible = arcsin(hookHeight / halfLength).
+  // When hook is low: maxTilt ≈ 0 → piece stays flat.
+  // When hook reaches halfLen above floor: maxTilt = 90° → piece fully vertical.
+  const hookHeight = Math.max(0, hookWorldPos.y - floorY);
+  const maxTilt = hookHeight >= halfLen
+    ? Math.PI / 2
+    : Math.asin(hookHeight / halfLen);
+
+  // ── 2. Target tilt delta (what gravity wants, clamped to what's possible) ──
+  // We only rotate pieces that are lying on their side (longAxis = x or z).
+  // longAxis 'y' means piece is already upright — nothing to do.
+  let targetTiltX = 0, targetTiltZ = 0;
+  if      (longAxis === 'x') targetTiltZ = maxTilt;
+  else if (longAxis === 'z') targetTiltX = maxTilt;
+
+  // ── 3. Spring-damper on the DELTA tilt ────────────────────────────────────
+  const stiffness = 1.8;
+  const damping   = 2.2;
+
+  const errX = targetTiltX - liftPhys.tiltX;
+  const errZ = targetTiltZ - liftPhys.tiltZ;
+
+  liftPhys.tiltXVel += (errX * stiffness - liftPhys.tiltXVel * damping) * dt;
+  liftPhys.tiltZVel += (errZ * stiffness - liftPhys.tiltZVel * damping) * dt;
+  liftPhys.tiltX    += liftPhys.tiltXVel * dt;
+  liftPhys.tiltZ    += liftPhys.tiltZVel * dt;
+
+  // Clamp delta to [0, maxTilt] — never overshoot geometry
+  liftPhys.tiltX = Math.max(0, Math.min(maxTilt, liftPhys.tiltX));
+  liftPhys.tiltZ = Math.max(0, Math.min(maxTilt, liftPhys.tiltZ));
+
+  // ── 4. Apply: base rotation + gravity delta ────────────────────────────────
+  obj.rotation.x = liftPhys.baseRotX + liftPhys.tiltX;
+  obj.rotation.y = liftPhys.baseRotY;
+  obj.rotation.z = liftPhys.baseRotZ + liftPhys.tiltZ;
+  obj.updateMatrixWorld(true);
+
+  // ── 5. Floor contact ──────────────────────────────────────────────────────
+  const worldBox2  = new THREE.Box3().setFromObject(obj);
+  const newLowestY = worldBox2.min.y;
+  liftPhys.grounded = Math.abs(newLowestY - floorY) < 0.05;
+
+  // While piece isn't fully airborne, pin lowest point to floor (both directions)
+  if (maxTilt < Math.PI / 2 - 0.01) {
+    const correction = floorY - newLowestY;
+    if (Math.abs(correction) > 0.001) {
+      obj.position.y += correction;
+      obj.updateMatrixWorld(true);
+      if (correction > 0) {          // penetrating floor — damp velocity
+        liftPhys.tiltXVel *= 0.6;
+        liftPhys.tiltZVel *= 0.6;
+      }
+    }
+  } else if (newLowestY < floorY) {
+    // Fully vertical but still clipping floor — push up
+    obj.position.y += floorY - newLowestY;
+    obj.updateMatrixWorld(true);
+  }
+
+  // ── 6. Resync attachedOffset Y after floor correction ────────────────────────
+  // X and Z of the offset stay fixed (hook point doesn't move laterally).
+  // Only Y changes when the floor pushes the object up/down.
+  obj.updateMatrixWorld(true);
+  const newPivot = new THREE.Vector3();
+  obj.getWorldPosition(newPivot);
+  attachedOffset.y = newPivot.y - hookWorldPos.y;
+}
+
+// Physics is hooked directly inside doAttach() and releaseAttached() above.
+// dt is exposed in the animate loop below for the physics step.
+setInterval(() => { if (typeof loadMonitorOpen !== 'undefined' && loadMonitorOpen) updateLoadMonitor(); }, 500);
+const clock = new THREE.Clock();
 let lastStatusUpdate=0;
 
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),0.05);
+  window._liftDt = dt;  // expose to lift physics
   const time=performance.now();
 
   // ── EXPLORER CHARACTER + CAMERA ──
@@ -1836,10 +3399,27 @@ function animate(){
     // Apply state for all cranes (not just active)
     cranes.forEach(c=>applyCraneState(c));
 
-    // Throttle status bar
+    // ── LIFT PHYSICS: run after crane positions the load ──
+    if (liftPhysicsEnabled && attachedObject && attachedCraneId !== null) {
+      const physCrane = cranes.find(c => c.id === attachedCraneId);
+      if (physCrane) {
+        const hs = physCrane.object.getObjectByName('hookShape');
+        if (hs) {
+          const hookW = new THREE.Vector3();
+          hs.getWorldPosition(hookW);
+          updateLiftPhysics(attachedObject, hookW, dt);
+        }
+      }
+    }
+
+    // Throttle status bar + nearby list
     if(time-lastStatusUpdate>200 && cranePanelOpen){
       updateCraneStatusBar();
       lastStatusUpdate=time;
+    }
+    // Auto-refresh nearby list every ~1.5s while panel open and not attached
+    if(cranePanelOpen && !attachedObject && time-lastStatusUpdate > 1500){
+      refreshNearbyList();
     }
   }
 
