@@ -545,6 +545,556 @@
   .lm-gauge-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:3px;}
   .lm-gauge-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
   .lm-gauge-fill{height:100%;border-radius:3px;transition:width .3s, background .3s;}
+
+  /* ════════════════════════════════════════════════════════
+     SIMULATION TIMELINE
+     ════════════════════════════════════════════════════════ */
+  :root {
+    --tl-h: 220px;
+    --tl-header: 36px;
+    --tl-row: 36px;
+    --tl-label: 130px;
+    --sim-purple: #a78bfa;
+    --sim-blue: #4fc3f7;
+    --sim-green: #81c784;
+    --sim-amber: #f6ad55;
+    --sim-red: #ef5350;
+  }
+
+  /* Timeline shell */
+  #sim-timeline {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 130;
+    background: rgba(8,10,14,.97); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    max-height: 60vh;
+  }
+  #sim-timeline.open { transform: translateY(0); }
+
+  /* Header bar */
+  #tl-header {
+    height: var(--tl-header);
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tl-logo { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--sim-purple); letter-spacing: .5px; }
+  .tl-sep  { width: 1px; height: 16px; background: var(--border); }
+
+  /* Transport controls */
+  .tl-transport { display: flex; align-items: center; gap: 4px; }
+  .tl-btn {
+    height: 26px; padding: 0 10px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text2); font-family: var(--mono); font-size: 10px;
+    cursor: pointer; transition: all .12s; display: flex; align-items: center; gap: 4px;
+  }
+  .tl-btn:hover { border-color: var(--sim-purple); color: var(--sim-purple); }
+  .tl-btn.active { border-color: var(--sim-purple); color: var(--sim-purple); background: rgba(167,139,250,.1); }
+  .tl-btn.play  { border-color: rgba(129,199,132,.4); color: var(--sim-green); background: rgba(129,199,132,.08); }
+  .tl-btn.play:hover  { background: rgba(129,199,132,.18); }
+  .tl-btn.stop  { border-color: rgba(239,83,80,.3); color: var(--sim-red); }
+  .tl-btn.export-btn { border-color: rgba(79,195,247,.3); color: var(--sim-blue); }
+
+  /* Time display */
+  #tl-time-display {
+    font-family: var(--mono); font-size: 11px; color: var(--sim-amber);
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 10px;
+    min-width: 80px; text-align: center;
+  }
+
+  /* Date range inputs */
+  .tl-date-group { display: flex; align-items: center; gap: 5px; }
+  .tl-date-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: .5px; }
+  .tl-date-input {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--accent); font-family: var(--mono); font-size: 10px;
+    padding: 3px 6px; outline: none; width: 110px;
+  }
+  .tl-date-input:focus { border-color: var(--sim-purple); }
+
+  /* Scale buttons */
+  .tl-scale-group { display: flex; gap: 2px; margin-left: auto; }
+  .tl-scale-btn {
+    padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text3); font-family: var(--mono); font-size: 9px;
+    cursor: pointer; transition: all .12s;
+  }
+  .tl-scale-btn.active { border-color: var(--sim-purple); color: var(--sim-purple); background: rgba(167,139,250,.1); }
+  #tl-hide { margin-left: 8px; }
+
+  /* Timeline body: rows */
+  #tl-body {
+    display: flex; flex: 1; overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Left labels column */
+  #tl-labels {
+    width: var(--tl-label); flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .tl-row-label {
+    height: var(--tl-row); flex-shrink: 0;
+    display: flex; align-items: center; gap: 7px;
+    padding: 0 10px; border-bottom: 1px solid rgba(255,255,255,.04);
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: .5px; cursor: pointer; user-select: none;
+    transition: background .12s;
+  }
+  .tl-row-label:hover { background: rgba(255,255,255,.03); }
+  .tl-row-label .rl-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .tl-row-label .rl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tl-row-label .rl-add {
+    width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text3); font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .12s; flex-shrink: 0;
+  }
+  .tl-row-label .rl-add:hover { border-color: var(--sim-purple); color: var(--sim-purple); }
+
+  /* Right scrollable canvas area */
+  #tl-canvas-wrap {
+    flex: 1; overflow-x: auto; overflow-y: hidden;
+    position: relative;
+  }
+  #tl-canvas { position: relative; height: 100%; min-width: 100%; }
+
+  /* Ruler row */
+  #tl-ruler {
+    height: 20px; position: sticky; top: 0; z-index: 10;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    pointer-events: auto; user-select: none;
+  }
+  /* tick marks inside the ruler shouldn't swallow drag events */
+  #tl-ruler > div { pointer-events: none; }
+
+  /* Track rows */
+  .tl-track {
+    height: var(--tl-row); border-bottom: 1px solid rgba(255,255,255,.04);
+    position: relative; overflow: visible;
+  }
+  .tl-track:hover { background: rgba(255,255,255,.015); }
+
+  /* Keyframe chips */
+  .tl-chip {
+    position: absolute; top: 4px; height: calc(var(--tl-row) - 8px);
+    border-radius: 4px; border: 1px solid; cursor: grab;
+    display: flex; align-items: center; padding: 0 6px;
+    font-family: var(--mono); font-size: 8px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; user-select: none;
+    transition: opacity .1s; min-width: 20px;
+  }
+  .tl-chip:hover { opacity: .85; }
+  .tl-chip.active { box-shadow: 0 0 0 2px rgba(167,139,250,.6); }
+
+  /* Block colors */
+  .chip-a { background: rgba(79,195,247,.15); border-color: rgba(79,195,247,.4); color: var(--sim-blue); }
+  .chip-b { background: rgba(167,139,250,.15); border-color: rgba(167,139,250,.4); color: var(--sim-purple); }
+  .chip-title { background: rgba(246,173,85,.15); border-color: rgba(246,173,85,.4); color: var(--sim-amber); }
+
+  /* Playhead */
+  #tl-playhead {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: var(--sim-red); z-index: 20; pointer-events: none;
+  }
+  #tl-playhead::before {
+    content: '▼'; position: absolute; top: -2px; left: -5px;
+    font-size: 10px; color: var(--sim-red);
+  }
+
+  /* ──────── BLOCK A PANEL (foundations) ──────── */
+  #block-a-panel {
+    position: fixed; top: 58px; left: 20px; z-index: 125;
+    width: 300px; max-height: calc(100vh - 120px);
+    background: rgba(8,10,14,.96); backdrop-filter: blur(16px);
+    border: 1px solid rgba(79,195,247,.25); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(-120%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #block-a-panel.open { transform: translateX(0); }
+
+  .bap-header {
+    height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 0 14px; border-bottom: 1px solid rgba(79,195,247,.15); flex-shrink: 0;
+  }
+  .bap-logo { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--sim-blue); letter-spacing: .5px; }
+  .bap-badge {
+    font-family: var(--mono); font-size: 8px; color: var(--text3);
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 2px 6px;
+  }
+  .bap-close {
+    margin-left: auto; width: 26px; height: 26px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--bg3);
+    color: var(--text2); cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; transition: all .12s;
+  }
+  .bap-close:hover { border-color: var(--danger); color: var(--danger); }
+
+  .bap-section { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+  .bap-section-title {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .bap-section-title::before { content: ''; display: block; width: 3px; height: 3px; border-radius: 50%; background: var(--sim-blue); }
+
+  /* Add foundation */
+  .bap-pick-row { display: flex; gap: 4px; }
+  .bap-btn {
+    flex: 1; padding: 6px 0; border-radius: 5px; border: 1px solid rgba(79,195,247,.25);
+    background: rgba(79,195,247,.06); color: var(--sim-blue);
+    font-family: var(--mono); font-size: 9px; cursor: pointer; transition: all .12s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .bap-btn:hover { background: rgba(79,195,247,.14); border-color: var(--sim-blue); }
+  .bap-btn.danger { border-color: rgba(239,83,80,.3); color: var(--danger); background: rgba(239,83,80,.06); }
+  .bap-btn.danger:hover { background: rgba(239,83,80,.14); }
+
+  /* Foundation list */
+  #bap-list { flex: 1; overflow-y: auto; padding: 8px 14px; min-height: 0; }
+  .bap-item {
+    border: 1px solid var(--border); border-radius: 7px; margin-bottom: 6px;
+    background: var(--bg2); overflow: hidden;
+  }
+  .bap-item-header {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 10px; cursor: pointer; user-select: none;
+  }
+  .bap-item-header:hover { background: rgba(79,195,247,.04); }
+  .bap-item-icon { font-size: 11px; }
+  .bap-item-name {
+    flex: 1; font-family: var(--mono); font-size: 10px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bap-item-pct {
+    font-family: var(--mono); font-size: 9px; color: var(--sim-blue);
+    background: rgba(79,195,247,.1); border: 1px solid rgba(79,195,247,.3);
+    border-radius: 5px; padding: 2px 6px; flex-shrink: 0;
+  }
+  .bap-item-body { padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.05); display: none; }
+  .bap-item-body.open { display: block; }
+
+  /* Concrete pour slider */
+  .bap-pour-wrap { margin-bottom: 8px; }
+  .bap-pour-labels {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 9px; color: var(--text3); margin-bottom: 4px;
+  }
+  .bap-pour-labels .val { color: var(--sim-blue); }
+  .bap-pour-slider {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+    background: var(--bg3); border-radius: 2px; outline: none;
+  }
+  .bap-pour-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--sim-blue); cursor: pointer; border: none;
+    box-shadow: 0 0 0 3px rgba(79,195,247,.2);
+  }
+
+  /* Pour height sub-fields */
+  .bap-height-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
+  .bap-height-field { display: flex; flex-direction: column; gap: 2px; }
+  .bap-height-label { font-family: var(--mono); font-size: 8px; color: var(--text3); }
+  .bap-height-input {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--accent); font-family: var(--mono); font-size: 11px;
+    padding: 3px 6px; outline: none; width: 100%;
+  }
+  .bap-height-input:focus { border-color: var(--sim-blue); }
+
+  /* Stage checkboxes */
+  .bap-stages { display: flex; flex-direction: column; gap: 4px; }
+  .bap-stage {
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+    border: 1px solid var(--border); border-radius: 5px; background: var(--bg3);
+    cursor: pointer; transition: all .12s;
+  }
+  .bap-stage:hover { border-color: rgba(79,195,247,.3); }
+  .bap-stage.done { border-color: rgba(79,195,247,.4); background: rgba(79,195,247,.07); }
+  .bap-stage input[type=checkbox] { accent-color: var(--sim-blue); flex-shrink: 0; }
+  .bap-stage-label { font-family: var(--mono); font-size: 9px; flex: 1; }
+  .bap-stage-badge {
+    font-size: 8px; padding: 1px 5px; border-radius: 4px; border: 1px solid;
+    flex-shrink: 0;
+  }
+
+  /* Foundation IO */
+  .bap-io { padding: 8px 14px; border-top: 1px solid rgba(255,255,255,.05); display: flex; gap: 4px; flex-shrink: 0; }
+
+  /* ──────── BLOCK B (now integrated into LPP) context ──────── */
+  /* The existing LPP panel handles block B, just adding timeline binding UI */
+  .lpp-tl-bind {
+    display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    background: rgba(167,139,250,.06); border: 1px solid rgba(167,139,250,.2);
+    border-radius: 5px; margin-top: 6px; cursor: pointer;
+  }
+  .lpp-tl-bind:hover { background: rgba(167,139,250,.12); }
+  .lpp-tl-bind-label { font-family: var(--mono); font-size: 9px; color: var(--sim-purple); flex: 1; }
+  .lpp-tl-bind .bind-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sim-purple); flex-shrink: 0;
+  }
+
+  /* ──────── TIMELINE CHIP EDITOR ──────── */
+  #chip-editor {
+    position: fixed; z-index: 140;
+    background: rgba(8,10,14,.97); backdrop-filter: blur(16px);
+    border: 1px solid rgba(167,139,250,.3); border-radius: 9px;
+    padding: 12px 14px; min-width: 220px;
+    display: none; flex-direction: column; gap: 8px;
+  }
+  .ce-title { font-family: var(--mono); font-size: 10px; color: var(--sim-purple); font-weight: 600; }
+  .ce-field { display: flex; flex-direction: column; gap: 2px; }
+  .ce-label { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+  .ce-input {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--accent); font-family: var(--mono); font-size: 11px;
+    padding: 4px 7px; outline: none; width: 100%;
+  }
+  .ce-input:focus { border-color: var(--sim-purple); }
+  .ce-btns { display: flex; gap: 4px; margin-top: 2px; }
+  .ce-btn {
+    flex: 1; padding: 5px 0; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--bg2); color: var(--text2); font-family: var(--mono); font-size: 9px;
+    cursor: pointer; transition: all .12s;
+  }
+  .ce-btn.ok { border-color: rgba(129,199,132,.3); color: var(--sim-green); }
+  .ce-btn.del { border-color: rgba(239,83,80,.3); color: var(--sim-red); }
+
+  /* ──────── SCREEN TITLE OVERLAY ──────── */
+  #sim-title-overlay {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    z-index: 160; pointer-events: none;
+    text-align: center; opacity: 0;
+    transition: opacity .4s;
+  }
+  #sim-title-overlay.show { opacity: 1; }
+  #sto-text {
+    font-family: var(--mono); font-size: 48px; font-weight: 600;
+    color: #fff; text-shadow: 0 0 40px rgba(167,139,250,.8), 0 2px 20px rgba(0,0,0,.9);
+    letter-spacing: -1px; line-height: 1.1;
+  }
+  #sto-sub {
+    font-family: var(--sans); font-size: 14px; color: var(--text2);
+    margin-top: 8px; text-shadow: 0 1px 10px rgba(0,0,0,.8);
+  }
+
+  /* ──────── KEYFRAME PANEL (add event to timeline) ──────── */
+  #tl-add-panel {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 135;
+    padding: 0 14px 14px;
+    pointer-events: none;
+    display: flex; justify-content: center;
+  }
+  #tl-add-inner {
+    background: rgba(8,10,14,.97); backdrop-filter: blur(16px);
+    border: 1px solid rgba(167,139,250,.3); border-radius: 10px;
+    padding: 12px 16px; display: none; flex-direction: column; gap: 8px;
+    min-width: 360px; pointer-events: all;
+  }
+  #tl-add-inner.show { display: flex; }
+
+  /* ──────── CONCRETE VISUALIZATION overlay ──────── */
+  /* Applied via JS to model objects — visual indication only */
+
+  /* ── TIMELINE COLLAPSE / RESIZE ───────────────────────────────── */
+  /* Resize handle above the timeline */
+  #tl-resize-handle {
+    position: absolute; top: -5px; left: 0; right: 0; height: 10px;
+    cursor: ns-resize; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #tl-resize-handle::before {
+    content: ''; display: block;
+    width: 40px; height: 3px; border-radius: 2px;
+    background: rgba(167,139,250,.3);
+    transition: background .15s;
+  }
+  #tl-resize-handle:hover::before { background: var(--sim-purple); }
+
+  /* Row collapse toggle */
+  .tl-row-label.collapsed { opacity: .5; }
+  .tl-row-label.collapsed .rl-name { text-decoration: line-through; }
+  .rl-collapse {
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1px solid var(--border); background: var(--bg3);
+    color: var(--text3); font-size: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .12s; margin-right: 2px;
+  }
+  .rl-collapse:hover { border-color: var(--sim-purple); color: var(--sim-purple); }
+  .tl-track.row-collapsed { display: none; }
+  .tl-row-label.collapsed .rl-collapse { color: var(--sim-purple); border-color: rgba(167,139,250,.4); }
+
+  /* Size presets row in header */
+  .tl-size-group { display: flex; gap: 2px; }
+  .tl-size-btn {
+    padding: 3px 7px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text3); font-family: var(--mono); font-size: 9px;
+    cursor: pointer; transition: all .12s;
+  }
+  .tl-size-btn:hover  { border-color: rgba(167,139,250,.4); color: var(--sim-purple); }
+  .tl-size-btn.active { border-color: var(--sim-purple); color: var(--sim-purple); background: rgba(167,139,250,.1); }
+
+  #sim-timeline { position: fixed; bottom: 0; left: 0; right: 0; z-index: 130;
+    background: rgba(8,10,14,.97); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1); }
+
+
+  /* ── MULTI-ROW BLOCKS + SCRUBBER ── */
+  .tl-block-head {
+    height: 18px; display: flex; align-items: center; gap: 6px;
+    padding: 0 10px; background: rgba(255,255,255,.03);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-top: 1px solid rgba(255,255,255,.05);
+  }
+  .tl-block-head .bh-name {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+    color: var(--text2); text-transform: uppercase; flex: 1;
+  }
+  .tl-block-head .bh-add {
+    font-family: var(--mono); font-size: 8px; padding: 1px 6px;
+    border-radius: 3px; border: 1px solid rgba(167,139,250,.3);
+    background: rgba(167,139,250,.08); color: var(--sim-purple);
+    cursor: pointer; transition: all .12s;
+  }
+  .tl-block-head .bh-add:hover { background: rgba(167,139,250,.18); }
+  .tl-block-head-track {
+    height: 18px; background: rgba(255,255,255,.02);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-top: 1px solid rgba(255,255,255,.05);
+  }
+
+  .rl-name-input {
+    flex: 1; min-width: 0; background: transparent; border: 1px solid transparent;
+    border-radius: 3px; color: var(--text2); font-family: var(--mono);
+    font-size: 9px; padding: 2px 4px; outline: none;
+  }
+  .rl-name-input:hover { border-color: var(--border); }
+  .rl-name-input:focus { border-color: var(--sim-purple); color: var(--text); background: var(--bg3); }
+  .rl-del {
+    width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0;
+    border: 1px solid var(--border); background: var(--bg3);
+    color: var(--text3); font-size: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .12s;
+  }
+  .rl-del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Scrubber zone: the ruler is clickable/draggable to move the playhead */
+  #tl-ruler { cursor: ew-resize; }
+  #tl-ruler:hover { background: rgba(167,139,250,.05); }
+  #tl-playhead.scrubbing::before { transform: scale(1.4); }
+  /* Bigger grab handle on playhead */
+  #tl-playhead { cursor: ew-resize; pointer-events: auto; }
+
+
+  /* ── MASTER DAY STRIP ── */
+  #tl-day-strip-wrap {
+    display: flex; align-items: stretch; gap: 8px;
+    padding: 7px 12px; border-bottom: 1px solid var(--border);
+    background: rgba(167,139,250,.04); flex-shrink: 0;
+    overflow-x: auto; overflow-y: hidden;
+  }
+  .tl-day-strip-label {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px;
+    color: var(--text3); writing-mode: vertical-rl; text-orientation: mixed;
+    display: flex; align-items: center; flex-shrink: 0; padding: 2px 0;
+  }
+  #tl-day-strip { display: flex; gap: 6px; align-items: stretch; }
+  .tl-day-card {
+    width: 130px; flex-shrink: 0; border: 1px solid var(--border);
+    border-radius: 7px; background: var(--bg2); padding: 6px 7px;
+    cursor: pointer; transition: all .12s; display: flex; flex-direction: column; gap: 4px;
+  }
+  .tl-day-card:hover { border-color: rgba(167,139,250,.4); }
+  .tl-day-card.active { border-color: var(--sim-purple); background: rgba(167,139,250,.1); box-shadow: 0 0 0 1px rgba(167,139,250,.3); }
+  .dc-top { display: flex; align-items: center; gap: 4px; }
+  .dc-label {
+    flex: 1; min-width: 0; background: transparent; border: 1px solid transparent;
+    border-radius: 3px; color: var(--text); font-family: var(--mono);
+    font-size: 10px; font-weight: 600; padding: 1px 3px; outline: none;
+  }
+  .dc-label:hover { border-color: var(--border); }
+  .dc-label:focus { border-color: var(--sim-purple); background: var(--bg3); }
+  .dc-del {
+    width: 15px; height: 15px; border-radius: 3px; flex-shrink: 0;
+    border: 1px solid var(--border); background: var(--bg3); color: var(--text3);
+    font-size: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .12s;
+  }
+  .dc-del:hover { border-color: var(--danger); color: var(--danger); }
+  .dc-date {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--accent); font-family: var(--mono); font-size: 9px; padding: 2px 4px; outline: none; width: 100%;
+  }
+  .dc-date:focus { border-color: var(--sim-purple); }
+  .dc-meta { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 8px; color: var(--text3); }
+  .dc-speed-wrap { display: flex; align-items: center; gap: 4px; }
+  .dc-speed { flex: 1; height: 3px; -webkit-appearance: none; appearance: none; background: var(--bg3); border-radius: 2px; outline: none; }
+  .dc-speed::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--sim-purple); cursor: pointer; }
+  .dc-actions { display: flex; gap: 3px; }
+  .dc-actions button {
+    flex: 1; padding: 3px 0; border-radius: 4px; border: 1px solid rgba(79,195,247,.3);
+    background: rgba(79,195,247,.06); color: var(--sim-blue);
+    font-family: var(--mono); font-size: 8px; cursor: pointer; transition: all .12s;
+  }
+  .dc-actions button:hover { background: rgba(79,195,247,.16); }
+  .tl-day-add {
+    width: 50px; flex-shrink: 0; border: 1px dashed rgba(167,139,250,.4);
+    border-radius: 7px; background: rgba(167,139,250,.04); color: var(--sim-purple);
+    font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all .12s;
+    display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3;
+  }
+  .tl-day-add:hover { background: rgba(167,139,250,.14); border-color: var(--sim-purple); }
+
+
+  /* ── DATE BANNER (top center) ── */
+  #sim-date-banner {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-12px);
+    z-index: 158; pointer-events: none;
+    display: flex; align-items: baseline; gap: 9px;
+    padding: 7px 18px; border-radius: 22px;
+    background: rgba(8,10,14,.82); backdrop-filter: blur(14px);
+    border: 1px solid rgba(167,139,250,.3);
+    font-family: var(--mono);
+    opacity: 0; transition: opacity .3s, transform .3s;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4);
+  }
+  #sim-date-banner.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #sim-date-banner .sdb-date {
+    font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .3px; text-transform: capitalize;
+  }
+  #sim-date-banner .sdb-sep { color: var(--text3); }
+  #sim-date-banner .sdb-label { font-size: 11px; color: var(--sim-purple); }
+  #sim-date-banner .sdb-time {
+    font-size: 12px; color: var(--sim-amber); margin-left: 4px;
+    background: rgba(246,173,85,.1); border: 1px solid rgba(246,173,85,.25);
+    border-radius: 10px; padding: 1px 8px;
+  }
+
+  /* Play-all button */
+  .tl-btn.playall { border-color: rgba(129,199,132,.4); color: var(--sim-green); background: rgba(129,199,132,.06); }
+  .tl-btn.playall:hover { background: rgba(129,199,132,.16); }
+  .tl-btn.playall.active { background: rgba(129,199,132,.22); border-color: var(--sim-green); }
+
+
+  /* Row drop-target highlight while dragging a chip vertically */
+  .tl-track.row-drop-target {
+    background: rgba(167,139,250,.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(167,139,250,.5);
+  }
+  .tl-chip { cursor: grab; }
+  .tl-chip:active { cursor: grabbing; }
+
 </style>
 </head>
 <body>
@@ -556,6 +1106,8 @@
   <span class="hud-logo">SUBSTATION<span style="color:var(--accent2)">·EXPLORER</span></span>
   <div class="hud-sep"></div>
   <span class="hud-logo" style="color:var(--crane);font-size:11px;">+ GRÚAS</span>
+  <div class="hud-sep"></div>
+  <span class="hud-logo" style="color:#a78bfa;font-size:11px;">+ SIMULACIÓN</span>
   <div class="hud-sep"></div>
   <span class="hud-title" id="model-name">Sin modelo cargado</span>
   <span id="hud-status">LISTO</span>
@@ -591,6 +1143,7 @@
   <button class="tool-btn crane-tool" id="btn-crane-panel" title="Módulo de grúas (G)" onclick="toggleCranePanel()">🏗</button>
   <button class="tool-btn" id="btn-lift-pos" title="Posiciones de izaje" onclick="toggleLiftPosPanel()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);">⬆</button>
   <button class="tool-btn" id="btn-floor-cfg" title="Configurar piso de proyecto" onclick="toggleFloorConfig()" style="font-size:13px;">⊟</button>
+  <button class="tool-btn" id="btn-timeline" title="Línea del tiempo de simulación" onclick="toggleTimeline()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);font-size:13px;">⏱</button>
 </div>
 
 <!-- Floor config panel -->
@@ -2640,27 +3193,101 @@ function registerLiftObject(obj) {
   obj.updateMatrixWorld(true);
   const worldPos = new THREE.Vector3();
   obj.getWorldPosition(worldPos);
+  // capture original rotation (degrees) too
+  const er = obj.rotation;
+  const origRx = parseFloat((er.x * 180/Math.PI).toFixed(2));
+  const origRy = parseFloat((er.y * 180/Math.PI).toFixed(2));
+  const origRz = parseFloat((er.z * 180/Math.PI).toFixed(2));
 
   const displayName = obj.name || obj.uuid.slice(0, 8);
   const isGroup = !obj.isMesh;
+
+  const ox = parseFloat(worldPos.x.toFixed(3));
+  const oy = parseFloat(worldPos.y.toFixed(3));
+  const oz = parseFloat(worldPos.z.toFixed(3));
 
   liftPositions.set(key, {
     name: displayName,
     isGroup,
     object: obj,
-    x: parseFloat(worldPos.x.toFixed(3)),
-    y: parseFloat(worldPos.y.toFixed(3)),
-    z: parseFloat(worldPos.z.toFixed(3)),
-    rx: 0, ry: 0, rz: 0,
-    // Store original world position so user can reset
-    origX: parseFloat(worldPos.x.toFixed(3)),
-    origY: parseFloat(worldPos.y.toFixed(3)),
-    origZ: parseFloat(worldPos.z.toFixed(3)),
-    origRx: 0, origRy: 0, origRz: 0,
+    // ── "pose en edición" (lo que se previsualiza en el panel) ──
+    x: ox, y: oy, z: oz, rx: origRx, ry: origRy, rz: origRz,
+    // ── posición ORIGINAL del modelo (keyframe implícito antes del primer chip) ──
+    origX: ox, origY: oy, origZ: oz, origRx, origRy, origRz,
+    // ── lista de poses-keyframe que el usuario define ──
+    poses: [],
   });
 
   renderLiftPosList(key);
 }
+
+// Add the current "edit pose" as a new named pose-keyframe
+window.addLiftPose = function(key) {
+  const cfg = liftPositions.get(key);
+  if (!cfg) return;
+  cfg.poses.push({
+    label: 'Posición ' + (cfg.poses.length + 1),
+    x: cfg.x, y: cfg.y, z: cfg.z, rx: cfg.rx, ry: cfg.ry, rz: cfg.rz,
+  });
+  renderLiftPosList(key);
+};
+
+// Load a pose into the edit fields (so user can preview/tweak)
+window.loadLiftPose = function(key, idx) {
+  const cfg = liftPositions.get(key);
+  if (!cfg || !cfg.poses[idx]) return;
+  const p = cfg.poses[idx];
+  cfg.x = p.x; cfg.y = p.y; cfg.z = p.z; cfg.rx = p.rx; cfg.ry = p.ry; cfg.rz = p.rz;
+  applyLiftPos(key);
+  renderLiftPosList(key);
+};
+
+// Update a stored pose from the current edit fields
+window.updateLiftPoseFromEdit = function(key, idx) {
+  const cfg = liftPositions.get(key);
+  if (!cfg || !cfg.poses[idx]) return;
+  const p = cfg.poses[idx];
+  p.x = cfg.x; p.y = cfg.y; p.z = cfg.z; p.rx = cfg.rx; p.ry = cfg.ry; p.rz = cfg.rz;
+  renderLiftPosList(key);
+};
+
+window.removeLiftPose = function(key, idx) {
+  const cfg = liftPositions.get(key);
+  if (!cfg) return;
+  cfg.poses.splice(idx, 1);
+  // Remove any chips referencing this/shifted pose indices
+  SIM.chips = SIM.chips.filter(c => !(c.blockData?.liftPositionKey === key && c.blockData?.poseIndex === idx));
+  // Shift down indices above idx
+  SIM.chips.forEach(c => {
+    if (c.blockData?.liftPositionKey === key && typeof c.blockData.poseIndex === 'number' && c.blockData.poseIndex > idx) {
+      c.blockData.poseIndex--;
+    }
+  });
+  renderLiftPosList(key);
+  if (timelineOpen) tlRender();
+};
+
+window.renameLiftPose = function(key, idx, val) {
+  const cfg = liftPositions.get(key);
+  if (cfg && cfg.poses[idx]) cfg.poses[idx].label = val;
+};
+
+// Add a pose directly to the timeline as a chip
+window.addLiftPoseToTimeline = function(key, idx) {
+  const cfg = liftPositions.get(key);
+  if (!cfg || !cfg.poses[idx]) return;
+  if (!activeDay()) { alert('Crea o selecciona un día primero.'); return; }
+  SIM.chipCounter++;
+  const start = SIM.currentHour || 0;
+  SIM.chips.push({
+    id: 'chip_' + SIM.chipCounter, rowId: firstRowOfBlock('B'),
+    label: cfg.name.replace(/_/g,' '),
+    desc: 'Mover a: ' + cfg.poses[idx].label,
+    startH: start, endH: Math.min(dayDuration(), start + 1),
+    blockData: { liftPositionKey: key, liftPositionName: cfg.name, poseIndex: idx }
+  });
+  if (!timelineOpen) toggleTimeline(); else tlRender();
+};
 
 window.resetLiftPosToOriginal = function(key) {
   const cfg = liftPositions.get(key);
@@ -2822,16 +3449,38 @@ function renderLiftPosList(highlightKey) {
       ? '<span class="lpp-item-badge" style="border-color:rgba(79,195,247,.4);color:var(--accent);">ENSAMBLE</span>'
       : '<span class="lpp-item-badge">PIEZA</span>';
 
+    const posesHtml = (cfg.poses || []).map((p, i) => `
+      <div style="border:1px solid rgba(167,139,250,.2);border-radius:5px;padding:5px 6px;margin-bottom:4px;background:rgba(167,139,250,.04);">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+          <span style="color:var(--sim-purple);font-size:10px;">⬆</span>
+          <input class="lpp-input" style="flex:1;text-align:left;font-size:9px;padding:2px 5px;color:var(--text);"
+            value="${p.label}" oninput="renameLiftPose('${key}',${i},this.value)">
+          <button title="Cargar a edición" onclick="loadLiftPose('${key}',${i})"
+            style="width:20px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--accent2);font-size:10px;cursor:pointer;">▼</button>
+          <button title="Guardar edición en esta pose" onclick="updateLiftPoseFromEdit('${key}',${i})"
+            style="width:20px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--sim-blue);font-size:10px;cursor:pointer;">⤓</button>
+          <button title="Agregar a línea del tiempo" onclick="addLiftPoseToTimeline('${key}',${i})"
+            style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(167,139,250,.3);background:rgba(167,139,250,.08);color:var(--sim-purple);font-size:11px;cursor:pointer;">+</button>
+          <button title="Eliminar pose" onclick="removeLiftPose('${key}',${i})"
+            style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);font-size:10px;cursor:pointer;">✕</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);">
+          XYZ: ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)} · rot: ${p.rx.toFixed(0)},${p.ry.toFixed(0)},${p.rz.toFixed(0)}
+        </div>
+      </div>
+    `).join('');
+
     item.innerHTML = `
       <div class="lpp-item-header" onclick="this.nextElementSibling.classList.toggle('open')">
         <span style="font-size:12px;margin-right:2px;">${cfg.isGroup ? '📁' : '▪'}</span>
         <span class="lpp-item-name">${cfg.name.replace(/_/g,' ')}</span>
-        ${typeTag}
+        <span class="lpp-item-badge" style="border-color:rgba(167,139,250,.4);color:var(--sim-purple);">${(cfg.poses||[]).length} pos</span>
         <span style="color:var(--text3);font-size:10px;margin-left:4px;">▾</span>
       </div>
       <div class="lpp-item-body">
+        <div class="lpp-field-label" style="color:var(--accent2);margin-bottom:4px;">✎ Editor de posición (vista previa en vivo)</div>
         <div class="lpp-field">
-          <div class="lpp-field-label">Posición inicial (m)</div>
+          <div class="lpp-field-label">Posición (m)</div>
           <div class="lpp-input-row">
             <div><input class="lpp-input" type="number" step="0.1" value="${cfg.x.toFixed(2)}" oninput="updateLiftPos('${key}','x',this.value)"><div class="lpp-input-label">X</div></div>
             <div><input class="lpp-input" type="number" step="0.1" value="${cfg.y.toFixed(2)}" oninput="updateLiftPos('${key}','y',this.value)"><div class="lpp-input-label">Y</div></div>
@@ -2839,18 +3488,24 @@ function renderLiftPosList(highlightKey) {
           </div>
         </div>
         <div class="lpp-field">
-          <div class="lpp-field-label">Rotación inicial (°)</div>
+          <div class="lpp-field-label">Rotación (°)</div>
           <div class="lpp-rot-row" style="grid-template-columns:1fr 1fr 1fr;">
             <div><input class="lpp-input" type="number" step="1" value="${cfg.rx.toFixed(0)}" oninput="updateLiftPos('${key}','rx',this.value)"><div class="lpp-input-label">Giro X</div></div>
             <div><input class="lpp-input" type="number" step="1" value="${cfg.ry.toFixed(0)}" oninput="updateLiftPos('${key}','ry',this.value)"><div class="lpp-input-label">Giro Y</div></div>
             <div><input class="lpp-input" type="number" step="1" value="${cfg.rz.toFixed(0)}" oninput="updateLiftPos('${key}','rz',this.value)"><div class="lpp-input-label">Giro Z</div></div>
           </div>
         </div>
-        <div style="display:flex;gap:4px;margin-top:4px;align-items:center;">
-          <div style="flex:1;padding:4px 7px;border-radius:4px;background:rgba(129,199,132,.08);border:1px solid rgba(129,199,132,.2);font-family:var(--mono);font-size:8px;color:var(--accent2);letter-spacing:.5px;">⚡ Posición en vivo</div>
-          <button class="lpp-set-btn" style="flex:none;width:auto;padding:4px 8px;font-size:9px;" onclick="resetLiftPosToOriginal('${key}')">↺ Original</button>
+        <div style="display:flex;gap:4px;margin-top:5px;">
+          <button class="lpp-set-btn" style="flex:1;padding:5px 0;font-size:9px;border-color:rgba(167,139,250,.4);color:var(--sim-purple);background:rgba(167,139,250,.08);" onclick="addLiftPose('${key}')">＋ Guardar como posición</button>
+          <button class="lpp-set-btn" style="flex:none;width:auto;padding:5px 8px;font-size:9px;" onclick="resetLiftPosToOriginal('${key}')">↺ Original</button>
         </div>
-        <button style="width:100%;padding:4px 0;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);font-family:var(--mono);font-size:9px;cursor:pointer;margin-top:3px;" onclick="removeLiftPos('${key}')">✕ Quitar de lista</button>
+
+        <div class="lpp-field-label" style="color:var(--sim-purple);margin:8px 0 4px;border-top:1px solid var(--border);padding-top:8px;">
+          ⬆ Posiciones guardadas (keyframes)
+        </div>
+        ${posesHtml || '<div style="color:var(--text3);font-size:9px;text-align:center;padding:6px 0;">Aún no hay posiciones. Edita arriba y pulsa "Guardar como posición".</div>'}
+
+        <button style="width:100%;padding:4px 0;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);font-family:var(--mono);font-size:9px;cursor:pointer;margin-top:6px;" onclick="removeLiftPos('${key}')">✕ Quitar pieza de lista</button>
       </div>
     `;
     // Auto-open the newly added one
@@ -3274,6 +3929,1507 @@ function updateLiftPhysics(obj, hookWorldPos, dt) {
   attachedOffset.y = newPivot.y - hookWorldPos.y;
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// SIMULATION SYSTEM — Timeline, Block A (Foundations), Block B
+// ═══════════════════════════════════════════════════════════════
+
+// ── SIM STATE
+// ── TWO-LEVEL MODEL ──────────────────────────────────────────────────────────
+// Master level  = a strip of DAYS (each day is a self-contained sub-timeline)
+// Day level      = the hour-by-hour timeline (0–24h) the user edits for one day
+//
+// SIM holds the master list of days + which day is "active" (being edited).
+// SIM.rows / SIM.chips are LIVE PROXIES that always reflect the active day, so
+// all the existing tlRender / chip-editor / applySimFrame code keeps working.
+
+function makeDefaultRows() {
+  return [
+    { id: 'titles',  label: 'Títulos',     color: '#f6ad55', block: 'title' },
+    { id: 'ciments', label: 'Cimientos 1', color: '#4fc3f7', block: 'A' },
+    { id: 'initial', label: 'Posiciones 1',color: '#a78bfa', block: 'B' },
+  ];
+}
+
+function makeDay(date, label) {
+  SIM.dayCounter = (SIM.dayCounter||0) + 1;
+  return {
+    id: 'day_' + SIM.dayCounter,
+    date: date,                       // 'YYYY-MM-DD'
+    label: label || ('Día ' + SIM.dayCounter),
+    speed: 1.0,                        // playback speed multiplier (1 = default smooth)
+    durationHours: 24,                 // editable span of the day's mini-timeline
+    rows: makeDefaultRows(),
+    chips: [],
+    chipCounter: 0,
+    rowCounter: 0,
+  };
+}
+
+const SIM = {
+  version: 4,
+  // master settings
+  scale: 'hour',          // day-timeline always works in hours now
+  playing: false,
+  playTimer: null,
+  currentHour: 0,         // playhead position within the active day (0–24)
+  dayCounter: 0,
+  activeDayId: null,
+  days: [],
+
+  // ── LIVE PROXIES to the active day (set by setActiveDay) ──
+  get rows()  { const d = activeDay(); return d ? d.rows  : _emptyRows; },
+  set rows(v) { const d = activeDay(); if (d) d.rows = v; },
+  get chips() { const d = activeDay(); return d ? d.chips : _emptyChips; },
+  set chips(v){ const d = activeDay(); if (d) d.chips = v; },
+  get chipCounter() { const d = activeDay(); return d ? d.chipCounter : 0; },
+  set chipCounter(v){ const d = activeDay(); if (d) d.chipCounter = v; },
+  get rowCounter()  { const d = activeDay(); return d ? d.rowCounter : 0; },
+  set rowCounter(v) { const d = activeDay(); if (d) d.rowCounter = v; },
+};
+let _emptyRows = [], _emptyChips = [];
+
+function activeDay() { return SIM.days.find(d => d.id === SIM.activeDayId) || null; }
+
+// Initialize with one day
+(function initFirstDay(){
+  const d0 = makeDay('2026-01-01', 'Día 1');
+  SIM.days.push(d0);
+  SIM.activeDayId = d0.id;
+})();
+
+// ── ROW / BLOCK HELPERS ──────────────────────────────────────────────────────
+const BLOCK_META = {
+  title: { name: 'Títulos',    color: '#f6ad55' },
+  A:     { name: 'Cimientos',  color: '#4fc3f7' },
+  B:     { name: 'Posiciones', color: '#a78bfa' },
+};
+function rowBlock(rowId) {
+  const r = SIM.rows.find(r => r.id === rowId);
+  return r ? r.block : null;
+}
+function firstRowOfBlock(block) {
+  const r = SIM.rows.find(r => r.block === block);
+  return r ? r.id : null;
+}
+function ensureRowsValid() {
+  // guarantee at least one row per block exists
+  ['title','A','B'].forEach(b => {
+    if (!SIM.rows.some(r => r.block === b)) {
+      SIM.rowCounter = (SIM.rowCounter||0) + 1;
+      SIM.rows.push({ id: b + '_r' + SIM.rowCounter, label: BLOCK_META[b].name + ' ' + SIM.rowCounter, color: BLOCK_META[b].color, block: b });
+    }
+  });
+}
+
+// Add a new parallel row to a block
+window.tlAddRow = function(block) {
+  SIM.rowCounter = (SIM.rowCounter||0) + 1;
+  const count = SIM.rows.filter(r => r.block === block).length + 1;
+  const newRow = { id: block + '_r' + SIM.rowCounter, label: BLOCK_META[block].name + ' ' + count, color: BLOCK_META[block].color, block };
+  // Insert after the last row of this block to keep block rows together
+  let lastIdx = -1;
+  SIM.rows.forEach((r, i) => { if (r.block === block) lastIdx = i; });
+  SIM.rows.splice(lastIdx + 1, 0, newRow);
+  tlRender();
+};
+
+// Remove a row (and its chips). Keeps at least one row per block.
+window.tlRemoveRow = function(rowId) {
+  const row = SIM.rows.find(r => r.id === rowId);
+  if (!row) return;
+  const sameBlock = SIM.rows.filter(r => r.block === row.block);
+  if (sameBlock.length <= 1) { alert('Cada bloque debe tener al menos una fila.'); return; }
+  if (SIM.chips.some(c => c.rowId === rowId) &&
+      !confirm('Esta fila tiene eventos. ¿Eliminar fila y sus eventos?')) return;
+  SIM.chips = SIM.chips.filter(c => c.rowId !== rowId);
+  SIM.rows = SIM.rows.filter(r => r.id !== rowId);
+  tlCollapsedRows.delete(rowId);
+  tlRender();
+};
+
+// Rename a row inline
+window.tlRenameRow = function(rowId, val) {
+  const row = SIM.rows.find(r => r.id === rowId);
+  if (row) row.label = val;
+};
+
+// ── TIMELINE TOGGLE
+let timelineOpen = false;
+const tlCollapsedRows = new Set(); // rowIds of collapsed rows
+window.toggleTimeline = function() {
+  timelineOpen = !timelineOpen;
+  document.getElementById('sim-timeline').classList.toggle('open', timelineOpen);
+  document.getElementById('btn-timeline').classList.toggle('active', timelineOpen);
+  if (timelineOpen) { renderDayStrip(); tlRender(); }
+  updateDateBanner();
+};
+
+// ── TIME HELPERS (now HOURS within the active day) ───────────────────────────
+function dayDuration() { const d = activeDay(); return d ? (d.durationHours || 24) : 24; }
+function fmtHour(h) {
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+}
+function parseHourStr(s) {
+  if (s === undefined || s === null || s === '') return null;
+  if (typeof s === 'number') return s;
+  const m = String(s).match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!m) { const f = parseFloat(s); return isNaN(f) ? null : f; }
+  return parseInt(m[1]) + (m[2] ? parseInt(m[2])/60 : 0);
+}
+
+function tlTrackWidth() {
+  const w = document.getElementById('tl-canvas-wrap');
+  return w ? Math.max(w.clientWidth, 600) : 800;
+}
+function tlPxPerHour() { return tlTrackWidth() / dayDuration(); }
+function tlHourOffset(h) { return Math.max(0, Math.min(dayDuration(), h)); }
+
+// ── DATE HELPERS (still used by the day strip) ───────────────────────────────
+function dateToMs(d)  { return new Date(d).getTime(); }
+function msToDate(ms) { return new Date(ms).toISOString().slice(0,10); }
+function daysDiff(a, b) { return Math.round((dateToMs(b) - dateToMs(a)) / 86400000); }
+function addDays(d, n)  { return msToDate(dateToMs(d) + n * 86400000); }
+
+// ── SCALE (hour zoom presets) ────────────────────────────────────────────────
+window.tlSetScale = function(scale) {
+  SIM.scale = scale;
+  ['day','week','month'].forEach(s => document.getElementById('tls-'+s)?.classList.toggle('active', s === scale));
+  tlRender();
+};
+
+// ── DAY MANAGEMENT (master strip) ────────────────────────────────────────────
+window.setActiveDay = function(dayId) {
+  if (SIM.playing) simPause();
+  SIM.activeDayId = dayId;
+  SIM.currentHour = 0;
+  tlCollapsedRows.clear();
+  ensureRowsValid();
+  renderDayStrip();
+  tlRender();
+  updatePlayhead();
+  updateDateBanner();
+};
+
+window.tlAddDay = function() {
+  // next date = day after the last day's date
+  let date = '2026-01-01';
+  if (SIM.days.length) {
+    const last = SIM.days[SIM.days.length-1];
+    date = addDays(last.date, 1);
+  }
+  const d = makeDay(date, 'Día ' + (SIM.days.length + 1));
+  SIM.days.push(d);
+  SIM.days.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  setActiveDay(d.id);
+};
+
+window.tlRemoveDay = function(dayId) {
+  if (SIM.days.length <= 1) { alert('Debe existir al menos un día.'); return; }
+  const day = SIM.days.find(d => d.id === dayId);
+  if (!day) return;
+  if (!confirm('¿Eliminar "'+(day.label||day.date)+'" y todos sus eventos?')) return;
+  SIM.days = SIM.days.filter(d => d.id !== dayId);
+  if (SIM.activeDayId === dayId) SIM.activeDayId = SIM.days[0].id;
+  setActiveDay(SIM.activeDayId);
+};
+
+window.tlSetDayDate = function(dayId, val) {
+  const day = SIM.days.find(d => d.id === dayId);
+  if (day && val) {
+    day.date = val;
+    // keep the strip in chronological order
+    SIM.days.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  }
+  renderDayStrip();
+};
+
+window.tlSetDayLabel = function(dayId, val) {
+  const day = SIM.days.find(d => d.id === dayId);
+  if (day) day.label = val;
+};
+
+window.tlSetDaySpeed = function(dayId, val) {
+  const day = SIM.days.find(d => d.id === dayId);
+  if (day) {
+    day.speed = Math.max(0.1, Math.min(10, parseFloat(val) || 1));
+    const lbl = document.getElementById('dayspeed-val-' + dayId);
+    if (lbl) lbl.textContent = day.speed.toFixed(1) + '×';
+  }
+};
+
+window.tlSetDayDuration = function(dayId, val) {
+  const day = SIM.days.find(d => d.id === dayId);
+  if (day) { day.durationHours = Math.max(1, Math.min(48, parseFloat(val) || 24)); if (day.id === SIM.activeDayId) tlRender(); }
+};
+
+// Render the master day strip
+function renderDayStrip() {
+  const strip = document.getElementById('tl-day-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  SIM.days.forEach(d => {
+    const active = d.id === SIM.activeDayId;
+    const card = document.createElement('div');
+    card.className = 'tl-day-card' + (active ? ' active' : '');
+    const chipCount = (d.chips||[]).length;
+    card.innerHTML =
+      '<div class="dc-top">'
+      +   '<input class="dc-label" value="'+(d.label||'')+'" title="Nombre del día" oninput="tlSetDayLabel(\''+d.id+'\',this.value)" onclick="event.stopPropagation()">'
+      +   '<button class="dc-del" title="Eliminar día" onclick="event.stopPropagation();tlRemoveDay(\''+d.id+'\')">✕</button>'
+      + '</div>'
+      + '<input class="dc-date" type="date" value="'+(d.date||'')+'" onclick="event.stopPropagation()" onchange="tlSetDayDate(\''+d.id+'\',this.value)">'
+      + '<div class="dc-meta">'
+      +   '<span>'+chipCount+' evt</span>'
+      +   '<span class="dc-speed-wrap">'
+      +     '⏩ <input class="dc-speed" type="range" min="0.2" max="4" step="0.1" value="'+(d.speed||1)+'" onclick="event.stopPropagation()" oninput="tlSetDaySpeed(\''+d.id+'\',this.value)">'
+      +     '<span id="dayspeed-val-'+d.id+'">'+(d.speed||1).toFixed(1)+'×</span>'
+      +   '</span>'
+      + '</div>'
+      + '<div class="dc-actions">'
+      +   '<button title="Exportar este día" onclick="event.stopPropagation();exportDayJSON(\''+d.id+'\')">↓ día</button>'
+      + '</div>';
+    card.addEventListener('click', () => setActiveDay(d.id));
+    strip.appendChild(card);
+  });
+  // Add-day button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tl-day-add';
+  addBtn.innerHTML = '＋<br>día';
+  addBtn.title = 'Agregar día';
+  addBtn.onclick = () => tlAddDay();
+  strip.appendChild(addBtn);
+}
+
+// ── RENDER TIMELINE (hours within the active day)
+function tlRender() {
+  const labelsEl = document.getElementById('tl-labels');
+  const canvasEl = document.getElementById('tl-canvas');
+  if (!labelsEl || !canvasEl) return;
+  if (!activeDay()) { labelsEl.innerHTML = ''; return; }
+
+  const W = tlTrackWidth();
+  const pph = tlPxPerHour();
+  const dur = dayDuration();
+
+  // Ruler — hour ticks. Density depends on zoom scale.
+  const ruler = document.getElementById('tl-ruler');
+  if (ruler) {
+    ruler.innerHTML = '';
+    ruler.style.width = W + 'px';
+    // step in hours: 'day' = every 15min, 'week' = hourly, 'month' = every 2h
+    let stepH = SIM.scale === 'day' ? 0.25 : SIM.scale === 'week' ? 1 : 2;
+    for (let h = 0; h <= dur + 0.001; h += stepH) {
+      const px = h * pph;
+      const tick = document.createElement('div');
+      tick.style.cssText = 'position:absolute;left:'+px+'px;top:0;height:20px;display:flex;align-items:center;padding-left:4px;font-family:var(--mono);font-size:8px;color:var(--text3);border-left:1px solid rgba(255,255,255,.06);white-space:nowrap;';
+      tick.textContent = fmtHour(h);
+      ruler.appendChild(tick);
+    }
+  }
+
+  // Labels + tracks, grouped by block
+  labelsEl.innerHTML = '';
+  canvasEl.querySelectorAll('.tl-track, .tl-block-head, .tl-block-head-track').forEach(t => t.remove());
+
+  const blockOrder = ['title', 'A', 'B'];
+  blockOrder.forEach(block => {
+    const blockRows = SIM.rows.filter(r => r.block === block);
+    if (!blockRows.length) return;
+
+    const headLbl = document.createElement('div');
+    headLbl.className = 'tl-block-head';
+    headLbl.innerHTML =
+      '<span class="bh-name">' + (block==='title'?'TÍTULOS':block==='A'?'BLOQUE A · CIMIENTOS':'BLOQUE B · POSICIONES') + '</span>'
+      + '<button class="bh-add" title="Agregar fila paralela" onclick="tlAddRow(\''+block+'\')">＋ fila</button>';
+    labelsEl.appendChild(headLbl);
+
+    const headTrack = document.createElement('div');
+    headTrack.className = 'tl-block-head-track';
+    headTrack.style.width = W + 'px';
+    canvasEl.insertBefore(headTrack, document.getElementById('tl-playhead'));
+
+    blockRows.forEach(row => {
+      const isCollapsed = tlCollapsedRows.has(row.id);
+
+      const el = document.createElement('div');
+      el.className = 'tl-row-label' + (isCollapsed ? ' collapsed' : '');
+      el.innerHTML =
+        '<button class="rl-collapse" title="Colapsar / expandir" onclick="tlToggleRowCollapse(\''+row.id+'\')">'+(isCollapsed?'▶':'▼')+'</button>'
+        + '<div class="rl-dot" style="background:'+row.color+'"></div>'
+        + '<input class="rl-name-input" value="'+(row.label||'')+'" oninput="tlRenameRow(\''+row.id+'\',this.value)" onclick="event.stopPropagation()">'
+        + '<button class="rl-add" title="Agregar evento" onclick="tlAddChip(\''+row.id+'\')">+</button>'
+        + '<button class="rl-del" title="Eliminar fila" onclick="tlRemoveRow(\''+row.id+'\')">✕</button>';
+      labelsEl.appendChild(el);
+
+      const track = document.createElement('div');
+      track.className = 'tl-track' + (isCollapsed ? ' row-collapsed' : '');
+      track.dataset.rowId = row.id;
+      track.style.width = W + 'px';
+
+      track.addEventListener('click', e => {
+        if (e.target.classList.contains('tl-chip')) return;
+        const rect = track.getBoundingClientRect();
+        const clickH = Math.round(((e.clientX - rect.left) / pph) * 4) / 4; // snap to 15min
+        tlAddChip(row.id, Math.max(0, clickH));
+      });
+
+      SIM.chips.filter(c => c.rowId === row.id).forEach(chip => {
+        const x1 = tlHourOffset(chip.startH) * pph;
+        const x2 = tlHourOffset(chip.endH)   * pph;
+        const w  = Math.max(24, x2 - x1);
+        const cel = document.createElement('div');
+        cel.className = 'tl-chip chip-' + (row.block||'a').toLowerCase();
+        cel.style.cssText = 'left:'+x1+'px;width:'+w+'px;';
+        let stageLabel = '';
+        if (chip.blockData?.foundationKey && typeof chip.blockData.stageIndex === 'number') {
+          const ff = foundations.get(chip.blockData.foundationKey);
+          if (ff && ff.stages[chip.blockData.stageIndex]) stageLabel = ' · ' + ff.stages[chip.blockData.stageIndex].label;
+        } else if (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number') {
+          const lp = liftPositions.get(chip.blockData.liftPositionKey);
+          if (lp && lp.poses[chip.blockData.poseIndex]) stageLabel = ' → ' + lp.poses[chip.blockData.poseIndex].label;
+        }
+        const fullyLinked = chip.blockData?.foundationKey
+          || (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number')
+          || row.block === 'title';
+        cel.textContent = (chip.blockData?.foundationKey || chip.blockData?.liftPositionKey ? '🔗 ' : '') + chip.label + stageLabel;
+        cel.title = chip.label+'\n'+fmtHour(chip.startH)+' → '+fmtHour(chip.endH)
+          + (fullyLinked ? '\n🔗 Enlazado'+stageLabel : '\n⚠ Falta destino')
+          + (chip.desc?'\n'+chip.desc:'');
+        cel.dataset.chipId = chip.id;
+        if (!fullyLinked && row.block !== 'title') cel.style.opacity = '0.55';
+        cel.addEventListener('click', e => { e.stopPropagation(); if (cel._justDragged) { cel._justDragged = false; return; } chipEditorOpen(chip.id, e.clientX, e.clientY); });
+
+        // Drag to move chip: horizontal = time (snap 15-min), vertical = row
+        let dragX0=0, dragY0=0, h0=0, dragging=false;
+        cel.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          dragX0 = e.clientX; dragY0 = e.clientY;
+          h0 = chip.startH;
+          dragging = false;
+          const len = chip.endH - chip.startH;
+          let hoverRowId = chip.rowId;
+
+          const onMove = ev => {
+            if (!dragging && (Math.abs(ev.clientX-dragX0) > 3 || Math.abs(ev.clientY-dragY0) > 3)) {
+              dragging = true;
+              cel.style.zIndex = '40';
+              cel.style.opacity = '0.85';
+            }
+            if (!dragging) return;
+
+            // ── horizontal → time ──
+            const deltaH = (ev.clientX - dragX0) / pph;
+            let newStart = Math.max(0, Math.min(dur - len, h0 + deltaH));
+            newStart = Math.round(newStart * 4) / 4;  // snap 15-min
+            chip.startH = newStart;
+            chip.endH   = newStart + len;
+            cel.style.left = (tlHourOffset(chip.startH) * pph) + 'px';
+
+            // ── vertical → find the track under the cursor ──
+            const under = document.elementFromPoint(ev.clientX, ev.clientY);
+            const overTrack = under ? under.closest('.tl-track') : null;
+            // clear previous highlight
+            document.querySelectorAll('.tl-track.row-drop-target').forEach(t => t.classList.remove('row-drop-target'));
+            if (overTrack && overTrack.dataset.rowId) {
+              const targetRowId = overTrack.dataset.rowId;
+              const targetBlock = rowBlock(targetRowId);
+              // only allow dropping within the same block
+              if (targetBlock === row.block && targetRowId !== chip.rowId) {
+                hoverRowId = targetRowId;
+                overTrack.classList.add('row-drop-target');
+              } else if (targetRowId === chip.rowId) {
+                hoverRowId = chip.rowId;
+              }
+            }
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            document.querySelectorAll('.tl-track.row-drop-target').forEach(t => t.classList.remove('row-drop-target'));
+            if (dragging) {
+              cel._justDragged = true;
+              // commit row change if it moved to a different row of the same block
+              if (hoverRowId && hoverRowId !== chip.rowId && rowBlock(hoverRowId) === row.block) {
+                chip.rowId = hoverRowId;
+              }
+              tlRender();
+            }
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        });
+
+        track.appendChild(cel);
+      });
+
+      canvasEl.insertBefore(track, document.getElementById('tl-playhead'));
+    });
+  });
+
+  updatePlayhead();
+}
+
+window.tlToggleRowCollapse = function(rowId) {
+  if (tlCollapsedRows.has(rowId)) tlCollapsedRows.delete(rowId);
+  else tlCollapsedRows.add(rowId);
+  tlRender();
+};
+
+function updatePlayhead() {
+  const ph = document.getElementById('tl-playhead');
+  if (!ph) return;
+  const pph = tlPxPerHour();
+  ph.style.left = (tlHourOffset(SIM.currentHour) * pph) + 'px';
+  const disp = document.getElementById('tl-time-display');
+  const d = activeDay();
+  if (disp) disp.textContent = (d ? d.date + '  ' : '') + fmtHour(SIM.currentHour);
+}
+
+// ── SCRUBBING: drag the playhead / click the ruler to move time (hours) ──────
+function tlScrubToClientX(clientX) {
+  const wrap = document.getElementById('tl-canvas-wrap');
+  if (!wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  const localX = clientX - rect.left + wrap.scrollLeft;
+  const pph = tlPxPerHour();
+  let h = localX / pph;
+  h = Math.max(0, Math.min(dayDuration(), h));
+  SIM.currentHour = h;
+  updatePlayhead();
+  applySimFrame(SIM.currentHour);   // live preview while scrubbing
+  updateDateBanner();
+}
+
+(function setupScrubber(){
+  const ruler  = document.getElementById('tl-ruler');
+  const ph     = document.getElementById('tl-playhead');
+  let scrubbing = false;
+
+  const startScrub = e => {
+    scrubbing = true;
+    if (ph) ph.classList.add('scrubbing');
+    if (SIM.playing) simPause();
+    tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX);
+    e.preventDefault();
+  };
+  const moveScrub = e => { if (scrubbing) tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX); };
+  const endScrub  = () => { scrubbing = false; if (ph) ph.classList.remove('scrubbing'); };
+
+  if (ruler) {
+    ruler.addEventListener('mousedown', startScrub);
+    ruler.addEventListener('touchstart', startScrub, {passive:false});
+  }
+  if (ph) {
+    ph.addEventListener('mousedown', startScrub);
+    ph.addEventListener('touchstart', startScrub, {passive:false});
+  }
+  window.addEventListener('mousemove', moveScrub);
+  window.addEventListener('touchmove', moveScrub, {passive:false});
+  window.addEventListener('mouseup', endScrub);
+  window.addEventListener('touchend', endScrub);
+})();
+
+// ── ADD CHIP (startH in hours; default 1h long)
+window.tlAddChip = function(rowId, startH) {
+  if (startH === undefined || startH === null) startH = SIM.currentHour || 0;
+  startH = Math.max(0, Math.min(dayDuration() - 0.25, startH));
+  SIM.chipCounter++;
+  const chip = { id:'chip_'+SIM.chipCounter, rowId, label:'Evento '+SIM.chipCounter, desc:'',
+                 startH: startH, endH: Math.min(dayDuration(), startH + 1), blockData:{} };
+  SIM.chips.push(chip);
+  tlRender();
+  chipEditorOpen(chip.id, window.innerWidth/2, 200);
+};
+
+// ── CHIP EDITOR (with element linking) ───────────────────────────────────────
+let _editChipId = null;
+
+// Populate the link <select> based on the chip's row/block type
+function chipEditorPopulateLinks(chip) {
+  const sel   = document.getElementById('ce-link');
+  const wrap  = document.getElementById('ce-link-wrap');
+  const label = document.getElementById('ce-link-label');
+  sel.innerHTML = '<option value="">— Sin enlace —</option>';
+
+  if (rowBlock(chip.rowId) === 'A') {
+    label.textContent = '🔗 Enlazar con cimiento';
+    wrap.style.display = 'flex';
+    foundations.forEach((f, key) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = f.name.replace(/_/g,' ');
+      if (chip.blockData?.foundationKey === key) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } else if (rowBlock(chip.rowId) === 'B') {
+    label.textContent = '🔗 Enlazar con pieza';
+    wrap.style.display = 'flex';
+    liftPositions.forEach((cfg, key) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = cfg.name.replace(/_/g,' ');
+      if (chip.blockData?.liftPositionKey === key) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } else {
+    // titles row — no link
+    wrap.style.display = 'none';
+  }
+  chipEditorPopulateStages(chip);
+}
+
+// Populate the secondary selector: foundation stage OR piece pose
+function chipEditorPopulateStages(chip) {
+  const stageWrap = document.getElementById('ce-stage-wrap');
+  const stageSel  = document.getElementById('ce-stage');
+  const stageLbl  = stageWrap.querySelector('.ce-label');
+  const linkKey   = document.getElementById('ce-link').value;
+
+  if (rowBlock(chip.rowId) === 'A' && linkKey && foundations.has(linkKey)) {
+    const f = foundations.get(linkKey);
+    if (stageLbl) stageLbl.textContent = 'Etapa de choreo objetivo';
+    stageWrap.style.display = 'flex';
+    stageSel.innerHTML = '<option value="">— Toda la pieza (0→100%) —</option>';
+    f.stages.forEach((s, i) => {
+      const pctFrom = Math.round((s.hFrom / f.totalH) * 100);
+      const pctTo   = Math.round((s.hTo   / f.totalH) * 100);
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${s.label} (${pctFrom}% → ${pctTo}%)`;
+      if (chip.blockData?.stageIndex === i) opt.selected = true;
+      stageSel.appendChild(opt);
+    });
+  } else if (rowBlock(chip.rowId) === 'B' && linkKey && liftPositions.has(linkKey)) {
+    const cfg = liftPositions.get(linkKey);
+    if (stageLbl) stageLbl.textContent = 'Posición destino del movimiento';
+    stageWrap.style.display = 'flex';
+    stageSel.innerHTML = '';
+    if (!cfg.poses || cfg.poses.length === 0) {
+      stageSel.innerHTML = '<option value="">⚠ Esta pieza no tiene posiciones guardadas</option>';
+    } else {
+      cfg.poses.forEach((p, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${p.label} (${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})`;
+        if (chip.blockData?.poseIndex === i) opt.selected = true;
+        stageSel.appendChild(opt);
+      });
+    }
+  } else {
+    stageWrap.style.display = 'none';
+  }
+}
+
+window.chipEditorLinkChanged = function() {
+  const chip = SIM.chips.find(c => c.id === _editChipId);
+  if (chip) chipEditorPopulateStages(chip);
+};
+
+window.chipEditorOpen = function(chipId, x, y) {
+  const chip = SIM.chips.find(c => c.id === chipId);
+  if (!chip) return;
+  _editChipId = chipId;
+  const ed = document.getElementById('chip-editor');
+  document.getElementById('ce-name').value  = chip.label;
+  document.getElementById('ce-start').value = fmtHour(chip.startH);
+  document.getElementById('ce-end').value   = fmtHour(chip.endH);
+  document.getElementById('ce-desc').value  = chip.desc || '';
+  chipEditorPopulateLinks(chip);
+  ed.style.left = Math.min(x, window.innerWidth-250) + 'px';
+  ed.style.top  = Math.min(y + 10, window.innerHeight-360) + 'px';
+  ed.style.display = 'flex';
+};
+
+window.chipEditorSave = function() {
+  const chip = SIM.chips.find(c => c.id === _editChipId); if (!chip) return chipEditorClose();
+  chip.label     = document.getElementById('ce-name').value  || chip.label;
+  const sH = parseHourStr(document.getElementById('ce-start').value);
+  const eH = parseHourStr(document.getElementById('ce-end').value);
+  if (sH !== null) chip.startH = Math.max(0, Math.min(dayDuration(), sH));
+  if (eH !== null) chip.endH   = Math.max(chip.startH, Math.min(dayDuration(), eH));
+  if (chip.endH <= chip.startH) chip.endH = Math.min(dayDuration(), chip.startH + 0.25);
+  chip.desc      = document.getElementById('ce-desc').value;
+
+  // Save link
+  chip.blockData = chip.blockData || {};
+  const linkKey = document.getElementById('ce-link').value;
+  const block = rowBlock(chip.rowId);
+  if (block === 'A') {
+    if (linkKey) {
+      chip.blockData.foundationKey = linkKey;
+      if (foundations.has(linkKey)) chip.blockData.foundationName = foundations.get(linkKey).name;
+      const stageVal = document.getElementById('ce-stage').value;
+      if (stageVal !== '') chip.blockData.stageIndex = parseInt(stageVal);
+      else delete chip.blockData.stageIndex;
+    } else {
+      delete chip.blockData.foundationKey; delete chip.blockData.foundationName;
+      delete chip.blockData.stageIndex;
+    }
+  } else if (block === 'B') {
+    if (linkKey) {
+      chip.blockData.liftPositionKey = linkKey;
+      if (liftPositions.has(linkKey)) chip.blockData.liftPositionName = liftPositions.get(linkKey).name;
+      const poseVal = document.getElementById('ce-stage').value;
+      if (poseVal !== '') chip.blockData.poseIndex = parseInt(poseVal);
+      else delete chip.blockData.poseIndex;
+    } else {
+      delete chip.blockData.liftPositionKey; delete chip.blockData.liftPositionName;
+      delete chip.blockData.poseIndex;
+    }
+  }
+  chipEditorClose(); tlRender();
+};
+
+window.chipEditorDelete = function() { SIM.chips = SIM.chips.filter(c => c.id !== _editChipId); chipEditorClose(); tlRender(); };
+window.chipEditorClose  = function() { document.getElementById('chip-editor').style.display='none'; _editChipId=null; };
+document.addEventListener('click', e => {
+  const ed = document.getElementById('chip-editor');
+  if (ed && !ed.contains(e.target) && ed.style.display==='flex') chipEditorClose();
+});
+
+// ── PLAYBACK (smooth, hour-based, per-day speed) ─────────────────────────────
+// Base: play the whole day in ~12 seconds at speed=1 (smooth). speed scales it.
+const SIM_DAY_SECONDS_AT_1X = 12;   // real seconds to play 24h at speed 1
+let _simLastTs = 0;
+let _playAllMode = false;   // true while playing every day back-to-back
+
+// Last hour at which something happens in a day (end of its last chip).
+// If the day has no chips, returns 0. Used to stop playback once the last
+// block is reached instead of running through empty time.
+function dayLastEventHour(day) {
+  if (!day || !day.chips || !day.chips.length) return 0;
+  return day.chips.reduce((mx, c) => Math.max(mx, c.endH || 0), 0);
+}
+
+// First hour at which something happens in a day (start of its earliest chip).
+// Used to skip the empty time before the first block and start there.
+function dayFirstEventHour(day) {
+  if (!day || !day.chips || !day.chips.length) return 0;
+  return day.chips.reduce((mn, c) => Math.min(mn, c.startH ?? Infinity), Infinity) || 0;
+}
+
+// Update the big date banner at the top of the screen
+function updateDateBanner() {
+  const banner = document.getElementById('sim-date-banner');
+  if (!banner) return;
+  const d = activeDay();
+  if (timelineOpen || SIM.playing) {
+    if (d) {
+      const dateLabel = formatPrettyDate(d.date);
+      banner.querySelector('.sdb-date').textContent = dateLabel;
+      banner.querySelector('.sdb-label').textContent = d.label || '';
+      banner.querySelector('.sdb-time').textContent = fmtHour(SIM.currentHour);
+      banner.classList.add('show');
+    }
+  } else {
+    banner.classList.remove('show');
+  }
+}
+function formatPrettyDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T12:00:00Z');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+window.simPlay = function() {
+  if (SIM.playing) { simPause(); return; }
+  if (!activeDay()) return;
+  _playAllMode = false;
+  startDayPlayback(null, true);   // single day: reset scene first
+};
+
+// Play current day. onDayEnd fires when finished. resetFirst controls whether
+// the scene is reset to initial conditions before this day plays.
+function startDayPlayback(onDayEnd, resetFirst) {
+  SIM.playing = true;
+  document.getElementById('tl-play-btn').textContent = '⏸ Pausar';
+  // Only reset when asked (single-day playback, or the very first day of a
+  // continuous "play all" run). In continuous mode later days keep the
+  // accumulated state (e.g. concrete poured on a previous day stays poured).
+  if (resetFirst) resetToInitialState();
+  // Capture the accumulated baseline for each foundation at the start of this
+  // day, so this day's pours build on top of whatever was already poured.
+  foundations.forEach((f) => { f.simBaseLevel = f.pourLevel || 0; });
+  // Skip the empty time before the first block: jump the cursor to the first
+  // event and end at the last event.
+  const startHour = dayFirstEventHour(activeDay());
+  const endHour   = Math.max(startHour + 0.001, dayLastEventHour(activeDay()));
+  SIM.currentHour = startHour;
+  applySimFrame(SIM.currentHour);
+  updatePlayhead();
+  updateDateBanner();
+  _simLastTs = performance.now();
+  const step = () => {
+    if (!SIM.playing) return;
+    const now = performance.now();
+    const dtSec = Math.min(0.1, (now - _simLastTs) / 1000);
+    _simLastTs = now;
+    const d = activeDay();
+    const speed = d ? (d.speed || 1) : 1;
+    const hoursPerSec = dayDuration() / (SIM_DAY_SECONDS_AT_1X / speed);
+    SIM.currentHour += dtSec * hoursPerSec;
+    if (SIM.currentHour >= endHour) {
+      SIM.currentHour = endHour;
+      updatePlayhead(); applySimFrame(SIM.currentHour); updateDateBanner();
+      if (typeof onDayEnd === 'function') { onDayEnd(); return; }
+      simPause();
+      return;
+    }
+    updatePlayhead();
+    applySimFrame(SIM.currentHour);
+    updateDateBanner();
+    SIM.playTimer = requestAnimationFrame(step);
+  };
+  SIM.playTimer = requestAnimationFrame(step);
+}
+
+// ── PLAY ALL DAYS continuously ───────────────────────────────────────────────
+window.simPlayAll = function() {
+  if (SIM.playing) { simPause(); return; }
+  if (!SIM.days.length) return;
+  _playAllMode = true;
+  // sort days by date so they run in calendar order
+  SIM.days.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  // Reset the scene ONCE at the very beginning; subsequent days accumulate.
+  resetToInitialState();
+  let idx = 0;
+  const playNext = () => {
+    if (idx >= SIM.days.length) { _playAllMode = false; simPause(); return; }
+    SIM.activeDayId = SIM.days[idx].id;
+    SIM.currentHour = 0;
+    tlCollapsedRows.clear();
+    ensureRowsValid();
+    renderDayStrip();
+    tlRender();
+    updateDateBanner();
+    // small pause between days so the date banner is readable
+    setTimeout(() => {
+      if (!_playAllMode) return;
+      startDayPlayback(() => { idx++; setTimeout(playNext, 400); }, false);  // no per-day reset
+    }, 350);
+  };
+  document.getElementById('tl-playall-btn')?.classList.add('active');
+  playNext();
+};
+
+function simPause() {
+  SIM.playing = false;
+  _playAllMode = false;
+  if (SIM.playTimer) cancelAnimationFrame(SIM.playTimer);
+  document.getElementById('tl-play-btn').textContent = '▶ Reproducir';
+  document.getElementById('tl-playall-btn')?.classList.remove('active');
+}
+window.simStop = function() {
+  simPause(); SIM.currentHour = 0; updatePlayhead(); restoreSimState(); updateDateBanner();
+};
+window.simRewind = function() { simPause(); SIM.currentHour = 0; updatePlayhead(); applySimFrame(0); updateDateBanner(); };
+
+// Smoothstep easing for nicer motion
+function easeInOut(t) { return t<=0?0 : t>=1?1 : t*t*(3-2*t); }
+
+function applySimFrame(hour) {
+  // ── Titles ──
+  const activeTitles = SIM.chips.filter(c => rowBlock(c.rowId)==='title' && c.startH<=hour && c.endH>=hour);
+  if (activeTitles.length) showScreenTitle(activeTitles[0].label, activeTitles[0].desc);
+  else hideScreenTitle();
+
+  // ── Block A: foundations, stage-aware ──
+  foundations.forEach((f, key) => {
+    const chips = SIM.chips
+      .filter(c => rowBlock(c.rowId)==='A' && c.blockData?.foundationKey===key)
+      .sort((a,b) => a.startH - b.startH);
+    if (!chips.length) return;
+
+    // Start from the accumulated baseline reached on previous days (so continuous
+    // "play all" accumulates instead of resetting to 0). simBaseLevel is only
+    // updated at day boundaries, never mid-frame, so scrubbing stays correct.
+    let level = (typeof f.simBaseLevel === 'number') ? f.simBaseLevel : 0;
+    for (const chip of chips) {
+      let fromLvl = 0, toLvl = 1;
+      if (typeof chip.blockData.stageIndex === 'number' && f.stages[chip.blockData.stageIndex]) {
+        const st = f.stages[chip.blockData.stageIndex];
+        fromLvl = st.hFrom / f.totalH;
+        toLvl   = st.hTo   / f.totalH;
+      }
+      if (hour < chip.startH) {
+        break;
+      } else if (hour >= chip.endH) {
+        level = Math.max(level, toLvl);
+      } else {
+        const t = (hour - chip.startH) / Math.max(0.001, (chip.endH - chip.startH));
+        level = Math.max(level, fromLvl + (toLvl - fromLvl) * easeInOut(t));
+        break;
+      }
+    }
+    applyFoundationProgress(key, Math.min(1, Math.max(0, level)));
+  });
+
+  // ── Block B: piece movement (keyframe interpolation, eased) ──
+  liftPositions.forEach((cfg, key) => {
+    const chips = SIM.chips
+      .filter(c => rowBlock(c.rowId)==='B' && c.blockData?.liftPositionKey===key && typeof c.blockData.poseIndex==='number')
+      .sort((a,b) => a.startH - b.startH);
+    if (!chips.length) return;
+
+    let curPose = { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz };
+    let applied = false;
+    for (const chip of chips) {
+      const targetPose = cfg.poses[chip.blockData.poseIndex];
+      if (!targetPose) continue;
+      if (hour < chip.startH) {
+        applyPoseToObject(cfg, curPose); applied = true; break;
+      } else if (hour >= chip.endH) {
+        curPose = targetPose; applyPoseToObject(cfg, curPose); applied = true;
+      } else {
+        const t = (hour - chip.startH) / Math.max(0.001, (chip.endH - chip.startH));
+        applyPoseToObject(cfg, lerpPose(curPose, targetPose, easeInOut(t))); applied = true; break;
+      }
+    }
+    if (!applied) applyPoseToObject(cfg, curPose);
+  });
+}
+
+// Linear interpolation between two poses
+function lerpPose(a, b, t) {
+  return {
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+    z: a.z + (b.z - a.z) * t,
+    rx: a.rx + (b.rx - a.rx) * t,
+    ry: a.ry + (b.ry - a.ry) * t,
+    rz: a.rz + (b.rz - a.rz) * t,
+  };
+}
+
+// Apply an arbitrary pose (world position + euler degrees) to a piece's object
+function applyPoseToObject(cfg, pose) {
+  const obj = cfg.object;
+  if (!obj) return;
+  obj.updateMatrixWorld(true);
+  const targetWorld = new THREE.Vector3(pose.x, pose.y, pose.z);
+  if (obj.parent && obj.parent !== scene) {
+    obj.parent.updateMatrixWorld(true);
+    obj.parent.worldToLocal(targetWorld);
+  }
+  obj.position.copy(targetWorld);
+  obj.rotation.set(pose.rx * Math.PI/180, pose.ry * Math.PI/180, pose.rz * Math.PI/180);
+}
+
+// Reset the whole 3D visualization to its "before anything happened" state:
+// every foundation back to unpoured (glass) and every piece to its model origin.
+// Foundations/pieces that are NOT used in the active day are also reset so no
+// stale color/position from a previous playback remains.
+function resetToInitialState() {
+  hideScreenTitle();
+  foundations.forEach((f, key) => { f.simBaseLevel = 0; applyFoundationProgress(key, 0); });
+  liftPositions.forEach((cfg) => {
+    applyPoseToObject(cfg, { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz });
+  });
+}
+
+function restoreSimState() {
+  hideScreenTitle();
+  foundations.forEach((f, key) => applyFoundationProgress(key, f.pourLevel));
+  // Reset every piece that has movement chips back to its original model position
+  liftPositions.forEach((cfg, key) => {
+    const hasChips = SIM.chips.some(c => rowBlock(c.rowId)==='B' && c.blockData?.liftPositionKey===key && typeof c.blockData.poseIndex==='number');
+    if (hasChips) applyPoseToObject(cfg, { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz });
+  });
+}
+
+// ── SCREEN TITLE
+let titleTimer = null;
+function showScreenTitle(text, sub) {
+  const ov = document.getElementById('sim-title-overlay');
+  document.getElementById('sto-text').textContent = text;
+  document.getElementById('sto-sub').textContent  = sub||'';
+  ov.classList.add('show'); clearTimeout(titleTimer);
+  titleTimer = setTimeout(hideScreenTitle, 3500);
+}
+function hideScreenTitle() { document.getElementById('sim-title-overlay')?.classList.remove('show'); }
+
+// ── JSON IMPORT / EXPORT (master + per-day) ──────────────────────────────────
+
+// Shared element definitions (foundations + lift pieces) — same across all days
+function collectBlockDefs() {
+  const liftData = [];
+  liftPositions.forEach((cfg) => liftData.push({
+    name: cfg.name, isGroup: cfg.isGroup,
+    origX: cfg.origX, origY: cfg.origY, origZ: cfg.origZ,
+    origRx: cfg.origRx, origRy: cfg.origRy, origRz: cfg.origRz,
+    poses: cfg.poses || [],
+  }));
+  const foundData = [];
+  foundations.forEach((f) => foundData.push({name:f.name,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
+  return { foundations: foundData, liftPositions: liftData };
+}
+
+// Serialize a day: chips with links stored by NAME (portable)
+function serializeDay(day) {
+  const chipsOut = (day.chips||[]).map(c => {
+    const bd = Object.assign({}, c.blockData);
+    if (bd.foundationKey && foundations.has(bd.foundationKey)) bd.foundationName = foundations.get(bd.foundationKey).name;
+    if (bd.liftPositionKey && liftPositions.has(bd.liftPositionKey)) bd.liftPositionName = liftPositions.get(bd.liftPositionKey).name;
+    delete bd.foundationKey; delete bd.liftPositionKey;
+    return Object.assign({}, c, { blockData: bd });
+  });
+  return {
+    id: day.id, date: day.date, label: day.label,
+    speed: day.speed, durationHours: day.durationHours,
+    rows: day.rows, chips: chipsOut, chipCounter: day.chipCounter, rowCounter: day.rowCounter,
+  };
+}
+
+// ── EXPORT MASTER: all days concatenated + shared element defs ──
+window.exportSimJSON = function() {
+  const payload = {
+    version: SIM.version, kind: 'master', exportDate: new Date().toISOString(),
+    days: SIM.days.map(serializeDay),
+    blockA: { foundations: collectBlockDefs().foundations },
+    blockB: { liftPositions: collectBlockDefs().liftPositions },
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'simulacion-MAESTRO.json'});
+  a.click();
+};
+
+// ── EXPORT one day only ──
+window.exportDayJSON = function(dayId) {
+  const day = SIM.days.find(d => d.id === (dayId || SIM.activeDayId));
+  if (!day) { alert('No hay día activo'); return; }
+  const payload = {
+    version: SIM.version, kind: 'day', exportDate: new Date().toISOString(),
+    day: serializeDay(day),
+    // include element defs so the day file is self-contained for solo editing
+    blockA: { foundations: collectBlockDefs().foundations },
+    blockB: { liftPositions: collectBlockDefs().liftPositions },
+  };
+  const safe = (day.date||'dia') + '_' + (day.label||'').replace(/[^a-z0-9]+/gi,'-');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'sim-'+safe+'.json'});
+  a.click();
+};
+
+// Re-resolve chip links from stored names → uuid, scoped to a list of chips
+function relinkChips(chips) {
+  const foundByName = {}; foundations.forEach((f, key) => foundByName[f.name] = key);
+  const liftByName  = {}; liftPositions.forEach((cfg, key) => liftByName[cfg.name] = key);
+  (chips||[]).forEach(c => {
+    if (!c.blockData) return;
+    if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
+    if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
+  });
+}
+
+// Normalize an imported day object (migrate legacy date-based chips → hours)
+function normalizeDay(d) {
+  d.rows = d.rows && d.rows.length ? d.rows : makeDefaultRows();
+  d.chips = d.chips || [];
+  d.speed = d.speed || 1;
+  d.durationHours = d.durationHours || 24;
+  d.chipCounter = d.chipCounter || d.chips.length;
+  d.rowCounter = d.rowCounter || 0;
+  // migrate any chip still using startDate/endDate → spread across the day
+  d.chips.forEach((c, i) => {
+    if (typeof c.startH !== 'number') { c.startH = Math.min(23, i); c.endH = Math.min(24, c.startH + 1); }
+  });
+  return d;
+}
+
+// ── IMPORT: detects master vs single-day automatically ──
+window.importSimJSON = function(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const p = JSON.parse(e.target.result);
+      // element defs (shared) load first so objects exist
+      if (p.blockA?.foundations) importFoundationsData(p.blockA.foundations);
+      if (p.blockB?.liftPositions) importLiftPositionsData(p.blockB.liftPositions);
+
+      if (p.kind === 'day' && p.day) {
+        // Single-day file → merge/replace that day in the master strip
+        importSingleDay(p.day);
+      } else if (p.days) {
+        // Master file → replace all days
+        SIM.days = p.days.map(d => normalizeDay(d));
+        SIM.dayCounter = SIM.days.length;
+        SIM.activeDayId = SIM.days[0]?.id || null;
+        SIM.days.forEach(d => relinkChips(d.chips));
+      } else if (p.simulation) {
+        // Legacy v3 single-timeline file → wrap into one day
+        const day = normalizeDay({
+          id: 'day_1', date: p.simulation.dateStart || '2026-01-01', label: 'Día 1',
+          speed: 1, durationHours: 24,
+          rows: p.simulation.rows, chips: p.simulation.chips, chipCounter: p.simulation.chipCounter,
+        });
+        SIM.days = [day]; SIM.dayCounter = 1; SIM.activeDayId = day.id;
+        relinkChips(day.chips);
+      }
+      SIM.currentHour = 0;
+      ensureRowsValid();
+      renderDayStrip();
+      tlRender();
+    } catch(err) { alert('Error importando: '+err.message); }
+    input.value='';
+  };
+  reader.readAsText(file);
+};
+
+// Merge a single imported day into the strip (replace if same date exists)
+function importSingleDay(dayObj) {
+  const d = normalizeDay(dayObj);
+  const existingIdx = SIM.days.findIndex(x => x.date === d.date);
+  // give it a fresh id to avoid collisions
+  SIM.dayCounter = (SIM.dayCounter||0) + 1;
+  d.id = 'day_' + SIM.dayCounter;
+  relinkChips(d.chips);
+  if (existingIdx >= 0) {
+    if (confirm('Ya existe un día con la fecha '+d.date+'. ¿Reemplazarlo?')) {
+      SIM.days[existingIdx] = d;
+    } else {
+      SIM.days.push(d);
+    }
+  } else {
+    SIM.days.push(d);
+  }
+  // keep days sorted by date
+  SIM.days.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  SIM.activeDayId = d.id;
+}
+
+// ══════════════════════════════════════════════════════
+// BLOCK A — FOUNDATIONS
+// ══════════════════════════════════════════════════════
+const foundations = new Map();
+let foundPick = false, foundPickType = 'assembly';
+let globalStages = 2, upperOpacity = 0.1;
+
+let blockAOpen = false;
+window.toggleBlockA = function() {
+  blockAOpen = !blockAOpen;
+  document.getElementById('block-a-panel').classList.toggle('open', blockAOpen);
+  document.getElementById('btn-block-a')?.classList.toggle('active', blockAOpen);
+};
+
+window.activateFoundationPick = function(type) {
+  foundPickType = type;
+  foundPick = true;
+  document.getElementById('pick-overlay').classList.add('active');
+  canvas.classList.add('pick-mode');
+  document.getElementById('pick-label').innerHTML =
+    '<b>🏛 Selecciona el '+(type==='assembly'?'ensamble':'pieza')+' de cimiento</b><br><small style="opacity:.6">ESC para cancelar</small>';
+  document.getElementById('bap-pick-status').textContent = '⏳ Haz clic en la escena…';
+};
+
+window.setFoundationFromTree = function() { alert('Usa selección 3D o clic en el árbol del modelo.'); };
+
+document.getElementById('pick-overlay').addEventListener('click', e => {
+  if (!foundPick || !state.modelLoaded) return;
+  e.stopPropagation();
+  const rect = canvas.getBoundingClientRect();
+  const ndx = ((e.clientX-rect.left)/rect.width)*2-1;
+  const ndy = -((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(new THREE.Vector2(ndx,ndy), camera);
+  const meshes = [];
+  scene.traverse(o => { if (o.isMesh && o.name!=='__char__') meshes.push(o); });
+  const hits = raycaster.intersectObjects(meshes, false);
+  if (!hits.length) { document.getElementById('bap-pick-status').textContent='⚠ Sin intersección'; return; }
+  const target = foundPickType==='assembly' ? getAssemblyRoot(hits[0].object) : hits[0].object;
+  registerFoundation(target);
+  cancelFoundationPick();
+});
+
+function cancelFoundationPick() {
+  foundPick = false;
+  document.getElementById('pick-overlay').classList.remove('active');
+  canvas.classList.remove('pick-mode');
+  document.getElementById('bap-pick-status').textContent='';
+}
+
+window.addEventListener('keydown', e => { if (e.code==='Escape' && foundPick) cancelFoundationPick(); });
+
+function registerFoundation(obj) {
+  const key = obj.uuid;
+  if (foundations.has(key)) { renderFoundationList(); return; }
+  obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj);
+  const totalH = parseFloat((box.max.y - box.min.y).toFixed(3));
+  const origMats = new Map();
+  obj.traverse(child => {
+    if (child.isMesh) {
+      const m = Array.isArray(child.material) ? child.material : [child.material];
+      origMats.set(child.uuid, m.map(mm => mm.clone()));
+    }
+  });
+  foundations.set(key, {
+    name: obj.name || obj.uuid.slice(0,8),
+    object: obj,
+    totalH,
+    bottomY: box.min.y,
+    stageCount: globalStages,
+    stages: buildDefaultStages(globalStages, totalH),
+    pourLevel: 0,
+    originalMats: origMats,
+  });
+  renderFoundationList();
+  applyFoundationProgress(key, 0);
+  document.getElementById('bap-count').textContent = foundations.size + ' cimientos';
+}
+
+function buildDefaultStages(count, totalH) {
+  const stages = [];
+  for (let i=0; i<count; i++) {
+    stages.push({ label:'Etapa '+(i+1), hFrom:parseFloat(((i/count)*totalH).toFixed(3)), hTo:parseFloat((((i+1)/count)*totalH).toFixed(3)), done:false });
+  }
+  return stages;
+}
+
+// Foundation shader: bright cyan-blue poured concrete below pourY, glass above.
+// Uses world-normal lighting for shading + a fill line at the pour front.
+const FOUND_POURED_COLOR = 0x29b6f6;   // bright sky-blue, reads clearly + good edges
+const FOUND_GLASS_COLOR  = 0x9fb3c8;   // light cool grey for pending (glass) zone
+function makeFoundationShaderMat(pourWorldY, solidOpacity, glassOpacity) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      pourY:      { value: pourWorldY },
+      blueColor:  { value: new THREE.Color(FOUND_POURED_COLOR) },
+      glassColor: { value: new THREE.Color(FOUND_GLASS_COLOR) },
+      solidAlpha: { value: solidOpacity },
+      glassAlpha: { value: glassOpacity },
+      lightDir:   { value: new THREE.Vector3(0.5, 1.0, 0.35).normalize() },
+    },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      void main() {
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: `
+      uniform float pourY;
+      uniform vec3  blueColor;
+      uniform vec3  glassColor;
+      uniform float solidAlpha;
+      uniform float glassAlpha;
+      uniform vec3  lightDir;
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      void main() {
+        // diffuse shading so faces/edges read clearly
+        vec3 N = normalize(vWorldNormal);
+        float diff = max(dot(N, normalize(lightDir)), 0.0);
+        float shade = 0.45 + 0.55 * diff;   // ambient + diffuse
+
+        float edge  = smoothstep(pourY - 0.02, pourY + 0.02, vWorldPos.y);
+        vec3  base  = mix(blueColor, glassColor, edge);
+        float alpha = mix(solidAlpha, glassAlpha, edge);
+
+        // bright water-line accent right at the pour front
+        float line = 1.0 - smoothstep(0.0, 0.06, abs(vWorldPos.y - pourY));
+        base = mix(base, vec3(1.0), line * 0.5 * (1.0 - edge));
+
+        vec3 col = base * shade;
+        if (alpha < 0.01) discard;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: true,
+  });
+}
+
+// Add crisp wireframe edges to a foundation object (once)
+function addFoundationEdges(f) {
+  if (f._edgesAdded) return;
+  f._edgeLines = [];
+  f.object.traverse(child => {
+    if (!child.isMesh || !child.geometry) return;
+    try {
+      const eg = new THREE.EdgesGeometry(child.geometry, 35);
+      const lm = new THREE.LineBasicMaterial({ color: 0x0d47a1, transparent: true, opacity: 0.55 });
+      const line = new THREE.LineSegments(eg, lm);
+      line.userData.foundEdgeSrc = child.uuid;
+      child.add(line);          // child-of-mesh → inherits transform automatically
+      f._edgeLines.push(line);
+    } catch(e) {}
+  });
+  f._edgesAdded = true;
+}
+function removeFoundationEdges(f) {
+  if (!f._edgeLines) return;
+  f._edgeLines.forEach(l => { if (l.parent) l.parent.remove(l); });
+  f._edgeLines = [];
+  f._edgesAdded = false;
+}
+
+function applyFoundationProgress(key, level) {
+  const f = foundations.get(key);
+  if (!f || !f.object) return;
+  f.pourLevel = level;
+
+  // Remove any lingering ghost meshes from old approach
+  const toRm = [];
+  scene.traverse(o => { if (o.userData.foundGhostSrc) toRm.push(o); });
+  toRm.forEach(o => scene.remove(o));
+  renderer.localClippingEnabled = false;
+
+  const pourWorldY = f.bottomY + level * f.totalH;
+  const glassAlpha = upperOpacity;
+
+  addFoundationEdges(f);   // crisp edges (added once)
+
+  f.object.traverse(child => {
+    if (!child.isMesh) return;
+    if (!child.userData._foundKey) child.userData._foundKey = key;
+
+    let m;
+    if (level <= 0) {
+      m = makeFoundationShaderMat(f.bottomY - 9999, 1.0, glassAlpha);   // all glass
+    } else if (level >= 1) {
+      m = makeFoundationShaderMat(f.bottomY + f.totalH + 9999, 1.0, glassAlpha); // all solid
+    } else {
+      m = makeFoundationShaderMat(pourWorldY, 1.0, glassAlpha);
+    }
+    child.material = m;
+  });
+}
+
+function restoreFoundationMaterials(key) {
+  const f = foundations.get(key); if (!f) return;
+  removeFoundationEdges(f);
+  f.object.traverse(child => {
+    if (!child.isMesh) return;
+    const orig = f.originalMats.get(child.uuid);
+    if (orig) child.material = orig.length===1 ? orig[0] : orig;
+  });
+  const toRemove = [];
+  scene.traverse(o => { if (o.userData.foundGhostSrc) toRemove.push(o); });
+  toRemove.forEach(o => scene.remove(o));
+}
+
+function renderFoundationList() {
+  const list = document.getElementById('bap-list');
+  document.getElementById('bap-count').textContent = foundations.size + ' cimientos';
+  if (foundations.size===0) { list.innerHTML='<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px;">Añade cimientos con los botones de arriba</div>'; return; }
+  list.innerHTML='';
+  foundations.forEach((f, key) => {
+    const pct = Math.round(f.pourLevel*100);
+    const item = document.createElement('div');
+    item.className = 'bap-item';
+    item.innerHTML =
+      '<div class="bap-item-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
+      + '<span class="bap-item-icon">🏛</span>'
+      + '<span class="bap-item-name">'+f.name.replace(/_/g,' ')+'</span>'
+      + '<span class="bap-item-pct" id="bap-pct-'+key+'">'+pct+'%</span>'
+      + '<span style="color:var(--text3);font-size:10px;">▾</span>'
+      + '</div>'
+      + '<div class="bap-item-body">'
+      + '<div class="bap-pour-wrap">'
+      + '<div class="bap-pour-labels"><span>Nivel de choreo</span><span class="val" id="bap-pctv-'+key+'">'+pct+'%</span></div>'
+      + '<input class="bap-pour-slider" type="range" min="0" max="1" step="0.01" value="'+f.pourLevel+'" oninput="updateFoundPour(\''+key+'\',this.value)">'
+      + '</div>'
+      + '<div class="bap-height-row">'
+      + '<div class="bap-height-field"><div class="bap-height-label">Altura total (m)</div><div style="font-family:var(--mono);font-size:12px;color:var(--sim-blue);padding:3px 6px;">'+f.totalH.toFixed(2)+'</div></div>'
+      + '<div class="bap-height-field"><div class="bap-height-label">Base Y (m)</div><div style="font-family:var(--mono);font-size:12px;color:var(--accent2);padding:3px 6px;">'+f.bottomY.toFixed(2)+'</div></div>'
+      + '</div>'
+      + '<div class="bap-section-title" style="margin-bottom:5px;">Etapas</div>'
+      + '<div class="bap-stages" id="bap-stages-'+key+'">'+renderStages(f,key)+'</div>'
+      + '<div class="lpp-tl-bind" onclick="addFoundationToTimeline(\''+key+'\')">'
+      + '<div class="bind-dot"></div><span class="lpp-tl-bind-label">+ Agregar a línea del tiempo</span></div>'
+      + '<button class="bap-btn danger" style="width:100%;margin-top:6px;" onclick="removeFoundation(\''+key+'\')">✕ Quitar</button>'
+      + '</div>';
+    list.appendChild(item);
+  });
+}
+
+function renderStages(f, key) {
+  return f.stages.map((s,i) =>
+    '<div class="bap-stage '+(s.done?'done':'')+'">'
+    + '<input type="checkbox" '+(s.done?'checked':'')+' onchange="toggleFoundStage(\''+key+'\','+i+',this.checked)">'
+    + '<span class="bap-stage-label">'+s.label+' ('+(s.hTo-s.hFrom).toFixed(2)+'m)</span>'
+    + '<span class="bap-stage-badge" style="color:'+(s.done?'var(--sim-blue)':'var(--text3)')+';border-color:'+(s.done?'rgba(79,195,247,.4)':'var(--border)')+';">'+(s.done?'✓':'—')+'</span>'
+    + '</div>'
+  ).join('');
+}
+
+window.updateFoundPour = function(key, val) {
+  const f = foundations.get(key); if (!f) return;
+  f.pourLevel = parseFloat(val);
+  const pct = Math.round(f.pourLevel*100)+'%';
+  const pe = document.getElementById('bap-pct-'+key); if(pe) pe.textContent=pct;
+  const pv = document.getElementById('bap-pctv-'+key); if(pv) pv.textContent=pct;
+  applyFoundationProgress(key, f.pourLevel);
+  f.stages.forEach((s,i) => {
+    const sl = s.hTo/f.totalH; const sf = s.hFrom/f.totalH;
+    if (f.pourLevel >= sl) s.done=true;
+    else if (f.pourLevel < sf) s.done=false;
+  });
+  const se = document.getElementById('bap-stages-'+key); if(se) se.innerHTML=renderStages(f,key);
+};
+
+window.toggleFoundStage = function(key, idx, checked) {
+  const f = foundations.get(key); if (!f) return;
+  f.stages[idx].done = checked;
+  const topDone = f.stages.reduce((b,s,i) => s.done?i:b, -1);
+  f.pourLevel = topDone>=0 ? f.stages[topDone].hTo/f.totalH : 0;
+  applyFoundationProgress(key, f.pourLevel);
+  renderFoundationList();
+};
+
+window.removeFoundation = function(key) { restoreFoundationMaterials(key); foundations.delete(key); renderFoundationList(); };
+window.updateGlobalStages = function(val) { globalStages = Math.max(1, Math.min(10, parseInt(val)||2)); };
+window.updateUpperOpacity = function(val) { upperOpacity = Math.max(0, Math.min(1, parseFloat(val)||0.1)); foundations.forEach((_,k)=>applyFoundationProgress(k, foundations.get(k).pourLevel)); };
+
+window.addLiftPosToTimeline = function(key) {
+  const cfg = liftPositions.get(key); if (!cfg) return;
+  if (!activeDay()) { alert('Crea o selecciona un día primero.'); return; }
+  SIM.chipCounter++;
+  const start = SIM.currentHour || 0;
+  SIM.chips.push({
+    id:'chip_'+SIM.chipCounter, rowId:firstRowOfBlock('B'),
+    label: cfg.name.replace(/_/g,' '),
+    desc: 'Posición inicial: '+cfg.name,
+    startH: start, endH: Math.min(dayDuration(), start + 1),
+    blockData: { liftPositionKey: key, liftPositionName: cfg.name }
+  });
+  if (!timelineOpen) toggleTimeline(); else tlRender();
+};
+
+window.addFoundationToTimeline = function(key) {
+  const f = foundations.get(key); if (!f) return;
+  if (!activeDay()) { alert('Crea o selecciona un día primero.'); return; }
+  // One chip per stage, sequenced back-to-back (1h each by default within the day)
+  let cursor = SIM.currentHour || 0;
+  const stageH = 1;
+  const rowId = firstRowOfBlock('A');
+  f.stages.forEach((stage, i) => {
+    if (cursor + stageH > dayDuration()) return; // don't overflow the day
+    SIM.chipCounter++;
+    SIM.chips.push({
+      id:'chip_'+SIM.chipCounter, rowId,
+      label: f.name.replace(/_/g,' '),
+      desc: 'Choreo · '+stage.label,
+      startH: cursor,
+      endH: cursor + stageH,
+      blockData: { foundationKey: key, foundationName: f.name, stageIndex: i }
+    });
+    cursor += stageH;
+  });
+  if (!timelineOpen) toggleTimeline(); else tlRender();
+};
+
+window.exportFoundations = function() {
+  if (!foundations.size) { alert('Sin cimientos'); return; }
+  const data=[]; foundations.forEach(f => data.push({name:f.name,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify({foundations:data},null,2)],{type:'application/json'})),download:'cimientos.json'}); a.click();
+};
+window.importFoundations = function(input) {
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=e=>{ try { importFoundationsData(JSON.parse(e.target.result).foundations||[]); } catch(err){alert(err.message);} input.value=''; }; r.readAsText(f);
+};
+function importFoundationsData(entries) {
+  entries.forEach(entry => {
+    let found=null; scene.traverse(o=>{ if(!found&&o.name===entry.name) found=o; });
+    if (!found) return;
+    registerFoundation(found);
+    const f=foundations.get(found.uuid); if(!f) return;
+    f.pourLevel=entry.pourLevel??0; f.stageCount=entry.stageCount??2; f.stages=entry.stages??buildDefaultStages(f.stageCount,f.totalH);
+    applyFoundationProgress(found.uuid, f.pourLevel);
+  });
+  renderFoundationList();
+}
+function importLiftPositionsData(entries) {
+  entries.forEach(entry => {
+    let found=null; scene.traverse(o=>{ if(!found&&o.name===entry.name) found=o; });
+    if(!found) return;
+    const key=found.uuid; found.updateMatrixWorld(true);
+    const wp=new THREE.Vector3(); found.getWorldPosition(wp);
+    const ox = entry.origX ?? wp.x, oy = entry.origY ?? wp.y, oz = entry.origZ ?? wp.z;
+    const orx = entry.origRx ?? 0, ory = entry.origRy ?? 0, orz = entry.origRz ?? 0;
+    const cfg = liftPositions.get(key) || {
+      name: entry.name, isGroup: entry.isGroup ?? !found.isMesh, object: found,
+      origX: ox, origY: oy, origZ: oz, origRx: orx, origRy: ory, origRz: orz,
+      x: ox, y: oy, z: oz, rx: orx, ry: ory, rz: orz, poses: [],
+    };
+    cfg.origX = ox; cfg.origY = oy; cfg.origZ = oz;
+    cfg.origRx = orx; cfg.origRy = ory; cfg.origRz = orz;
+    cfg.poses = entry.poses || cfg.poses || [];
+    // edit pose defaults to original
+    cfg.x = ox; cfg.y = oy; cfg.z = oz; cfg.rx = orx; cfg.ry = ory; cfg.rz = orz;
+    liftPositions.set(key, cfg);
+  });
+  renderLiftPosList();
+}
+
+window.addEventListener('resize', () => { if(timelineOpen) tlRender(); });
+
+// ── TIMELINE HEIGHT / SIZE ───────────────────────────────────────────────────
+const TL_HEIGHTS = { sm: 140, md: 220, lg: 340, xl: Math.floor(window.innerHeight * 0.7) };
+let tlCurrentH = TL_HEIGHTS.md;
+
+window.tlSetHeight = function(preset) {
+  tlCurrentH = preset === 'xl' ? Math.floor(window.innerHeight * 0.7) : TL_HEIGHTS[preset];
+  document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+  ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.toggle('active', k===preset));
+  tlRender();
+};
+
+// Drag-to-resize
+(function() {
+  const handle = document.getElementById('tl-resize-handle');
+  if (!handle) return;
+  let startY = 0, startH = 0;
+  handle.addEventListener('mousedown', e => {
+    startY = e.clientY; startH = tlCurrentH;
+    document.body.style.userSelect = 'none';
+    const onMove = ev => {
+      const delta = startY - ev.clientY; // drag up = bigger
+      tlCurrentH = Math.max(100, Math.min(window.innerHeight - 80, startH + delta));
+      document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+      // Clear active preset since we're freeform
+      ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.remove('active'));
+    };
+    const onUp = () => {
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      tlRender();
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+  // Touch support
+  handle.addEventListener('touchstart', e => {
+    const t = e.touches[0]; startY = t.clientY; startH = tlCurrentH;
+    const onMove = ev => {
+      const delta = startY - ev.touches[0].clientY;
+      tlCurrentH = Math.max(100, Math.min(window.innerHeight - 80, startH + delta));
+      document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+      ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.remove('active'));
+    };
+    const onUp = () => { handle.removeEventListener('touchmove', onMove); handle.removeEventListener('touchend', onUp); tlRender(); };
+    handle.addEventListener('touchmove', onMove, {passive:true});
+    handle.addEventListener('touchend', onUp);
+  }, {passive:true});
+})();
+
+// ── ROW COLLAPSE ─────────────────────────────────────────────────────────────
+// (collapse handling is built directly into tlRender now)
+
+// Initial render of day strip + default timeline height
+document.getElementById('sim-timeline').style.maxHeight = TL_HEIGHTS.md + 'px';
+renderDayStrip();
+
+
 // Physics is hooked directly inside doAttach() and releaseAttached() above.
 // dt is exposed in the animate loop below for the physics step.
 setInterval(() => { if (typeof loadMonitorOpen !== 'undefined' && loadMonitorOpen) updateLoadMonitor(); }, 500);
@@ -3428,5 +5584,191 @@ function animate(){
 
 animate();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIMULATION SYSTEM — TIMELINE + BLOCK A + BLOCK B
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Date banner (top of screen, shows which day is playing) -->
+<div id="sim-date-banner">
+  <span class="sdb-date">—</span>
+  <span class="sdb-sep">·</span>
+  <span class="sdb-label"></span>
+  <span class="sdb-time">00:00</span>
+</div>
+
+<!-- Screen title overlay (appears during playback) -->
+<div id="sim-title-overlay">
+  <div id="sto-text">FASE A: CIMIENTOS</div>
+  <div id="sto-sub">Avance de cimentación</div>
+</div>
+
+<!-- Chip editor popup -->
+<div id="chip-editor">
+  <div class="ce-title">✏ Editar evento</div>
+  <div class="ce-field">
+    <div class="ce-label">Nombre del evento</div>
+    <input class="ce-input" id="ce-name" type="text" placeholder="Ej: Choreo de pedestales">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+    <div class="ce-field">
+      <div class="ce-label">Hora inicio (HH:MM)</div>
+      <input class="ce-input" id="ce-start" type="text" placeholder="08:00">
+    </div>
+    <div class="ce-field">
+      <div class="ce-label">Hora fin (HH:MM)</div>
+      <input class="ce-input" id="ce-end" type="text" placeholder="09:00">
+    </div>
+  </div>
+  <div class="ce-field">
+    <div class="ce-label">Descripción / notas</div>
+    <input class="ce-input" id="ce-desc" type="text" placeholder="Opcional">
+  </div>
+
+  <!-- Link to block element -->
+  <div class="ce-field" id="ce-link-wrap">
+    <div class="ce-label" id="ce-link-label">🔗 Enlazar con elemento</div>
+    <select class="ce-input" id="ce-link" onchange="chipEditorLinkChanged()">
+      <option value="">— Sin enlace —</option>
+    </select>
+  </div>
+
+  <!-- Stage selector (only for foundation links) -->
+  <div class="ce-field" id="ce-stage-wrap" style="display:none;">
+    <div class="ce-label">Etapa de choreo objetivo</div>
+    <select class="ce-input" id="ce-stage">
+      <option value="">— Toda la pieza (0→100%) —</option>
+    </select>
+  </div>
+
+  <div class="ce-btns">
+    <button class="ce-btn ok" onclick="chipEditorSave()">✓ Guardar</button>
+    <button class="ce-btn del" onclick="chipEditorDelete()">✕ Eliminar</button>
+    <button class="ce-btn" onclick="chipEditorClose()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ═══════════ BLOCK A: FOUNDATIONS PANEL ═══════════ -->
+<div id="block-a-panel">
+  <div class="bap-header">
+    <span class="bap-logo">🏛 BLOQUE A · CIMIENTOS</span>
+    <span class="bap-badge" id="bap-count">0 cimientos</span>
+    <button class="bap-close" onclick="toggleBlockA()">✕</button>
+  </div>
+
+  <!-- Add foundation section -->
+  <div class="bap-section">
+    <div class="bap-section-title">Agregar cimiento</div>
+    <div class="bap-pick-row">
+      <button class="bap-btn" onclick="activateFoundationPick('single')">🖱 Pieza</button>
+      <button class="bap-btn" onclick="activateFoundationPick('assembly')">📦 Ensamble</button>
+      <button class="bap-btn" onclick="setFoundationFromTree()">🌳 Árbol</button>
+    </div>
+    <div id="bap-pick-status" style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:5px;min-height:12px;"></div>
+  </div>
+
+  <!-- Total height reference -->
+  <div class="bap-section">
+    <div class="bap-section-title">Configuración general</div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <div class="bap-height-row">
+        <div class="bap-height-field">
+          <div class="bap-height-label">Etapas de choreo</div>
+          <input class="bap-height-input" id="bap-global-stages" type="number" min="1" max="10" step="1" value="2" placeholder="2" oninput="updateGlobalStages(this.value)">
+        </div>
+        <div class="bap-height-field">
+          <div class="bap-height-label">Opacidad restante</div>
+          <input class="bap-height-input" id="bap-upper-opacity" type="number" min="0" max="1" step="0.05" value="0.1" placeholder="0.1" oninput="updateUpperOpacity(this.value)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- List of configured foundations -->
+  <div id="bap-list"></div>
+
+  <!-- Import / Export -->
+  <div class="bap-io">
+    <button class="bap-btn export-btn" onclick="exportFoundations()" style="border-color:rgba(79,195,247,.3);color:var(--sim-blue);">↓ Exportar</button>
+    <button class="bap-btn" onclick="document.getElementById('bap-import-file').click()" style="border-color:rgba(129,199,132,.3);color:var(--sim-green);">↑ Importar</button>
+    <input type="file" id="bap-import-file" accept=".json" style="display:none" onchange="importFoundations(this)">
+  </div>
+</div>
+
+<!-- ═══════════ SIMULATION TIMELINE ═══════════ -->
+<div id="sim-timeline">
+  <!-- Drag-resize handle -->
+  <div id="tl-resize-handle" title="Arrastrar para redimensionar"></div>
+
+  <!-- Header / transport -->
+  <div id="tl-header">
+    <span class="tl-logo">⏱ SIMULACIÓN</span>
+    <div class="tl-sep"></div>
+
+    <div class="tl-transport">
+      <button class="tl-btn play" id="tl-play-btn" onclick="simPlay()">▶ Reproducir</button>
+      <button class="tl-btn playall" id="tl-playall-btn" onclick="simPlayAll()" title="Reproducir todos los días en orden">⏭ Todos los días</button>
+      <button class="tl-btn stop" onclick="simStop()">■ Detener</button>
+      <button class="tl-btn" onclick="simRewind()">⏮ Inicio</button>
+    </div>
+
+    <div id="tl-time-display">00:00</div>
+
+    <div class="tl-sep"></div>
+
+    <!-- Block launchers -->
+    <button class="tl-btn" onclick="toggleBlockA()" id="btn-block-a" title="Configurar cimientos">🏛 Bloque A</button>
+    <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
+
+    <div class="tl-sep"></div>
+
+    <!-- Hour zoom -->
+    <div class="tl-scale-group">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">ZOOM</span>
+      <button class="tl-scale-btn active" onclick="tlSetScale('day')" id="tls-day" title="15 min">15m</button>
+      <button class="tl-scale-btn" onclick="tlSetScale('week')" id="tls-week" title="1 hora">1h</button>
+      <button class="tl-scale-btn" onclick="tlSetScale('month')" id="tls-month" title="2 horas">2h</button>
+    </div>
+
+    <div class="tl-sep"></div>
+
+    <!-- Export / Import (master) -->
+    <button class="tl-btn export-btn" onclick="exportSimJSON()" title="Exportar maestro (todos los días)">↓ Maestro</button>
+    <button class="tl-btn export-btn" onclick="document.getElementById('sim-import-file').click()" style="border-color:rgba(129,199,132,.3);color:var(--sim-green);" title="Importar maestro o día">↑ Importar</button>
+    <input type="file" id="sim-import-file" accept=".json" style="display:none" onchange="importSimJSON(this)">
+
+    <div class="tl-sep"></div>
+    <div class="tl-size-group">
+      <button class="tl-size-btn" id="tls-sm"  onclick="tlSetHeight('sm')"  title="Pequeño">S</button>
+      <button class="tl-size-btn active" id="tls-md" onclick="tlSetHeight('md')" title="Mediano">M</button>
+      <button class="tl-size-btn" id="tls-lg"  onclick="tlSetHeight('lg')"  title="Grande">L</button>
+      <button class="tl-size-btn" id="tls-xl"  onclick="tlSetHeight('xl')"  title="Pantalla completa">XL</button>
+    </div>
+    <button class="tl-btn" id="tl-hide" onclick="toggleTimeline()">✕ Ocultar</button>
+  </div>
+
+  <!-- MASTER DAY STRIP -->
+  <div id="tl-day-strip-wrap">
+    <span class="tl-day-strip-label">DÍAS</span>
+    <div id="tl-day-strip"><!-- day cards injected by JS --></div>
+  </div>
+
+  <!-- Body: labels + tracks (active day, by hour) -->
+  <div id="tl-body">
+    <div id="tl-labels">
+      <!-- Row labels injected by JS -->
+    </div>
+    <div id="tl-canvas-wrap">
+      <div id="tl-canvas">
+        <div id="tl-ruler"></div>
+        <!-- Track rows injected by JS -->
+        <div id="tl-playhead"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- End simulation timeline -->
+
 </body>
 </html>
