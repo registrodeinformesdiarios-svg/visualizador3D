@@ -1095,6 +1095,24 @@
   .tl-chip { cursor: grab; }
   .tl-chip:active { cursor: grabbing; }
 
+
+  /* Block C (visibility) and D (camera) chip colors */
+  .chip-c { background: rgba(79,209,197,.15); border-color: rgba(79,209,197,.4); color: #4fd1c5; }
+  .chip-d { background: rgba(246,135,179,.15); border-color: rgba(246,135,179,.4); color: #f687b3; }
+
+
+  /* Block C visibility panel (mirrors block-a-panel, positioned right) */
+  #block-c-panel {
+    position: fixed; top: 58px; left: 336px; z-index: 125;
+    width: 300px; max-height: calc(100vh - 120px);
+    background: rgba(8,10,14,.96); backdrop-filter: blur(16px);
+    border: 1px solid rgba(79,209,197,.25); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(-160%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #block-c-panel.open { transform: translateX(0); }
+
 </style>
 </head>
 <body>
@@ -2864,6 +2882,7 @@ function onModelReady(gltf,name){
   updateMinimapCamera();
   state.modelLoaded=true;
   rebuildLppTreeIfOpen();
+  if (blockCOpen) buildVisTree();
   document.getElementById('model-name').textContent=name;
   document.getElementById('hud-status').textContent='EXPLORANDO';
   const toFlex=['controls-legend','speed-badge','cam-toggle','compass','minimap-wrap','toolbar','joystick-wrap','height-panel'];
@@ -3948,6 +3967,8 @@ function makeDefaultRows() {
     { id: 'titles',  label: 'Títulos',     color: '#f6ad55', block: 'title' },
     { id: 'ciments', label: 'Cimientos 1', color: '#4fc3f7', block: 'A' },
     { id: 'initial', label: 'Posiciones 1',color: '#a78bfa', block: 'B' },
+    { id: 'visib',   label: 'Visibilidad 1',color: '#4fd1c5', block: 'C' },
+    { id: 'camera',  label: 'Cámara 1',    color: '#f687b3', block: 'D' },
   ];
 }
 
@@ -4000,10 +4021,13 @@ function activeDay() { return SIM.days.find(d => d.id === SIM.activeDayId) || nu
 
 // ── ROW / BLOCK HELPERS ──────────────────────────────────────────────────────
 const BLOCK_META = {
-  title: { name: 'Títulos',    color: '#f6ad55' },
-  A:     { name: 'Cimientos',  color: '#4fc3f7' },
-  B:     { name: 'Posiciones', color: '#a78bfa' },
+  title: { name: 'Títulos',     color: '#f6ad55' },
+  A:     { name: 'Cimientos',   color: '#4fc3f7' },
+  B:     { name: 'Posiciones',  color: '#a78bfa' },
+  C:     { name: 'Visibilidad', color: '#4fd1c5' },
+  D:     { name: 'Cámara',      color: '#f687b3' },
 };
+const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D'];
 function rowBlock(rowId) {
   const r = SIM.rows.find(r => r.id === rowId);
   return r ? r.block : null;
@@ -4014,7 +4038,7 @@ function firstRowOfBlock(block) {
 }
 function ensureRowsValid() {
   // guarantee at least one row per block exists
-  ['title','A','B'].forEach(b => {
+  BLOCK_ORDER.forEach(b => {
     if (!SIM.rows.some(r => r.block === b)) {
       SIM.rowCounter = (SIM.rowCounter||0) + 1;
       SIM.rows.push({ id: b + '_r' + SIM.rowCounter, label: BLOCK_META[b].name + ' ' + SIM.rowCounter, color: BLOCK_META[b].color, block: b });
@@ -4234,7 +4258,8 @@ function tlRender() {
   labelsEl.innerHTML = '';
   canvasEl.querySelectorAll('.tl-track, .tl-block-head, .tl-block-head-track').forEach(t => t.remove());
 
-  const blockOrder = ['title', 'A', 'B'];
+  const blockOrder = BLOCK_ORDER;
+  const blockHeadName = { title:'TÍTULOS', A:'BLOQUE A · CIMIENTOS', B:'BLOQUE B · POSICIONES', C:'BLOQUE C · VISIBILIDAD', D:'BLOQUE D · CÁMARA' };
   blockOrder.forEach(block => {
     const blockRows = SIM.rows.filter(r => r.block === block);
     if (!blockRows.length) return;
@@ -4242,7 +4267,7 @@ function tlRender() {
     const headLbl = document.createElement('div');
     headLbl.className = 'tl-block-head';
     headLbl.innerHTML =
-      '<span class="bh-name">' + (block==='title'?'TÍTULOS':block==='A'?'BLOQUE A · CIMIENTOS':'BLOQUE B · POSICIONES') + '</span>'
+      '<span class="bh-name">' + (blockHeadName[block] || block) + '</span>'
       + '<button class="bh-add" title="Agregar fila paralela" onclick="tlAddRow(\''+block+'\')">＋ fila</button>';
     labelsEl.appendChild(headLbl);
 
@@ -4284,19 +4309,32 @@ function tlRender() {
         cel.className = 'tl-chip chip-' + (row.block||'a').toLowerCase();
         cel.style.cssText = 'left:'+x1+'px;width:'+w+'px;';
         let stageLabel = '';
+        let linkIcon = '';
         if (chip.blockData?.foundationKey && typeof chip.blockData.stageIndex === 'number') {
           const ff = foundations.get(chip.blockData.foundationKey);
           if (ff && ff.stages[chip.blockData.stageIndex]) stageLabel = ' · ' + ff.stages[chip.blockData.stageIndex].label;
+          linkIcon = '🔗 ';
         } else if (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number') {
           const lp = liftPositions.get(chip.blockData.liftPositionKey);
           if (lp && lp.poses[chip.blockData.poseIndex]) stageLabel = ' → ' + lp.poses[chip.blockData.poseIndex].label;
+          linkIcon = '🔗 ';
+        } else if (row.block === 'C') {
+          const st = chipVisState(chip);
+          if (st) { stageLabel = ' · ' + (st.visible ? '👁' : '🚫') + ' ' + st.name; linkIcon = '👁 '; }
+          else stageLabel = ' · (sin estado)';
+        } else if (row.block === 'D') {
+          const m = chip.blockData?.cam?.mode;
+          stageLabel = m ? ' · ' + (m==='first'?'1ª pers.':m==='third'?'3ª pers.':'libre') : ' · (sin captura)';
+          linkIcon = '🎥 ';
         }
         const fullyLinked = chip.blockData?.foundationKey
           || (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number')
+          || (row.block === 'C' && chipVisState(chip))
+          || (row.block === 'D' && chip.blockData?.cam)
           || row.block === 'title';
-        cel.textContent = (chip.blockData?.foundationKey || chip.blockData?.liftPositionKey ? '🔗 ' : '') + chip.label + stageLabel;
+        cel.textContent = linkIcon + chip.label + stageLabel;
         cel.title = chip.label+'\n'+fmtHour(chip.startH)+' → '+fmtHour(chip.endH)
-          + (fullyLinked ? '\n🔗 Enlazado'+stageLabel : '\n⚠ Falta destino')
+          + (fullyLinked ? '\n✓ Configurado'+stageLabel : '\n⚠ Falta configurar')
           + (chip.desc?'\n'+chip.desc:'');
         cel.dataset.chipId = chip.id;
         if (!fullyLinked && row.block !== 'title') cel.style.opacity = '0.55';
@@ -4452,9 +4490,16 @@ function chipEditorPopulateLinks(chip) {
   const sel   = document.getElementById('ce-link');
   const wrap  = document.getElementById('ce-link-wrap');
   const label = document.getElementById('ce-link-label');
+  const visWrap = document.getElementById('ce-visib-wrap');
+  const camWrap = document.getElementById('ce-cam-wrap');
   sel.innerHTML = '<option value="">— Sin enlace —</option>';
+  // default: hide special panels
+  visWrap.style.display = 'none';
+  camWrap.style.display = 'none';
 
-  if (rowBlock(chip.rowId) === 'A') {
+  const block = rowBlock(chip.rowId);
+
+  if (block === 'A') {
     label.textContent = '🔗 Enlazar con cimiento';
     wrap.style.display = 'flex';
     foundations.forEach((f, key) => {
@@ -4464,7 +4509,7 @@ function chipEditorPopulateLinks(chip) {
       if (chip.blockData?.foundationKey === key) opt.selected = true;
       sel.appendChild(opt);
     });
-  } else if (rowBlock(chip.rowId) === 'B') {
+  } else if (block === 'B') {
     label.textContent = '🔗 Enlazar con pieza';
     wrap.style.display = 'flex';
     liftPositions.forEach((cfg, key) => {
@@ -4474,12 +4519,54 @@ function chipEditorPopulateLinks(chip) {
       if (chip.blockData?.liftPositionKey === key) opt.selected = true;
       sel.appendChild(opt);
     });
+  } else if (block === 'C') {
+    wrap.style.display = 'none';
+    visWrap.style.display = 'flex';
+    ceRenderVisibEditor(chip);
+  } else if (block === 'D') {
+    wrap.style.display = 'none';
+    camWrap.style.display = 'flex';
+    ceRenderCamEditor(chip);
   } else {
     // titles row — no link
     wrap.style.display = 'none';
   }
   chipEditorPopulateStages(chip);
 }
+
+// ── Block C visibility editor: pick a named visibility STATE ──
+function ceRenderVisibEditor(chip) {
+  const sel = document.getElementById('ce-vis-state');
+  sel.innerHTML = '<option value="">— Selecciona un estado —</option>';
+  visStates.forEach((s, id) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = (s.visible?'👁 ':'🚫 ') + s.name + ' (' + s.targets.length + ')';
+    if (chip.blockData?.visStateKey === id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (visStates.size === 0) {
+    sel.innerHTML = '<option value="">⚠ No hay estados — créalos en Bloque C</option>';
+  }
+}
+
+// ── Block D camera editor state ──
+let _ceCam = null;   // captured camera snapshot
+function ceRenderCamEditor(chip) {
+  _ceCam = chip.blockData?.cam ? JSON.parse(JSON.stringify(chip.blockData.cam)) : null;
+  ceUpdateCamInfo();
+}
+function ceUpdateCamInfo() {
+  const info = document.getElementById('ce-cam-info');
+  if (!_ceCam) { info.textContent = 'Sin captura'; return; }
+  const mn = _ceCam.mode==='first'?'1ª persona':_ceCam.mode==='third'?'3ª persona':'Libre';
+  info.textContent = '🎥 ' + mn + '  ·  pos ('
+    + _ceCam.px.toFixed(1)+', '+_ceCam.py.toFixed(1)+', '+_ceCam.pz.toFixed(1)+')';
+}
+window.ceCaptureCamera = function() {
+  _ceCam = captureCameraSnapshot();
+  ceUpdateCamInfo();
+};
 
 // Populate the secondary selector: foundation stage OR piece pose
 function chipEditorPopulateStages(chip) {
@@ -4579,6 +4666,16 @@ window.chipEditorSave = function() {
       delete chip.blockData.liftPositionKey; delete chip.blockData.liftPositionName;
       delete chip.blockData.poseIndex;
     }
+  } else if (block === 'C') {
+    const vsId = document.getElementById('ce-vis-state').value;
+    if (vsId && visStates.has(vsId)) {
+      chip.blockData.visStateKey = vsId;
+      chip.blockData.visStateName = visStates.get(vsId).name;
+    } else {
+      delete chip.blockData.visStateKey; delete chip.blockData.visStateName;
+    }
+  } else if (block === 'D') {
+    if (_ceCam) chip.blockData.cam = JSON.parse(JSON.stringify(_ceCam));
   }
   chipEditorClose(); tlRender();
 };
@@ -4586,11 +4683,80 @@ window.chipEditorSave = function() {
 window.chipEditorDelete = function() { SIM.chips = SIM.chips.filter(c => c.id !== _editChipId); chipEditorClose(); tlRender(); };
 window.chipEditorClose  = function() { document.getElementById('chip-editor').style.display='none'; _editChipId=null; };
 document.addEventListener('click', e => {
+  if (_ceVisPicking || vsPick3D) return;   // don't close editor while picking in 3D
   const ed = document.getElementById('chip-editor');
   if (ed && !ed.contains(e.target) && ed.style.display==='flex') chipEditorClose();
 });
 
 // ── PLAYBACK (smooth, hour-based, per-day speed) ─────────────────────────────
+// ── CAMERA SNAPSHOT (Block D) ────────────────────────────────────────────────
+// Capture the current camera state in a portable, mode-aware way.
+function captureCameraSnapshot() {
+  const snap = {
+    mode: state.camMode,            // 'first' | 'third' | 'free'
+    px: camera.position.x, py: camera.position.y, pz: camera.position.z,
+  };
+  if (state.camMode === 'free') {
+    snap.fcx = freeCam.pos.x; snap.fcy = freeCam.pos.y; snap.fcz = freeCam.pos.z;
+    snap.yaw = freeCam.yaw; snap.pitch = freeCam.pitch; snap.radius = freeCam.orbitRadius;
+  } else {
+    // first / third person: store character pos + rotation + pitch
+    snap.cx = charGroup.position.x; snap.cy = charGroup.position.y; snap.cz = charGroup.position.z;
+    snap.charRot = state.charRot; snap.camPitch = state.camPitch;
+  }
+  return snap;
+}
+
+// Apply a camera snapshot. If `lerpT` (0..1) given, blends from a "from" snapshot.
+function applyCameraSnapshot(snap, fromSnap, t) {
+  if (!snap) return;
+  t = (t === undefined) ? 1 : Math.max(0, Math.min(1, t));
+  const ease = t<=0?0:t>=1?1:t*t*(3-2*t);
+
+  // switch mode immediately to target's mode
+  state.camMode = snap.mode;
+
+  if (snap.mode === 'free') {
+    const f = (fromSnap && fromSnap.mode === 'free') ? fromSnap : snap;
+    freeCam.pos.set(
+      lerp(f.fcx ?? snap.fcx, snap.fcx, ease),
+      lerp(f.fcy ?? snap.fcy, snap.fcy, ease),
+      lerp(f.fcz ?? snap.fcz, snap.fcz, ease)
+    );
+    freeCam.yaw    = lerp(f.yaw ?? snap.yaw, snap.yaw, ease);
+    freeCam.pitch  = lerp(f.pitch ?? snap.pitch, snap.pitch, ease);
+    freeCam.orbitRadius = lerp(f.radius ?? snap.radius, snap.radius, ease);
+  } else {
+    const f = (fromSnap && fromSnap.mode !== 'free') ? fromSnap : snap;
+    charGroup.position.set(
+      lerp(f.cx ?? snap.cx, snap.cx, ease),
+      lerp(f.cy ?? snap.cy, snap.cy, ease),
+      lerp(f.cz ?? snap.cz, snap.cz, ease)
+    );
+    state.charRot  = lerp(f.charRot ?? snap.charRot, snap.charRot, ease);
+    state.camPitch = lerp(f.camPitch ?? snap.camPitch, snap.camPitch, ease);
+    charGroup.rotation.y = state.charRot;
+  }
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ── VISIBILITY (Block C) ─────────────────────────────────────────────────────
+// Resolve a target {name} to a scene object and set its visibility.
+function setObjectVisibilityByName(name, visible) {
+  let obj = null;
+  scene.traverse(o => { if (!obj && o.name === name) obj = o; });
+  if (obj) obj.visible = visible;
+}
+// Reset all Block-C-controlled objects to visible (called on reset)
+function resetVisibility() {
+  const names = new Set();
+  visStates.forEach(s => s.targets.forEach(t => names.add(t.name)));
+  names.forEach(n => setObjectVisibilityByName(n, true));
+}
+
+// (Visibility picking is now handled per-state in the Block C panel.)
+let _ceVisPicking = false;   // kept for the editor-close guard; never set true now
+
 // Base: play the whole day in ~12 seconds at speed=1 (smooth). speed scales it.
 const SIM_DAY_SECONDS_AT_1X = 12;   // real seconds to play 24h at speed 1
 let _simLastTs = 0;
@@ -4791,6 +4957,43 @@ function applySimFrame(hour) {
     }
     if (!applied) applyPoseToObject(cfg, curPose);
   });
+
+  // ── Block C: visibility — apply the last visibility chip that has started ──
+  // Each chip references a named visibility STATE (set of targets + show/hide).
+  const visByName = {};   // target name -> {hour, visible}
+  SIM.chips.filter(c => rowBlock(c.rowId)==='C' && c.startH <= hour)
+    .forEach(c => {
+      const st = chipVisState(c);
+      if (!st) return;
+      st.targets.forEach(t => {
+        if (!visByName[t.name] || c.startH >= visByName[t.name].hour) {
+          visByName[t.name] = { hour: c.startH, visible: !!st.visible };
+        }
+      });
+    });
+  Object.keys(visByName).forEach(name => setObjectVisibilityByName(name, visByName[name].visible));
+
+  // ── Block D: camera — interpolate between the surrounding camera keyframes ──
+  const camChips = SIM.chips.filter(c => rowBlock(c.rowId)==='D' && c.blockData?.cam)
+    .sort((a,b) => a.startH - b.startH);
+  if (camChips.length) {
+    // find the active/previous and next camera keyframes
+    let prev = null, next = null;
+    for (const c of camChips) {
+      if (c.startH <= hour) prev = c;
+      else { next = c; break; }
+    }
+    if (prev && next) {
+      // blend from prev to next across the gap between them
+      const t = (hour - prev.startH) / Math.max(0.001, (next.startH - prev.startH));
+      applyCameraSnapshot(next.blockData.cam, prev.blockData.cam, t);
+    } else if (prev) {
+      applyCameraSnapshot(prev.blockData.cam, null, 1);
+    } else if (next && hour < next.startH) {
+      // before the first camera keyframe: hold the first one
+      applyCameraSnapshot(next.blockData.cam, null, 1);
+    }
+  }
 }
 
 // Linear interpolation between two poses
@@ -4829,6 +5032,7 @@ function resetToInitialState() {
   liftPositions.forEach((cfg) => {
     applyPoseToObject(cfg, { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz });
   });
+  resetVisibility();   // all Block-C targets back to visible
 }
 
 function restoreSimState() {
@@ -4865,7 +5069,23 @@ function collectBlockDefs() {
   }));
   const foundData = [];
   foundations.forEach((f) => foundData.push({name:f.name,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
-  return { foundations: foundData, liftPositions: liftData };
+  // visibility states (shared, like foundations)
+  const visData = [];
+  visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(t=>({name:t.name})) }));
+  return { foundations: foundData, liftPositions: liftData, visStates: visData };
+}
+
+function importVisStatesData(entries) {
+  if (!Array.isArray(entries)) return;
+  visStates.clear();
+  let maxN = 0;
+  entries.forEach(e => {
+    const id = e.id || ('vis_' + (++visStateCounter));
+    visStates.set(id, { name: e.name||'Estado', visible: !!e.visible, targets: (e.targets||[]).map(t=>({name:t.name})) });
+    const m = (id.match(/vis_(\d+)/)||[])[1]; if (m) maxN = Math.max(maxN, parseInt(m));
+  });
+  visStateCounter = Math.max(visStateCounter, maxN);
+  renderVisStateList();
 }
 
 // Serialize a day: chips with links stored by NAME (portable)
@@ -4891,6 +5111,7 @@ window.exportSimJSON = function() {
     days: SIM.days.map(serializeDay),
     blockA: { foundations: collectBlockDefs().foundations },
     blockB: { liftPositions: collectBlockDefs().liftPositions },
+    blockC: { visStates: collectBlockDefs().visStates },
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'simulacion-MAESTRO.json'});
@@ -4907,6 +5128,7 @@ window.exportDayJSON = function(dayId) {
     // include element defs so the day file is self-contained for solo editing
     blockA: { foundations: collectBlockDefs().foundations },
     blockB: { liftPositions: collectBlockDefs().liftPositions },
+    blockC: { visStates: collectBlockDefs().visStates },
   };
   const safe = (day.date||'dia') + '_' + (day.label||'').replace(/[^a-z0-9]+/gi,'-');
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -4918,16 +5140,25 @@ window.exportDayJSON = function(dayId) {
 function relinkChips(chips) {
   const foundByName = {}; foundations.forEach((f, key) => foundByName[f.name] = key);
   const liftByName  = {}; liftPositions.forEach((cfg, key) => liftByName[cfg.name] = key);
+  const visByName   = {}; visStates.forEach((s, key) => visByName[s.name] = key);
   (chips||[]).forEach(c => {
     if (!c.blockData) return;
     if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
     if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
+    if (c.blockData.visStateName && visByName[c.blockData.visStateName]) c.blockData.visStateKey = visByName[c.blockData.visStateName];
   });
 }
 
 // Normalize an imported day object (migrate legacy date-based chips → hours)
 function normalizeDay(d) {
   d.rows = d.rows && d.rows.length ? d.rows : makeDefaultRows();
+  // make sure every block (incl. C and D added later) has at least one row
+  BLOCK_ORDER.forEach(b => {
+    if (!d.rows.some(r => r.block === b)) {
+      d.rowCounter = (d.rowCounter||0) + 1;
+      d.rows.push({ id: b + '_imp' + d.rowCounter, label: BLOCK_META[b].name + ' 1', color: BLOCK_META[b].color, block: b });
+    }
+  });
   d.chips = d.chips || [];
   d.speed = d.speed || 1;
   d.durationHours = d.durationHours || 24;
@@ -4949,6 +5180,7 @@ window.importSimJSON = function(input) {
       const p = JSON.parse(e.target.result);
       // element defs (shared) load first so objects exist
       if (p.blockA?.foundations) importFoundationsData(p.blockA.foundations);
+      if (p.blockC?.visStates) importVisStatesData(p.blockC.visStates);
       if (p.blockB?.liftPositions) importLiftPositionsData(p.blockB.liftPositions);
 
       if (p.kind === 'day' && p.day) {
@@ -5003,6 +5235,207 @@ function importSingleDay(dayObj) {
 }
 
 // ══════════════════════════════════════════════════════
+// BLOCK C — VISIBILITY STATES (named, reusable, like foundations)
+// ══════════════════════════════════════════════════════
+// visStates: id -> { name, visible, targets:[{name}] }
+const visStates = new Map();
+let visStateCounter = 0;
+let blockCOpen = false;
+let _vsEditingId = null;      // which state's tree-pick is active
+let _vsTreeFilter = '';
+
+window.toggleBlockC = function() {
+  blockCOpen = !blockCOpen;
+  document.getElementById('block-c-panel').classList.toggle('open', blockCOpen);
+  document.getElementById('btn-block-c')?.classList.toggle('active', blockCOpen);
+  if (blockCOpen) { renderVisStateList(); buildVisTree(); }
+};
+
+window.addVisState = function() {
+  visStateCounter++;
+  const id = 'vis_' + visStateCounter;
+  visStates.set(id, { name: 'Estado ' + visStateCounter, visible: false, targets: [] });
+  renderVisStateList();
+};
+
+window.removeVisState = function(id) {
+  if (!confirm('¿Eliminar este estado de visibilidad?')) return;
+  visStates.delete(id);
+  // unlink chips referencing it
+  SIM.days.forEach(d => (d.chips||[]).forEach(c => {
+    if (c.blockData?.visStateName && visStates.get(c.blockData.visStateKey)?.name !== c.blockData.visStateName) {}
+  }));
+  renderVisStateList();
+};
+
+window.renameVisState = function(id, val) { const s = visStates.get(id); if (s) s.name = val; };
+window.setVisStateVisible = function(id, v) {
+  const s = visStates.get(id); if (!s) return;
+  s.visible = v; renderVisStateList();
+};
+window.removeVisTarget = function(id, idx) {
+  const s = visStates.get(id); if (!s) return;
+  s.targets.splice(idx, 1); renderVisStateList();
+};
+
+// Activate tree picking for a given state
+window.vsPickForState = function(id) {
+  _vsEditingId = id;
+  document.getElementById('vs-pick-banner').style.display = 'block';
+  document.getElementById('vs-pick-banner').textContent = '👁 Selecciona elementos en el árbol o haz clic en 3D para "'+ (visStates.get(id)?.name||'') +'". Pulsa aquí para terminar.';
+};
+window.vsPickDone = function() {
+  _vsEditingId = null;
+  document.getElementById('vs-pick-banner').style.display = 'none';
+  if (vsPick3D) { vsPick3D = false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); }
+};
+
+// add a target (by object) to the state being edited
+function vsAddTargetToState(obj) {
+  if (!_vsEditingId) return;
+  const s = visStates.get(_vsEditingId); if (!s) return;
+  const name = obj.name || obj.uuid.slice(0,8);
+  if (!s.targets.some(t => t.name === name)) s.targets.push({ name });
+  renderVisStateList();
+}
+
+// 3D pick mode for visibility
+let vsPick3D = false;
+window.vsActivate3DPick = function() {
+  if (!_vsEditingId) { alert('Primero pulsa "Seleccionar" en un estado.'); return; }
+  vsPick3D = true;
+  document.getElementById('pick-overlay').classList.add('active');
+  canvas.classList.add('pick-mode');
+  document.getElementById('pick-label').innerHTML = '<b>👁 Clic en piezas para añadirlas</b><br><small style="opacity:.6">ESC o el banner para terminar</small>';
+};
+
+// Render the list of visibility states in the panel
+function renderVisStateList() {
+  const list = document.getElementById('vs-list');
+  if (!list) return;
+  document.getElementById('vs-count').textContent = visStates.size + ' estados';
+  if (visStates.size === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px;">Crea un estado de visibilidad con el botón de arriba</div>';
+    return;
+  }
+  list.innerHTML = '';
+  visStates.forEach((s, id) => {
+    const item = document.createElement('div');
+    item.className = 'bap-item';
+    const targetsHtml = s.targets.length
+      ? s.targets.map((t,i) => '<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-family:var(--mono);font-size:9px;">'
+          + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t.name.replace(/_/g,' ')+'</span>'
+          + '<button onclick="removeVisTarget(\''+id+'\','+i+')" style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:10px;">✕</button>'
+          + '</div>').join('')
+      : '<div style="color:var(--text3);font-size:9px;padding:3px 0;">Sin elementos</div>';
+    item.innerHTML =
+      '<div class="bap-item-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
+      + '<span class="bap-item-icon">'+(s.visible?'👁':'🚫')+'</span>'
+      + '<input class="rl-name-input" style="flex:1;font-size:10px;" value="'+s.name+'" onclick="event.stopPropagation()" oninput="renameVisState(\''+id+'\',this.value)">'
+      + '<span class="bap-item-pct" style="border-color:rgba(79,209,197,.3);color:#4fd1c5;">'+s.targets.length+'</span>'
+      + '<span style="color:var(--text3);font-size:10px;">▾</span>'
+      + '</div>'
+      + '<div class="bap-item-body">'
+      + '<div class="bap-section-title" style="margin-bottom:5px;">Estado</div>'
+      + '<div style="display:flex;gap:4px;margin-bottom:8px;">'
+      + '<button class="bap-btn'+(s.visible?'':' danger')+'" onclick="setVisStateVisible(\''+id+'\',true)">👁 Mostrar</button>'
+      + '<button class="bap-btn'+(s.visible?' danger':'')+'" onclick="setVisStateVisible(\''+id+'\',false)">🚫 Ocultar</button>'
+      + '</div>'
+      + '<div class="bap-section-title" style="margin-bottom:5px;">Elementos ('+s.targets.length+')</div>'
+      + '<div style="max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:5px;padding:4px;background:var(--bg3);margin-bottom:6px;">'+targetsHtml+'</div>'
+      + '<div style="display:flex;gap:4px;">'
+      + '<button class="bap-btn" onclick="vsPickForState(\''+id+'\')">🌳 Seleccionar del árbol</button>'
+      + '<button class="bap-btn" onclick="vsPickForState(\''+id+'\');vsActivate3DPick()">🖱 Clic 3D</button>'
+      + '</div>'
+      + '<button class="bap-btn danger" style="width:100%;margin-top:6px;" onclick="removeVisState(\''+id+'\')">✕ Eliminar estado</button>'
+      + '</div>';
+    list.appendChild(item);
+  });
+}
+
+// Build the model tree for visibility selection
+function buildVisTree() {
+  const wrap = document.getElementById('vs-tree-wrap');
+  if (!wrap) return;
+  const model = scene.getObjectByName('__model__');
+  if (!model) { wrap.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">Sin modelo cargado</div>'; return; }
+  wrap.innerHTML = '';
+  model.children.forEach(child => {
+    const node = buildVisTreeNode(child, 0);
+    if (node) wrap.appendChild(node);
+  });
+}
+
+function buildVisTreeNode(obj, depth) {
+  if (obj.name && (obj.name.startsWith('crane_') || obj.name === '__char__')) return null;
+  const isGroup = !obj.isMesh;
+  const hasChildren = obj.children && obj.children.length > 0;
+  const name = obj.name || (isGroup ? '(grupo)' : '(mesh)');
+  if (_vsTreeFilter && !name.toLowerCase().includes(_vsTreeFilter.toLowerCase())) {
+    if (!hasDescendantMatch(obj, _vsTreeFilter)) return null;
+  }
+  const node = document.createElement('div');
+  node.className = 'tree-node';
+  const row = document.createElement('div');
+  row.className = 'tree-row';
+  const toggle = document.createElement('span');
+  toggle.className = 'tree-toggle' + (hasChildren && isGroup ? '' : ' leaf');
+  toggle.textContent = '▶';
+  const icon = document.createElement('span');
+  icon.className = 'tree-icon';
+  icon.textContent = isGroup ? '📁' : '▪';
+  const label = document.createElement('span');
+  label.className = 'tree-label ' + (isGroup ? 'group' : 'mesh');
+  label.textContent = name.replace(/_/g, ' ');
+  label.title = name;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tree-add-btn';
+  addBtn.textContent = '+';
+  addBtn.title = 'Añadir al estado en edición';
+  row.appendChild(toggle); row.appendChild(icon); row.appendChild(label); row.appendChild(addBtn);
+  node.appendChild(row);
+
+  let childWrap = null, expanded = false;
+  if (hasChildren && isGroup) {
+    childWrap = document.createElement('div');
+    childWrap.className = 'tree-children';
+    childWrap.style.display = 'none';
+    node.appendChild(childWrap);
+    toggle.style.cursor = 'pointer';
+    const expand = () => {
+      expanded = !expanded;
+      childWrap.style.display = expanded ? 'block' : 'none';
+      toggle.classList.toggle('open', expanded);
+      if (expanded && childWrap.children.length === 0) {
+        obj.children.forEach(child => { const cn = buildVisTreeNode(child, depth+1); if (cn) childWrap.appendChild(cn); });
+      }
+    };
+    toggle.addEventListener('click', e => { e.stopPropagation(); expand(); });
+    row.addEventListener('click', e => { if (e.target === addBtn) return; expand(); });
+  }
+  addBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!_vsEditingId) { alert('Primero pulsa "Seleccionar del árbol" en un estado.'); return; }
+    vsAddTargetToState(obj);
+    addBtn.textContent = '✓';
+    addBtn.style.color = '#4fd1c5';
+  });
+  return node;
+}
+
+window.filterVisTree = function(val) { _vsTreeFilter = val; buildVisTree(); };
+
+// Resolve visState reference on a chip → the live state object (by key or name)
+function chipVisState(chip) {
+  if (!chip.blockData) return null;
+  if (chip.blockData.visStateKey && visStates.has(chip.blockData.visStateKey)) return visStates.get(chip.blockData.visStateKey);
+  if (chip.blockData.visStateName) {
+    for (const s of visStates.values()) if (s.name === chip.blockData.visStateName) return s;
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════
 // BLOCK A — FOUNDATIONS
 // ══════════════════════════════════════════════════════
 const foundations = new Map();
@@ -5052,6 +5485,24 @@ function cancelFoundationPick() {
 }
 
 window.addEventListener('keydown', e => { if (e.code==='Escape' && foundPick) cancelFoundationPick(); });
+
+// Block C visibility 3D picker — uses the same pick overlay (per-state)
+document.getElementById('pick-overlay').addEventListener('click', e => {
+  if (vsPick3D && _vsEditingId && state.modelLoaded) {
+    e.stopPropagation();
+    const rect = canvas.getBoundingClientRect();
+    const ndx = ((e.clientX-rect.left)/rect.width)*2-1;
+    const ndy = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(new THREE.Vector2(ndx,ndy), camera);
+    const meshes = [];
+    scene.traverse(o => { if (o.isMesh && o.name!=='__char__') meshes.push(o); });
+    const hits = raycaster.intersectObjects(meshes, false);
+    if (hits.length) vsAddTargetToState(getAssemblyRoot(hits[0].object));
+  }
+});
+window.addEventListener('keydown', e => {
+  if (vsPick3D && e.code === 'Escape') { e.preventDefault(); vsPickDone(); }
+});
 
 function registerFoundation(obj) {
   const key = obj.uuid;
@@ -5641,6 +6092,31 @@ animate();
     </select>
   </div>
 
+  <!-- Block C: visibility editor (pick a named state) -->
+  <div id="ce-visib-wrap" style="display:none;flex-direction:column;gap:8px;">
+    <div class="ce-field">
+      <div class="ce-label">👁 Estado de visibilidad</div>
+      <select class="ce-input" id="ce-vis-state">
+        <option value="">— Selecciona un estado —</option>
+      </select>
+    </div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">
+      Los estados se crean y editan en el panel <b style="color:#4fd1c5;">Bloque C</b> (botón en la barra). Cada estado define qué elementos se muestran u ocultan.
+    </div>
+  </div>
+
+  <!-- Block D: camera editor -->
+  <div id="ce-cam-wrap" style="display:none;flex-direction:column;gap:8px;">
+    <div class="ce-field">
+      <div class="ce-label">Vista de cámara capturada</div>
+      <div id="ce-cam-info" style="font-family:var(--mono);font-size:9px;color:var(--text2);padding:5px 7px;border:1px solid var(--border);border-radius:5px;background:var(--bg3);">Sin captura</div>
+    </div>
+    <button class="ce-btn ok" onclick="ceCaptureCamera()">📸 Capturar posición actual de cámara</button>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">
+      Mueve la cámara en la escena (1ª/3ª persona o libre) y captura. Durante la reproducción la cámara transicionará suavemente hacia esta vista.
+    </div>
+  </div>
+
   <div class="ce-btns">
     <button class="ce-btn ok" onclick="chipEditorSave()">✓ Guardar</button>
     <button class="ce-btn del" onclick="chipEditorDelete()">✕ Eliminar</button>
@@ -5695,6 +6171,31 @@ animate();
   </div>
 </div>
 
+<!-- ═══════════ BLOCK C: VISIBILITY STATES PANEL ═══════════ -->
+<div id="block-c-panel">
+  <div class="bap-header" style="border-bottom-color:rgba(79,209,197,.15);">
+    <span class="bap-logo" style="color:#4fd1c5;">👁 BLOQUE C · VISIBILIDAD</span>
+    <span class="bap-badge" id="vs-count">0 estados</span>
+    <button class="bap-close" onclick="toggleBlockC()">✕</button>
+  </div>
+
+  <div class="bap-section">
+    <div class="bap-section-title" style="color:#4fd1c5;">Estados de visibilidad</div>
+    <button class="bap-btn" style="width:100%;border-color:rgba(79,209,197,.3);color:#4fd1c5;" onclick="addVisState()">＋ Nuevo estado</button>
+    <div id="vs-pick-banner" onclick="vsPickDone()" style="display:none;margin-top:6px;padding:6px 8px;border-radius:5px;background:rgba(79,209,197,.1);border:1px solid rgba(79,209,197,.3);color:#4fd1c5;font-family:var(--mono);font-size:8px;cursor:pointer;line-height:1.4;"></div>
+  </div>
+
+  <!-- list of states -->
+  <div id="vs-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
+
+  <!-- model tree for picking -->
+  <div class="bap-section" style="border-top:1px solid rgba(255,255,255,.05);">
+    <div class="bap-section-title" style="color:#4fd1c5;">🌳 Árbol del modelo</div>
+    <input id="vs-tree-search" placeholder="🔍 Filtrar por nombre…" oninput="filterVisTree(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 7px;outline:none;margin-bottom:6px;">
+    <div id="vs-tree-wrap" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px;background:var(--bg2);"></div>
+  </div>
+</div>
+
 <!-- ═══════════ SIMULATION TIMELINE ═══════════ -->
 <div id="sim-timeline">
   <!-- Drag-resize handle -->
@@ -5719,6 +6220,7 @@ animate();
     <!-- Block launchers -->
     <button class="tl-btn" onclick="toggleBlockA()" id="btn-block-a" title="Configurar cimientos">🏛 Bloque A</button>
     <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
+    <button class="tl-btn" onclick="toggleBlockC()" id="btn-block-c" title="Estados de visibilidad" style="color:#4fd1c5;border-color:rgba(79,209,197,.3);">👁 Bloque C</button>
 
     <div class="tl-sep"></div>
 
