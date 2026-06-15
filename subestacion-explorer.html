@@ -1108,10 +1108,70 @@
     background: rgba(8,10,14,.96); backdrop-filter: blur(16px);
     border: 1px solid rgba(79,209,197,.25); border-radius: 12px;
     display: flex; flex-direction: column; overflow: hidden;
-    transform: translateX(-160%);
+    transform: translateX(calc(-100% - 360px));
     transition: transform .25s cubic-bezier(.4,0,.2,1);
   }
   #block-c-panel.open { transform: translateX(0); }
+
+
+  /* ── VIDEO RECORDING UI ── */
+  .tl-btn.rec-btn { border-color: rgba(239,83,80,.4); color: #ef5350; background: rgba(239,83,80,.06); }
+  .tl-btn.rec-btn:hover { background: rgba(239,83,80,.16); }
+  .tl-btn.rec-btn.active { background: rgba(239,83,80,.22); border-color: #ef5350; }
+
+  #record-panel {
+    position: fixed; top: 58px; right: 20px; z-index: 145;
+    width: 280px;
+    background: rgba(8,10,14,.97); backdrop-filter: blur(16px);
+    border: 1px solid rgba(239,83,80,.3); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(140%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #record-panel.open { transform: translateX(0); }
+  .rp-header {
+    height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 0 14px; border-bottom: 1px solid rgba(239,83,80,.15);
+  }
+  .rp-logo { font-family: var(--mono); font-size: 11px; font-weight: 600; color: #ef5350; letter-spacing: .5px; flex: 1; }
+  .rp-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .rp-field { display: flex; flex-direction: column; gap: 5px; }
+  .rp-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; }
+  .rp-btn-row { display: flex; gap: 4px; }
+  .rp-opt {
+    flex: 1; padding: 5px 0; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text3); font-family: var(--mono); font-size: 9px;
+    cursor: pointer; transition: all .12s;
+  }
+  .rp-opt:hover { border-color: rgba(239,83,80,.4); color: #ef5350; }
+  .rp-opt.active { border-color: #ef5350; color: #ef5350; background: rgba(239,83,80,.1); }
+  .rp-record {
+    padding: 9px 0; border-radius: 7px; border: 1px solid rgba(239,83,80,.4);
+    background: rgba(239,83,80,.1); color: #ef5350; font-family: var(--mono);
+    font-size: 11px; font-weight: 600; cursor: pointer; transition: all .12s;
+  }
+  .rp-record:hover { background: rgba(239,83,80,.2); }
+  .rp-record.recording { background: #ef5350; color: #fff; animation: recpulse 1.2s infinite; }
+  .rp-record-single {
+    padding: 7px 0; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text2); font-family: var(--mono);
+    font-size: 9px; cursor: pointer; transition: all .12s;
+  }
+  .rp-record-single:hover { border-color: rgba(239,83,80,.4); color: #ef5350; }
+  @keyframes recpulse { 0%,100%{ box-shadow:0 0 0 0 rgba(239,83,80,.5);} 50%{ box-shadow:0 0 0 6px rgba(239,83,80,0);} }
+
+  #rec-indicator {
+    position: fixed; top: 16px; right: 20px; z-index: 162;
+    display: none; align-items: center; gap: 7px;
+    padding: 5px 12px; border-radius: 16px;
+    background: rgba(239,83,80,.15); border: 1px solid rgba(239,83,80,.5);
+    color: #ff6b6b; font-family: var(--mono); font-size: 11px; font-weight: 600;
+    pointer-events: none;
+  }
+  #rec-indicator .rec-pulse {
+    width: 9px; height: 9px; border-radius: 50%; background: #ef5350;
+    animation: recpulse 1.2s infinite;
+  }
 
 </style>
 </head>
@@ -1681,7 +1741,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // ── MAIN RENDERER ────────────────────────────────────────────────────────────
 const canvas = document.getElementById('main-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -4688,6 +4748,199 @@ document.addEventListener('click', e => {
   if (ed && !ed.contains(e.target) && ed.style.display==='flex') chipEditorClose();
 });
 
+// ── VIDEO RECORDING (MediaRecorder + canvas.captureStream) ───────────────────
+// Records the WebGL canvas to a YouTube-compatible WebM (VP9), low weight via
+// adjustable bitrate, with selectable output resolution.
+const REC = {
+  recording: false, recorder: null, chunks: [], stream: null,
+  resolution: '1080', fps: 30, bitrateMbps: 8,
+  savedW: 0, savedH: 0, savedPR: 0,
+};
+const REC_RES = {
+  '720':  { w: 1280, h: 720 },
+  '1080': { w: 1920, h: 1080 },
+  '1440': { w: 2560, h: 1440 },
+};
+
+function pickRecorderMime() {
+  const prefs = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+  for (const m of prefs) { if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; }
+  return '';
+}
+
+function applyRecordResolution() {
+  REC.savedW = renderer.domElement.width;
+  REC.savedH = renderer.domElement.height;
+  REC.savedPR = renderer.getPixelRatio();
+  if (REC.resolution === 'native') return;
+  const r = REC_RES[REC.resolution]; if (!r) return;
+  renderer.setPixelRatio(1);
+  renderer.setSize(r.w, r.h, false);
+  camera.aspect = r.w / r.h; camera.updateProjectionMatrix();
+}
+function restoreRenderResolution() {
+  renderer.setPixelRatio(REC.savedPR || Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+}
+
+window.recSetResolution = function(v) {
+  REC.resolution = v;
+  ['720','1080','1440','native'].forEach(k => document.getElementById('rec-res-'+k)?.classList.toggle('active', k===v));
+  recUpdateEstimate();
+};
+window.recSetBitrate = function(v) {
+  REC.bitrateMbps = parseFloat(v) || 8;
+  document.getElementById('rec-bitrate-val').textContent = REC.bitrateMbps.toFixed(1) + ' Mbps';
+  recUpdateEstimate();
+};
+window.recSetFps = function(v) {
+  REC.fps = parseInt(v) || 30;
+  ['24','30','60'].forEach(k => document.getElementById('rec-fps-'+k)?.classList.toggle('active', k===String(REC.fps)));
+};
+
+function estimateTotalSeconds() {
+  let total = 0;
+  SIM.days.forEach(d => {
+    const span = Math.max(0, dayLastEventHour(d) - dayFirstEventHour(d));
+    const speed = d.speed || 1;
+    total += (span / 24) * (SIM_DAY_SECONDS_AT_1X / speed) + 0.75;
+  });
+  return Math.max(1, total);
+}
+function recUpdateEstimate() {
+  const secs = estimateTotalSeconds();
+  const sizeMB = (REC.bitrateMbps * secs) / 8;
+  const est = document.getElementById('rec-estimate');
+  if (est) est.textContent = '≈ ' + secs.toFixed(0) + 's · ' + sizeMB.toFixed(1) + ' MB aprox.';
+}
+
+window.toggleRecordPanel = function() {
+  const p = document.getElementById('record-panel');
+  const open = !p.classList.contains('open');
+  p.classList.toggle('open', open);
+  document.getElementById('btn-record')?.classList.toggle('active', open);
+  if (open) recUpdateEstimate();
+};
+
+window.startRecording = function(mode) {
+  if (REC.recording) { stopRecording(); return; }
+  if (!SIM.days.length) { alert('No hay días para grabar.'); return; }
+  const mime = pickRecorderMime();
+  if (!mime || !window.MediaRecorder) { alert('Tu navegador no soporta grabación de video (MediaRecorder).'); return; }
+  applyRecordResolution();
+  setTimeout(() => {
+    // Compositing canvas: WebGL frame + date banner + title overlay drawn on top
+    const rr = (REC.resolution === 'native')
+      ? { w: renderer.domElement.width, h: renderer.domElement.height }
+      : REC_RES[REC.resolution];
+    REC.compCanvas = document.createElement('canvas');
+    REC.compCanvas.width = rr.w; REC.compCanvas.height = rr.h;
+    REC.compCtx = REC.compCanvas.getContext('2d');
+    REC.compActive = true;
+    drawCompositeFrame();   // start the per-frame compositor
+
+    try { REC.stream = REC.compCanvas.captureStream(REC.fps); }
+    catch (err) { alert('No se pudo capturar: ' + err.message); restoreRenderResolution(); REC.compActive=false; return; }
+    REC.chunks = [];
+    const opts = { mimeType: mime, videoBitsPerSecond: Math.round(REC.bitrateMbps * 1e6) };
+    try { REC.recorder = new MediaRecorder(REC.stream, opts); }
+    catch (err) { REC.recorder = new MediaRecorder(REC.stream); }
+    REC.recorder.ondataavailable = e => { if (e.data && e.data.size) REC.chunks.push(e.data); };
+    REC.recorder.onstop = () => finalizeRecording(mime);
+    REC.recorder.start();
+    REC.recording = true;
+    updateRecordUI();
+    if (mode === 'all') simPlayAll(); else simPlay();
+  }, 120);
+};
+
+// Per-frame compositor: copies the WebGL canvas, then paints date + title text.
+function drawCompositeFrame() {
+  if (!REC.compActive) return;
+  const ctx = REC.compCtx, W = REC.compCanvas.width, H = REC.compCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  // 1) the 3D frame
+  try { ctx.drawImage(renderer.domElement, 0, 0, W, H); } catch(e) {}
+
+  const scale = H / 1080;  // scale text relative to 1080p baseline
+
+  // 2) date banner (top center)
+  const d = activeDay();
+  if (d) {
+    const dateTxt = formatPrettyDate(d.date);
+    const timeTxt = fmtHour(SIM.currentHour);
+    const label = d.label || '';
+    ctx.save();
+    ctx.font = '600 ' + Math.round(26*scale) + 'px ui-monospace, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const full = dateTxt + '   ·   ' + label + '   ' + timeTxt;
+    const padX = 28*scale, padY = 14*scale;
+    const tw = ctx.measureText(full).width;
+    const bx = W/2 - tw/2 - padX, by = 24*scale, bw = tw + padX*2, bh = 30*scale + padY;
+    ctx.fillStyle = 'rgba(8,10,14,.82)';
+    roundRect(ctx, bx, by, bw, bh, 22*scale); ctx.fill();
+    ctx.strokeStyle = 'rgba(167,139,250,.5)'; ctx.lineWidth = 1.5*scale; ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(dateTxt + '   ·   ' + label + '   ' + timeTxt, W/2, by + padY/2 + 6*scale);
+    ctx.restore();
+  }
+
+  // 3) big title overlay (center) if a title is active
+  if (REC._activeTitle) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = '600 ' + Math.round(54*scale) + 'px ui-monospace, monospace';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(167,139,250,.8)'; ctx.shadowBlur = 40*scale;
+    ctx.fillText(REC._activeTitle.text, W/2, H/2);
+    if (REC._activeTitle.sub) {
+      ctx.shadowBlur = 0;
+      ctx.font = '400 ' + Math.round(16*scale) + 'px ui-sans-serif, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      ctx.fillText(REC._activeTitle.sub, W/2, H/2 + 36*scale);
+    }
+    ctx.restore();
+  }
+
+  REC.compRAF = requestAnimationFrame(drawCompositeFrame);
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath();
+}
+
+function stopRecording() {
+  if (!REC.recording) return;
+  if (REC.recorder && REC.recorder.state !== 'inactive') REC.recorder.stop();
+  REC.recording = false;
+  if (SIM.playing) simPause();
+  updateRecordUI();
+}
+
+function finalizeRecording(mime) {
+  REC.compActive = false;
+  if (REC.compRAF) cancelAnimationFrame(REC.compRAF);
+  restoreRenderResolution();
+  if (REC.stream) { REC.stream.getTracks().forEach(t => t.stop()); REC.stream = null; }
+  if (!REC.chunks.length) return;
+  const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+  const blob = new Blob(REC.chunks, { type: mime.split(';')[0] });
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: 'simulacion-subestacion.' + ext });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  REC.chunks = [];
+}
+
+function updateRecordUI() {
+  const btn = document.getElementById('rec-start-btn');
+  const dot = document.getElementById('rec-indicator');
+  if (btn) { btn.textContent = REC.recording ? '■ Detener y guardar' : '● Grabar todos los días'; btn.classList.toggle('recording', REC.recording); }
+  if (dot) dot.style.display = REC.recording ? 'flex' : 'none';
+}
+
 // ── PLAYBACK (smooth, hour-based, per-day speed) ─────────────────────────────
 // ── CAMERA SNAPSHOT (Block D) ────────────────────────────────────────────────
 // Capture the current camera state in a portable, mode-aware way.
@@ -4888,6 +5141,12 @@ function simPause() {
   if (SIM.playTimer) cancelAnimationFrame(SIM.playTimer);
   document.getElementById('tl-play-btn').textContent = '▶ Reproducir';
   document.getElementById('tl-playall-btn')?.classList.remove('active');
+  // If we were recording, finish the recording when playback stops/ends.
+  if (REC.recording) {
+    if (REC.recorder && REC.recorder.state !== 'inactive') REC.recorder.stop();
+    REC.recording = false;
+    updateRecordUI();
+  }
 }
 window.simStop = function() {
   simPause(); SIM.currentHour = 0; updatePlayhead(); restoreSimState(); updateDateBanner();
@@ -5053,8 +5312,11 @@ function showScreenTitle(text, sub) {
   document.getElementById('sto-sub').textContent  = sub||'';
   ov.classList.add('show'); clearTimeout(titleTimer);
   titleTimer = setTimeout(hideScreenTitle, 3500);
+  REC._activeTitle = { text: text, sub: sub||'' };   // for video compositor
+  clearTimeout(REC._titleClear);
+  REC._titleClear = setTimeout(() => { REC._activeTitle = null; }, 3500);
 }
-function hideScreenTitle() { document.getElementById('sim-title-overlay')?.classList.remove('show'); }
+function hideScreenTitle() { document.getElementById('sim-title-overlay')?.classList.remove('show'); REC._activeTitle = null; }
 
 // ── JSON IMPORT / EXPORT (master + per-day) ──────────────────────────────────
 
@@ -6048,6 +6310,54 @@ animate();
   <span class="sdb-time">00:00</span>
 </div>
 
+<!-- Recording indicator -->
+<div id="rec-indicator"><span class="rec-pulse"></span>REC</div>
+
+<!-- Recording settings panel -->
+<div id="record-panel">
+  <div class="rp-header">
+    <span class="rp-logo">🎬 GRABAR VIDEO</span>
+    <button class="bap-close" onclick="toggleRecordPanel()">✕</button>
+  </div>
+  <div class="rp-body">
+    <div class="rp-field">
+      <div class="rp-label">Resolución</div>
+      <div class="rp-btn-row">
+        <button class="rp-opt" id="rec-res-720"  onclick="recSetResolution('720')">720p</button>
+        <button class="rp-opt active" id="rec-res-1080" onclick="recSetResolution('1080')">1080p</button>
+        <button class="rp-opt" id="rec-res-1440" onclick="recSetResolution('1440')">1440p</button>
+        <button class="rp-opt" id="rec-res-native" onclick="recSetResolution('native')">Pantalla</button>
+      </div>
+    </div>
+
+    <div class="rp-field">
+      <div class="rp-label">Cuadros por segundo</div>
+      <div class="rp-btn-row">
+        <button class="rp-opt" id="rec-fps-24" onclick="recSetFps('24')">24</button>
+        <button class="rp-opt active" id="rec-fps-30" onclick="recSetFps('30')">30</button>
+        <button class="rp-opt" id="rec-fps-60" onclick="recSetFps('60')">60</button>
+      </div>
+    </div>
+
+    <div class="rp-field">
+      <div class="rp-label">Calidad / peso <span id="rec-bitrate-val" style="color:var(--accent2);float:right;">8.0 Mbps</span></div>
+      <input type="range" id="rec-bitrate" min="1" max="20" step="0.5" value="8" oninput="recSetBitrate(this.value)" style="width:100%;accent-color:#ef5350;">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text3);">
+        <span>← menor peso</span><span>mayor calidad →</span>
+      </div>
+    </div>
+
+    <div id="rec-estimate" style="font-family:var(--mono);font-size:9px;color:var(--text2);text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);">≈ — s · — MB</div>
+
+    <button class="rp-record" id="rec-start-btn" onclick="startRecording('all')">● Grabar todos los días</button>
+    <button class="rp-record-single" onclick="startRecording('single')">● Grabar solo el día activo</button>
+
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">
+      El video (formato WebM/VP9) es compatible con YouTube. La grabación inicia la reproducción automáticamente y al terminar descarga el archivo. No muevas la ventana durante la grabación.
+    </div>
+  </div>
+</div>
+
 <!-- Screen title overlay (appears during playback) -->
 <div id="sim-title-overlay">
   <div id="sto-text">FASE A: CIMIENTOS</div>
@@ -6238,6 +6548,9 @@ animate();
     <button class="tl-btn export-btn" onclick="exportSimJSON()" title="Exportar maestro (todos los días)">↓ Maestro</button>
     <button class="tl-btn export-btn" onclick="document.getElementById('sim-import-file').click()" style="border-color:rgba(129,199,132,.3);color:var(--sim-green);" title="Importar maestro o día">↑ Importar</button>
     <input type="file" id="sim-import-file" accept=".json" style="display:none" onchange="importSimJSON(this)">
+
+    <div class="tl-sep"></div>
+    <button class="tl-btn rec-btn" id="btn-record" onclick="toggleRecordPanel()" title="Grabar video">🎬 Grabar</button>
 
     <div class="tl-sep"></div>
     <div class="tl-size-group">
