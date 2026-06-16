@@ -362,27 +362,28 @@
 
   /* ── D-PAD CRANE CONTROLLER ── */
   #crane-dpad-wrap{
-    position:fixed;bottom:100px;right:20px;z-index:120;display:none;
-    flex-direction:column;align-items:center;gap:2px;
+    position:fixed;bottom:24px;right:20px;z-index:120;display:none;
+    flex-direction:column;align-items:flex-end;gap:4px;
   }
   #crane-dpad-wrap.panel-open{right:calc(var(--panel-w) + 20px);}
   .dpad-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
-  .dpad-tabs{display:flex;gap:2px;margin-bottom:4px;}
-  .dpad-tab{padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);
-    color:var(--text3);font-family:var(--mono);font-size:8px;cursor:pointer;transition:all .12s;letter-spacing:.5px;}
-  .dpad-tab.active{border-color:var(--crane);color:var(--crane);background:rgba(246,173,85,.1);}
-  .dpad-grid{display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:3px;}
+  #dpad-clusters{display:flex;gap:8px;align-items:flex-start;}
+  .dpad-cluster{display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px;border:1px solid var(--border);border-radius:10px;background:rgba(10,12,16,.6);backdrop-filter:blur(8px);}
+  .dpad-cluster-title{font-family:var(--mono);font-size:8px;color:var(--crane);letter-spacing:.5px;}
+  .dpad-tabs{display:none;}
+  .dpad-grid{display:grid;grid-template-columns:38px 38px 38px;grid-template-rows:38px 38px 38px;gap:3px;}
   .dp-btn{
-    width:44px;height:44px;border-radius:8px;border:1px solid var(--border);
+    width:38px;height:38px;border-radius:7px;border:1px solid var(--border);
     background:rgba(10,12,16,.85);backdrop-filter:blur(8px);
-    color:var(--text2);font-size:18px;cursor:pointer;
+    color:var(--text2);font-size:16px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     transition:all .1s;user-select:none;-webkit-user-select:none;touch-action:none;
   }
   .dp-btn:active,.dp-btn.pressed{background:rgba(246,173,85,.2);border-color:var(--crane);color:var(--crane);}
-  .dp-btn.center-btn{background:rgba(246,173,85,.06);border-color:rgba(246,173,85,.2);font-size:12px;color:var(--text3);}
+  .dp-btn.center-btn{background:rgba(246,173,85,.06);border-color:rgba(246,173,85,.2);font-size:8px;color:var(--text3);letter-spacing:.5px;}
   .dp-btn.empty{visibility:hidden;pointer-events:none;}
-  .dpad-extra{display:flex;gap:3px;margin-top:3px;}
+  .dpad-extra{display:flex;gap:3px;margin-top:3px;width:100%;}
   .dp-wide-btn{
     flex:1;padding:6px 0;border-radius:7px;border:1px solid var(--border);
     background:rgba(10,12,16,.85);backdrop-filter:blur(8px);
@@ -1173,6 +1174,81 @@
     animation: recpulse 1.2s infinite;
   }
 
+
+  /* Block E (crane) chip color */
+  .chip-e { background: rgba(246,173,85,.15); border-color: rgba(246,173,85,.45); color: #f6ad55; }
+
+
+  /* Block E panel */
+  #block-e-panel {
+    position: fixed; top: 58px; left: 652px; z-index: 125;
+    width: 290px; max-height: calc(100vh - 120px);
+    background: rgba(8,10,14,.96); backdrop-filter: blur(16px);
+    border: 1px solid rgba(246,173,85,.25); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(calc(-100% - 680px));
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #block-e-panel.open { transform: translateX(0); }
+
+  /* Capsule editor window (detailed, center-right) */
+  #capsule-editor {
+    position: fixed; top: 58px; right: 20px; z-index: 146;
+    width: 340px; max-height: calc(100vh - 140px);
+    background: rgba(8,10,14,.98); backdrop-filter: blur(16px);
+    border: 1px solid rgba(246,173,85,.35); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(calc(100% + 40px)); opacity: 0;
+    transition: transform .25s cubic-bezier(.4,0,.2,1), opacity .2s;
+    pointer-events: none;
+  }
+  #capsule-editor.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+  .ce-win-header {
+    height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 0 14px; border-bottom: 1px solid rgba(246,173,85,.15); flex-shrink: 0;
+  }
+  .ce-win-toolbar {
+    display: flex; gap: 5px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .cap-tool-btn {
+    flex: 1; padding: 7px 0; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text2); font-family: var(--mono); font-size: 9px;
+    cursor: pointer; transition: all .12s;
+  }
+  .cap-tool-btn:hover { border-color: var(--crane); color: var(--crane); }
+  .cap-tool-btn.capture { border-color: rgba(246,173,85,.4); color: var(--crane); background: rgba(246,173,85,.08); }
+  .cap-tool-btn.capture:hover { background: rgba(246,173,85,.2); }
+  .ce-win-body { flex: 1; overflow-y: auto; padding: 12px 14px; min-height: 0; }
+  .ce-win-footer { padding: 8px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+
+  /* ── Draggable floating windows ── */
+  .win-drag-handle { cursor: move; user-select: none; -webkit-user-select: none; }
+  /* Once user-positioned, show/hide is via display (the transform is fixed to none),
+     so the .open class no longer drives the slide animation. */
+  #block-a-panel.user-positioned,
+  #block-c-panel.user-positioned,
+  #block-e-panel.user-positioned,
+  #record-panel.user-positioned,
+  #capsule-editor.user-positioned,
+  #lift-pos-panel.user-positioned,
+  #crane-panel.user-positioned {
+    transform: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    display: none;
+  }
+  #block-a-panel.user-positioned.open,
+  #block-c-panel.user-positioned.open,
+  #block-e-panel.user-positioned.open,
+  #record-panel.user-positioned.open,
+  #capsule-editor.user-positioned.open,
+  #lift-pos-panel.user-positioned.open,
+  #crane-panel.user-positioned.open {
+    display: flex;
+  }
+
 </style>
 </head>
 <body>
@@ -1319,65 +1395,59 @@
   <div id="pick-label">Haz click sobre la pieza o ensamble a sujetar<br><small style="opacity:.6">ESC para cancelar</small></div>
 </div>
 
-<!-- D-PAD CRANE CONTROLLER -->
+<!-- D-PAD CRANE CONTROLLER (all clusters visible, no mode switching) -->
 <div id="crane-dpad-wrap">
   <div class="dpad-label">Control de grúa</div>
-  <div class="dpad-tabs">
-    <button class="dpad-tab active" id="dpad-tab-vehicle" onclick="setDpadMode('vehicle')">Vehículo</button>
-    <button class="dpad-tab" id="dpad-tab-turret" onclick="setDpadMode('turret')">Pluma</button>
-    <button class="dpad-tab" id="dpad-tab-hook" onclick="setDpadMode('hook')">Gancho</button>
-  </div>
-  <!-- Vehicle mode -->
-  <div id="dpad-vehicle">
-    <div class="dpad-grid">
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="fwd">▲</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="rotL">↺</button>
-      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">VEH</div>
-      <button class="dp-btn" data-dp-action="rotR">↻</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="back">▼</button>
-      <div class="dp-btn empty"></div>
+  <div id="dpad-clusters">
+    <!-- Vehicle cluster -->
+    <div class="dpad-cluster">
+      <div class="dpad-cluster-title">🚚 Vehículo</div>
+      <div class="dpad-grid">
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="fwd">▲</button>
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="left">◄</button>
+        <div class="dp-btn center-btn">VEH</div>
+        <button class="dp-btn" data-dp-action="right">►</button>
+        <button class="dp-btn" data-dp-action="rotL" style="font-size:14px;">↺</button>
+        <button class="dp-btn" data-dp-action="back">▼</button>
+        <button class="dp-btn" data-dp-action="rotR" style="font-size:14px;">↻</button>
+      </div>
     </div>
-    <div class="dpad-extra">
-      <button class="dp-wide-btn" data-dp-action="left">◄ Lat. iz.</button>
-      <button class="dp-wide-btn" data-dp-action="right">Lat. der. ►</button>
+
+    <!-- Arm / boom cluster -->
+    <div class="dpad-cluster">
+      <div class="dpad-cluster-title">🦾 Pluma</div>
+      <div class="dpad-grid">
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="armAup">▲</button>
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="giroI">↺</button>
+        <div class="dp-btn center-btn">PLUMA</div>
+        <button class="dp-btn" data-dp-action="giro">↻</button>
+        <button class="dp-btn" data-dp-action="armBret" style="font-size:13px;">⟵</button>
+        <button class="dp-btn" data-dp-action="armAdn">▼</button>
+        <button class="dp-btn" data-dp-action="armBext" style="font-size:13px;">⟶</button>
+      </div>
     </div>
-  </div>
-  <!-- Turret / arm mode -->
-  <div id="dpad-turret" style="display:none;">
-    <div class="dpad-grid">
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="armAup">▲</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="giroI">↺</button>
-      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">ARM</div>
-      <button class="dp-btn" data-dp-action="giro">↻</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="armAdn">▼</button>
-      <div class="dp-btn empty"></div>
-    </div>
-    <div class="dpad-extra">
-      <button class="dp-wide-btn" data-dp-action="armBret">⟵ Retraer</button>
-      <button class="dp-wide-btn" data-dp-action="armBext">Extender ⟶</button>
-    </div>
-  </div>
-  <!-- Hook mode -->
-  <div id="dpad-hook" style="display:none;">
-    <div class="dpad-grid">
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="hookUp">▲</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="hookRotI">↺</button>
-      <div class="dp-btn center-btn" style="font-size:10px;color:var(--text3);">HOOK</div>
-      <button class="dp-btn" data-dp-action="hookRot">↻</button>
-      <div class="dp-btn empty"></div>
-      <button class="dp-btn" data-dp-action="hookDn">▼</button>
-      <div class="dp-btn empty"></div>
-    </div>
-    <div class="dpad-extra">
-      <button class="dp-wide-btn" id="dp-attach-btn" onclick="window.toggleCraneAttach()" style="background:rgba(246,173,85,.08);border-color:rgba(246,173,85,.3);color:var(--crane);font-size:9px;">⊕ Enganchar</button>
+
+    <!-- Hook cluster -->
+    <div class="dpad-cluster">
+      <div class="dpad-cluster-title">🪝 Gancho</div>
+      <div class="dpad-grid">
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="hookUp">▲</button>
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="hookRotI">↺</button>
+        <div class="dp-btn center-btn">HOOK</div>
+        <button class="dp-btn" data-dp-action="hookRot">↻</button>
+        <div class="dp-btn empty"></div>
+        <button class="dp-btn" data-dp-action="hookDn">▼</button>
+        <div class="dp-btn empty"></div>
+      </div>
+      <div class="dpad-extra" style="margin-top:3px;">
+        <button class="dp-wide-btn" id="dp-attach-btn" onclick="window.toggleCraneAttach()" style="background:rgba(246,173,85,.08);border-color:rgba(246,173,85,.3);color:var(--crane);font-size:9px;">⊕ Enganchar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3078,16 +3148,8 @@ window.addEventListener('load',()=>{
 });
 
 // ── D-PAD CONTROLLER ─────────────────────────────────────────────────────────
-let dpadMode = 'vehicle';
-window.setDpadMode = function(mode) {
-  dpadMode = mode;
-  ['vehicle','turret','hook'].forEach(m => {
-    const el = document.getElementById(`dpad-${m}`);
-    const tab = document.getElementById(`dpad-tab-${m}`);
-    if (el) el.style.display = m === mode ? 'block' : 'none';
-    if (tab) tab.classList.toggle('active', m === mode);
-  });
-};
+let dpadMode = 'all';
+window.setDpadMode = function(mode) { /* all clusters always visible now */ };
 
 // Wire all D-pad buttons
 document.querySelectorAll('.dp-btn[data-dp-action], .dp-wide-btn[data-dp-action]').forEach(btn => {
@@ -4029,6 +4091,7 @@ function makeDefaultRows() {
     { id: 'initial', label: 'Posiciones 1',color: '#a78bfa', block: 'B' },
     { id: 'visib',   label: 'Visibilidad 1',color: '#4fd1c5', block: 'C' },
     { id: 'camera',  label: 'Cámara 1',    color: '#f687b3', block: 'D' },
+    { id: 'crane',   label: 'Grúas 1',     color: '#f6ad55', block: 'E' },
   ];
 }
 
@@ -4086,8 +4149,9 @@ const BLOCK_META = {
   B:     { name: 'Posiciones',  color: '#a78bfa' },
   C:     { name: 'Visibilidad', color: '#4fd1c5' },
   D:     { name: 'Cámara',      color: '#f687b3' },
+  E:     { name: 'Grúas',       color: '#f6ad55' },
 };
-const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D'];
+const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D', 'E'];
 function rowBlock(rowId) {
   const r = SIM.rows.find(r => r.id === rowId);
   return r ? r.block : null;
@@ -4319,7 +4383,7 @@ function tlRender() {
   canvasEl.querySelectorAll('.tl-track, .tl-block-head, .tl-block-head-track').forEach(t => t.remove());
 
   const blockOrder = BLOCK_ORDER;
-  const blockHeadName = { title:'TÍTULOS', A:'BLOQUE A · CIMIENTOS', B:'BLOQUE B · POSICIONES', C:'BLOQUE C · VISIBILIDAD', D:'BLOQUE D · CÁMARA' };
+  const blockHeadName = { title:'TÍTULOS', A:'BLOQUE A · CIMIENTOS', B:'BLOQUE B · POSICIONES', C:'BLOQUE C · VISIBILIDAD', D:'BLOQUE D · CÁMARA', E:'BLOQUE E · GRÚAS' };
   blockOrder.forEach(block => {
     const blockRows = SIM.rows.filter(r => r.block === block);
     if (!blockRows.length) return;
@@ -4386,11 +4450,16 @@ function tlRender() {
           const m = chip.blockData?.cam?.mode;
           stageLabel = m ? ' · ' + (m==='first'?'1ª pers.':m==='third'?'3ª pers.':'libre') : ' · (sin captura)';
           linkIcon = '🎥 ';
+        } else if (row.block === 'E') {
+          const cap = chipCapsule(chip);
+          if (cap) { stageLabel = ' · ' + cap.keyframes.length + ' pts'; linkIcon = '🏗 '; }
+          else stageLabel = ' · (sin secuencia)';
         }
         const fullyLinked = chip.blockData?.foundationKey
           || (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number')
           || (row.block === 'C' && chipVisState(chip))
           || (row.block === 'D' && chip.blockData?.cam)
+          || (row.block === 'E' && chipCapsule(chip))
           || row.block === 'title';
         cel.textContent = linkIcon + chip.label + stageLabel;
         cel.title = chip.label+'\n'+fmtHour(chip.startH)+' → '+fmtHour(chip.endH)
@@ -4556,6 +4625,8 @@ function chipEditorPopulateLinks(chip) {
   // default: hide special panels
   visWrap.style.display = 'none';
   camWrap.style.display = 'none';
+  const capWrap = document.getElementById('ce-cap-wrap');
+  if (capWrap) capWrap.style.display = 'none';
 
   const block = rowBlock(chip.rowId);
 
@@ -4587,11 +4658,29 @@ function chipEditorPopulateLinks(chip) {
     wrap.style.display = 'none';
     camWrap.style.display = 'flex';
     ceRenderCamEditor(chip);
+  } else if (block === 'E') {
+    wrap.style.display = 'none';
+    document.getElementById('ce-cap-wrap').style.display = 'flex';
+    ceRenderCapEditor(chip);
   } else {
     // titles row — no link
     wrap.style.display = 'none';
   }
   chipEditorPopulateStages(chip);
+}
+
+// Block E capsule selector in the chip editor
+function ceRenderCapEditor(chip) {
+  const sel = document.getElementById('ce-cap-state');
+  sel.innerHTML = '<option value="">— Selecciona una secuencia —</option>';
+  craneCapsules.forEach((cap, id) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = '🏗 ' + cap.name + ' (' + cap.keyframes.length + ' pts)';
+    if (chip.blockData?.capsuleKey === id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (craneCapsules.size === 0) sel.innerHTML = '<option value="">⚠ No hay secuencias — créalas en Bloque E</option>';
 }
 
 // ── Block C visibility editor: pick a named visibility STATE ──
@@ -4736,6 +4825,14 @@ window.chipEditorSave = function() {
     }
   } else if (block === 'D') {
     if (_ceCam) chip.blockData.cam = JSON.parse(JSON.stringify(_ceCam));
+  } else if (block === 'E') {
+    const capId = document.getElementById('ce-cap-state').value;
+    if (capId && craneCapsules.has(capId)) {
+      chip.blockData.capsuleKey = capId;
+      chip.blockData.capsuleName = craneCapsules.get(capId).name;
+    } else {
+      delete chip.blockData.capsuleKey; delete chip.blockData.capsuleName;
+    }
   }
   chipEditorClose(); tlRender();
 };
@@ -5066,6 +5163,7 @@ window.simPlay = function() {
 function startDayPlayback(onDayEnd, resetFirst) {
   SIM.playing = true;
   document.getElementById('tl-play-btn').textContent = '⏸ Pausar';
+  if (typeof liftPhysicsEnabled !== 'undefined') _physicsDefault = liftPhysicsEnabled;
   // Only reset when asked (single-day playback, or the very first day of a
   // continuous "play all" run). In continuous mode later days keep the
   // accumulated state (e.g. concrete poured on a previous day stays poured).
@@ -5253,6 +5351,21 @@ function applySimFrame(hour) {
       applyCameraSnapshot(next.blockData.cam, null, 1);
     }
   }
+
+  // ── Block E: crane movement capsules — play the active capsule chip ──
+  let anyCapsuleActive = false;
+  SIM.chips.filter(c => rowBlock(c.rowId)==='E' && c.blockData?.capsuleKey)
+    .forEach(chip => {
+      const cap = chipCapsule(chip);
+      if (!cap || !cap.keyframes.length) return;
+      if (hour < chip.startH || hour > chip.endH) return;   // only during the chip
+      anyCapsuleActive = true;
+      // physics is now stored per-keyframe and applied inside evalCapsule
+      const p = (hour - chip.startH) / Math.max(0.001, (chip.endH - chip.startH));
+      evalCapsule(cap, Math.min(1, Math.max(0, p)));
+    });
+  // restore physics default when no capsule is currently driving a crane
+  if (!anyCapsuleActive && typeof liftPhysicsEnabled !== 'undefined') liftPhysicsEnabled = _physicsDefault;
 }
 
 // Linear interpolation between two poses
@@ -5334,7 +5447,30 @@ function collectBlockDefs() {
   // visibility states (shared, like foundations)
   const visData = [];
   visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(t=>({name:t.name})) }));
-  return { foundations: foundData, liftPositions: liftData, visStates: visData };
+  // crane capsules (shared)
+  const capData = [];
+  craneCapsules.forEach((cap, id) => capData.push({
+    id, name: cap.name, craneId: cap.craneId, craneName: cap.craneName,
+    load: cap.load, physics: cap.physics,
+    keyframes: cap.keyframes.map(k => JSON.parse(JSON.stringify(k)))
+  }));
+  return { foundations: foundData, liftPositions: liftData, visStates: visData, capsules: capData };
+}
+
+function importCapsulesData(entries) {
+  if (!Array.isArray(entries)) return;
+  craneCapsules.clear();
+  let maxN = 0;
+  entries.forEach(e => {
+    const id = e.id || ('cap_' + (++craneCapsuleCounter));
+    craneCapsules.set(id, {
+      name: e.name||'Secuencia', craneId: e.craneId??null, craneName: e.craneName??null,
+      load: e.load||null, physics: e.physics!==false, keyframes: e.keyframes||[]
+    });
+    const m = (id.match(/cap_(\d+)/)||[])[1]; if (m) maxN = Math.max(maxN, parseInt(m));
+  });
+  craneCapsuleCounter = Math.max(craneCapsuleCounter, maxN);
+  renderCapsuleList();
 }
 
 function importVisStatesData(entries) {
@@ -5374,6 +5510,7 @@ window.exportSimJSON = function() {
     blockA: { foundations: collectBlockDefs().foundations },
     blockB: { liftPositions: collectBlockDefs().liftPositions },
     blockC: { visStates: collectBlockDefs().visStates },
+    blockE: { capsules: collectBlockDefs().capsules },
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'simulacion-MAESTRO.json'});
@@ -5391,6 +5528,7 @@ window.exportDayJSON = function(dayId) {
     blockA: { foundations: collectBlockDefs().foundations },
     blockB: { liftPositions: collectBlockDefs().liftPositions },
     blockC: { visStates: collectBlockDefs().visStates },
+    blockE: { capsules: collectBlockDefs().capsules },
   };
   const safe = (day.date||'dia') + '_' + (day.label||'').replace(/[^a-z0-9]+/gi,'-');
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -5403,11 +5541,13 @@ function relinkChips(chips) {
   const foundByName = {}; foundations.forEach((f, key) => foundByName[f.name] = key);
   const liftByName  = {}; liftPositions.forEach((cfg, key) => liftByName[cfg.name] = key);
   const visByName   = {}; visStates.forEach((s, key) => visByName[s.name] = key);
+  const capByName   = {}; craneCapsules.forEach((cap, key) => capByName[cap.name] = key);
   (chips||[]).forEach(c => {
     if (!c.blockData) return;
     if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
     if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
     if (c.blockData.visStateName && visByName[c.blockData.visStateName]) c.blockData.visStateKey = visByName[c.blockData.visStateName];
+    if (c.blockData.capsuleName && capByName[c.blockData.capsuleName]) c.blockData.capsuleKey = capByName[c.blockData.capsuleName];
   });
 }
 
@@ -5443,6 +5583,7 @@ window.importSimJSON = function(input) {
       // element defs (shared) load first so objects exist
       if (p.blockA?.foundations) importFoundationsData(p.blockA.foundations);
       if (p.blockC?.visStates) importVisStatesData(p.blockC.visStates);
+      if (p.blockE?.capsules) importCapsulesData(p.blockE.capsules);
       if (p.blockB?.liftPositions) importLiftPositionsData(p.blockB.liftPositions);
 
       if (p.kind === 'day' && p.day) {
@@ -5495,6 +5636,414 @@ function importSingleDay(dayObj) {
   SIM.days.sort((a,b) => (a.date||'').localeCompare(b.date||''));
   SIM.activeDayId = d.id;
 }
+
+// ══════════════════════════════════════════════════════
+// BLOCK E — CRANE MOVEMENT CAPSULES
+// ══════════════════════════════════════════════════════
+// A "capsule" is a named, ordered list of keyframes. Each keyframe captures the
+// FULL state of one crane (vehicle pos/rot + boom/turret/hook) plus, optionally,
+// which load is attached. During simulation the crane interpolates smoothly
+// through the keyframes. Physics (load tilt) can be disabled per capsule.
+const craneCapsules = new Map();
+let craneCapsuleCounter = 0;
+let _physicsDefault = true;
+let blockEOpen = false;
+let _capEditingId = null;
+let _capPreviewing = false;
+let _capPreviewRAF = null;
+
+window.toggleBlockE = function() {
+  blockEOpen = !blockEOpen;
+  document.getElementById('block-e-panel').classList.toggle('open', blockEOpen);
+  document.getElementById('btn-block-e')?.classList.toggle('active', blockEOpen);
+  if (blockEOpen) renderCapsuleList();
+};
+
+window.addCraneCapsule = function() {
+  const c = getActiveCrane();
+  craneCapsuleCounter++;
+  const id = 'cap_' + craneCapsuleCounter;
+  craneCapsules.set(id, {
+    name: 'Secuencia ' + craneCapsuleCounter,
+    craneId: c ? c.id : null,
+    craneName: c ? c.customName : null,
+    load: null, physics: true, keyframes: [],
+  });
+  _capEditingId = id;
+  renderCapsuleList();
+  openCapsuleEditor(id);
+};
+
+window.removeCraneCapsule = function(id) {
+  if (!confirm('¿Eliminar esta secuencia de grúa?')) return;
+  craneCapsules.delete(id);
+  if (_capEditingId === id) { _capEditingId = null; closeCapsuleEditor(); }
+  renderCapsuleList();
+};
+
+window.renameCraneCapsule = function(id, val) { const c = craneCapsules.get(id); if (c) c.name = val; };
+
+// A keyframe is now a FULL snapshot of the crane scene at capture time:
+//  - every crane that exists (id, config props, position, full state)
+//  - what each crane has attached (object name + offset) or nothing
+//  - whether lift physics was active
+function captureCraneKeyframe(cap) {
+  if (!cranes.length) { alert('No hay grúas en escena para capturar.'); return null; }
+
+  const craneSnaps = cranes.map(crane => {
+    const obj = crane.object;
+    // attachment for THIS crane
+    let load = null;
+    if (attachedObject && attachedCraneId === crane.id) {
+      load = {
+        name: attachedObject.name || attachedObject.uuid.slice(0,8),
+        offX: attachedOffset.x, offY: attachedOffset.y, offZ: attachedOffset.z,
+        isAssembly: attachedIsAssembly,
+      };
+    }
+    return {
+      id: crane.id,
+      // configuration properties (so a new crane is reproduced with its setup)
+      config: {
+        customName: crane.customName, color: crane.color,
+        maxCapacity: crane.maxCapacity, maxRadius: crane.maxRadius,
+        customScale: crane.customScale,
+        armAMaxLen: crane.armAMaxLen, armBMaxExt: crane.armBMaxExt,
+      },
+      pos: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+      rotY: obj.rotation.y,
+      state: Object.assign({}, crane.state),
+      load,
+    };
+  });
+
+  // keep the capsule's primary crane reference pointing at the active one
+  const active = getActiveCrane();
+  if (active) { cap.craneId = active.id; cap.craneName = active.customName; }
+
+  return {
+    label: 'Punto ' + (cap.keyframes.length + 1),
+    physics: (typeof liftPhysicsEnabled !== 'undefined') ? !!liftPhysicsEnabled : true,
+    cranes: craneSnaps,
+    // legacy single-crane fields kept for the editor summary (primary crane)
+    pos: (craneSnaps.find(s => s.id === (active?active.id:craneSnaps[0].id)) || craneSnaps[0]).pos,
+    state: (craneSnaps.find(s => s.id === (active?active.id:craneSnaps[0].id)) || craneSnaps[0]).state,
+    load: (craneSnaps.find(s => s.id === (active?active.id:craneSnaps[0].id)) || craneSnaps[0]).load,
+  };
+}
+
+window.capAddKeyframe = function() {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  const kf = captureCraneKeyframe(cap); if (!kf) return;
+  cap.keyframes.push(kf);
+  renderCapsuleEditor(); renderCapsuleList();
+};
+window.capUpdateKeyframe = function(idx) {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  const kf = captureCraneKeyframe(cap); if (!kf) return;
+  kf.label = cap.keyframes[idx].label;
+  cap.keyframes[idx] = kf;
+  renderCapsuleEditor();
+};
+window.capRemoveKeyframe = function(idx) {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  cap.keyframes.splice(idx, 1);
+  renderCapsuleEditor(); renderCapsuleList();
+};
+window.capMoveKeyframe = function(idx, dir) {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  const j = idx + dir; if (j < 0 || j >= cap.keyframes.length) return;
+  const tmp = cap.keyframes[idx]; cap.keyframes[idx] = cap.keyframes[j]; cap.keyframes[j] = tmp;
+  renderCapsuleEditor();
+};
+window.capRenameKeyframe = function(idx, val) {
+  const cap = craneCapsules.get(_capEditingId); if (cap && cap.keyframes[idx]) cap.keyframes[idx].label = val;
+};
+window.capGotoKeyframe = function(idx) {
+  const cap = craneCapsules.get(_capEditingId); if (!cap || !cap.keyframes[idx]) return;
+  applyCraneKeyframe(cap, cap.keyframes[idx]);
+};
+window.capTogglePhysics = function() {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  cap.physics = !cap.physics;
+  // also flip the live simulator physics so the next captured keyframe reflects it
+  if (typeof liftPhysicsEnabled !== 'undefined' && liftPhysicsEnabled !== cap.physics) {
+    if (typeof window.toggleLiftPhysics === 'function') window.toggleLiftPhysics();
+    else liftPhysicsEnabled = cap.physics;
+  }
+  renderCapsuleEditor();
+};
+
+// Ensure a crane with the given snapshot exists; create it (with its config) if not.
+function ensureCraneFromSnapshot(cs) {
+  let crane = cranes.find(c => c.id === cs.id);
+  if (!crane) {
+    // create a crane, then reassign its id to the captured id so future lookups match
+    addCrane();
+    crane = cranes[cranes.length - 1];
+    crane.id = cs.id;
+    if (craneCounter < cs.id) craneCounter = cs.id;
+  }
+  // apply configuration props
+  if (cs.config) {
+    if (cs.config.customName !== undefined) crane.customName = cs.config.customName;
+    if (cs.config.color !== undefined) crane.color = cs.config.color;
+    if (cs.config.maxCapacity !== undefined) crane.maxCapacity = cs.config.maxCapacity;
+    if (cs.config.maxRadius !== undefined) crane.maxRadius = cs.config.maxRadius;
+    if (cs.config.customScale !== undefined) { crane.customScale = cs.config.customScale; crane.object.scale.setScalar(cs.config.customScale); }
+    if (cs.config.armAMaxLen !== undefined) crane.armAMaxLen = cs.config.armAMaxLen;
+    if (cs.config.armBMaxExt !== undefined) crane.armBMaxExt = cs.config.armBMaxExt;
+  }
+  return crane;
+}
+
+// Resolve & (re)apply the attachment a crane snapshot expects this frame.
+function syncCraneAttachment(crane, loadSnap) {
+  const currentlyHasThis = attachedObject && attachedCraneId === crane.id;
+  if (!loadSnap) {
+    // snapshot says: nothing attached to this crane
+    if (currentlyHasThis) releaseAttached();
+    return;
+  }
+  // snapshot says: attach a named object with a stored offset
+  const wantName = loadSnap.name;
+  const alreadyRight = currentlyHasThis && attachedObject &&
+    (attachedObject.name === wantName);
+  if (alreadyRight) {
+    // keep offset in sync (in case physics moved it)
+    attachedOffset.set(loadSnap.offX, loadSnap.offY, loadSnap.offZ);
+    return;
+  }
+  // find the object in the scene
+  let target = null;
+  scene.traverse(o => { if (!target && o.name === wantName) target = o; });
+  if (!target) return;
+  // release any current load on this crane, then attach
+  if (currentlyHasThis) releaseAttached();
+  attachedObject = target;
+  attachedCraneId = crane.id;
+  attachedIsAssembly = !!loadSnap.isAssembly;
+  attachedOffset.set(loadSnap.offX, loadSnap.offY, loadSnap.offZ);
+  if (typeof initLiftPhysics === 'function') initLiftPhysics(target);
+}
+
+// Apply one full keyframe instantly (all cranes + attachments + physics)
+function applyCraneKeyframe(cap, kf) {
+  if (!kf) return;
+  // physics flag: keyframe wins, capsule's toggle is the fallback
+  if (typeof liftPhysicsEnabled !== 'undefined') {
+    liftPhysicsEnabled = (kf.physics !== undefined) ? !!kf.physics : !!cap.physics;
+  }
+  const snaps = kf.cranes || [];
+  snaps.forEach(cs => {
+    const crane = ensureCraneFromSnapshot(cs);
+    crane.object.position.set(cs.pos.x, cs.pos.y, cs.pos.z);
+    crane.object.rotation.y = cs.rotY;
+    Object.assign(crane.state, cs.state);
+    syncCraneAttachment(crane, cs.load);
+    applyCraneState(crane);
+  });
+  if (typeof updateCraneList === 'function') updateCraneList();
+}
+
+// Interpolate every crane between two keyframes a→b
+function lerpCraneKeyframe(cap, a, b, t) {
+  const e = t<=0?0:t>=1?1:t*t*(3-2*t);
+  // physics + attachment come from the segment's START keyframe (discrete)
+  if (typeof liftPhysicsEnabled !== 'undefined') {
+    liftPhysicsEnabled = (a.physics !== undefined) ? !!a.physics : !!cap.physics;
+  }
+  const aSnaps = a.cranes || [], bSnaps = b.cranes || [];
+  aSnaps.forEach(csA => {
+    const crane = ensureCraneFromSnapshot(csA);
+    const csB = bSnaps.find(s => s.id === csA.id) || csA;   // if absent in b, hold
+    crane.object.position.set(
+      csA.pos.x + (csB.pos.x - csA.pos.x) * e,
+      csA.pos.y + (csB.pos.y - csA.pos.y) * e,
+      csA.pos.z + (csB.pos.z - csA.pos.z) * e);
+    crane.object.rotation.y = lerpAngle(csA.rotY, csB.rotY, e);
+    const sa = csA.state, sb = csB.state, s = crane.state;
+    s.turretRot     = lerpAngle(sa.turretRot, sb.turretRot, e);
+    s.armAAngle     = sa.armAAngle + (sb.armAAngle - sa.armAAngle) * e;
+    s.armBExtension = sa.armBExtension + (sb.armBExtension - sa.armBExtension) * e;
+    s.hookDepth     = sa.hookDepth + (sb.hookDepth - sa.hookDepth) * e;
+    s.hookRot       = lerpAngle(sa.hookRot, sb.hookRot, e);
+    // attachment is discrete — use the START keyframe's load for this crane
+    syncCraneAttachment(crane, csA.load);
+    applyCraneState(crane);
+  });
+}
+function lerpAngle(a, b, t) {
+  let d = b - a;
+  while (d > Math.PI) d -= Math.PI*2;
+  while (d < -Math.PI) d += Math.PI*2;
+  return a + d * t;
+}
+function evalCapsule(cap, p) {
+  const kfs = cap.keyframes; if (!kfs.length) return;
+  // migrate any legacy single-crane keyframe to the new multi-crane shape
+  kfs.forEach(migrateKeyframe);
+  if (kfs.length === 1) { applyCraneKeyframe(cap, kfs[0]); return; }
+  const segs = kfs.length - 1;
+  const fp = Math.max(0, Math.min(1, p)) * segs;
+  const i = Math.min(segs - 1, Math.floor(fp));
+  lerpCraneKeyframe(cap, kfs[i], kfs[i+1], fp - i);
+}
+
+// Backward-compat: old keyframes only had {pos,rotY,state,load} for one crane.
+function migrateKeyframe(kf) {
+  if (kf.cranes) return;
+  kf.cranes = [{
+    id: 1, config: null,
+    pos: kf.pos || {x:0,y:0,z:0}, rotY: kf.rotY || 0,
+    state: kf.state || {turretRot:0,armAAngle:0.6,armBExtension:0,hookDepth:1.5,hookRot:0,gripY:0},
+    load: kf.load || null,
+  }];
+  if (kf.physics === undefined) kf.physics = true;
+}
+
+window.capPreview = function() {
+  const cap = craneCapsules.get(_capEditingId);
+  if (!cap || cap.keyframes.length < 1) { alert('Agrega al menos un punto clave.'); return; }
+  if (_capPreviewing) { capStopPreview(); return; }
+  _capPreviewing = true;
+  document.getElementById('cap-preview-btn').textContent = '■ Detener vista previa';
+  const durMs = Math.max(1500, cap.keyframes.length * 1400);
+  const t0 = performance.now();
+  const step = () => {
+    if (!_capPreviewing) return;
+    const p = Math.min(1, (performance.now() - t0) / durMs);
+    evalCapsule(cap, p);
+    if (p >= 1) { capStopPreview(); return; }
+    _capPreviewRAF = requestAnimationFrame(step);
+  };
+  _capPreviewRAF = requestAnimationFrame(step);
+};
+function capStopPreview() {
+  _capPreviewing = false;
+  if (_capPreviewRAF) cancelAnimationFrame(_capPreviewRAF);
+  const btn = document.getElementById('cap-preview-btn');
+  if (btn) btn.textContent = '▶ Vista previa';
+}
+
+function chipCapsule(chip) {
+  if (!chip.blockData) return null;
+  if (chip.blockData.capsuleKey && craneCapsules.has(chip.blockData.capsuleKey)) return craneCapsules.get(chip.blockData.capsuleKey);
+  if (chip.blockData.capsuleName) {
+    for (const c of craneCapsules.values()) if (c.name === chip.blockData.capsuleName) return c;
+  }
+  return null;
+}
+
+function renderCapsuleList() {
+  const list = document.getElementById('cap-list'); if (!list) return;
+  document.getElementById('cap-count').textContent = craneCapsules.size + ' secuencias';
+  if (craneCapsules.size === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px;">Crea una secuencia de movimientos de grúa</div>';
+    return;
+  }
+  list.innerHTML = '';
+  craneCapsules.forEach((cap, id) => {
+    const item = document.createElement('div');
+    item.className = 'bap-item';
+    item.innerHTML =
+      '<div class="bap-item-header">'
+      + '<span class="bap-item-icon">🏗</span>'
+      + '<input class="rl-name-input" style="flex:1;font-size:10px;" value="'+cap.name+'" onclick="event.stopPropagation()" oninput="renameCraneCapsule(\''+id+'\',this.value)">'
+      + '<span class="bap-item-pct" style="border-color:rgba(246,173,85,.35);color:#f6ad55;">'+cap.keyframes.length+' pts</span>'
+      + '</div>'
+      + '<div class="bap-item-body open">'
+      + '<div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:6px;">'
+      +   'Grúa: '+(cap.craneName||'—')+(cap.load?(' · carga: '+cap.load.name.replace(/_/g,' ')):'')+'<br>Física: '+(cap.physics?'activa':'desactivada')
+      + '</div>'
+      + '<div style="display:flex;gap:4px;">'
+      + '<button class="bap-btn" onclick="openCapsuleEditor(\''+id+'\')">✎ Editar</button>'
+      + '<button class="bap-btn" onclick="addCapsuleToTimeline(\''+id+'\')" style="border-color:rgba(246,173,85,.35);color:#f6ad55;">＋ Timeline</button>'
+      + '</div>'
+      + '<button class="bap-btn danger" style="width:100%;margin-top:5px;" onclick="removeCraneCapsule(\''+id+'\')">✕ Eliminar</button>'
+      + '</div>';
+    list.appendChild(item);
+  });
+}
+
+window.openCapsuleEditor = function(id) {
+  _capEditingId = id;
+  document.getElementById('capsule-editor').classList.add('open');
+  renderCapsuleEditor();
+};
+window.closeCapsuleEditor = function() {
+  capStopPreview();
+  document.getElementById('capsule-editor').classList.remove('open');
+};
+
+function renderCapsuleEditor() {
+  const cap = craneCapsules.get(_capEditingId);
+  const body = document.getElementById('cap-editor-body');
+  if (!cap || !body) return;
+  document.getElementById('cap-editor-title').textContent = '🏗 ' + cap.name;
+  let html = '';
+  html += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">';
+  html += '<span style="font-family:var(--mono);font-size:9px;color:var(--text3);">Grúa:</span>';
+  html += '<select id="cap-crane-sel" onchange="capSetCrane(this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--crane);font-family:var(--mono);font-size:10px;padding:3px 6px;">';
+  cranes.forEach(c => { html += '<option value="'+c.id+'" '+(c.id===cap.craneId?'selected':'')+'>'+c.customName+'</option>'; });
+  if (!cranes.length) html += '<option>— sin grúas —</option>';
+  html += '</select>';
+  html += '<button class="bap-btn" style="flex:none;padding:4px 8px;border-color:'+(cap.physics?'rgba(129,199,132,.4)':'rgba(239,83,80,.4)')+';color:'+(cap.physics?'var(--accent2)':'var(--danger)')+';" onclick="capTogglePhysics()">'+(cap.physics?'🟢 Física ON':'🔴 Física OFF')+'</button>';
+  html += '</div>';
+  html += '<div style="font-family:var(--mono);font-size:9px;color:var(--crane);letter-spacing:.5px;margin-bottom:5px;">PUNTOS CLAVE ('+cap.keyframes.length+')</div>';
+  if (!cap.keyframes.length) {
+    html += '<div style="color:var(--text3);font-size:10px;text-align:center;padding:10px;border:1px dashed var(--border);border-radius:6px;">Mueve la grúa con la cruceta y pulsa "Capturar punto".</div>';
+  } else {
+    cap.keyframes.forEach((kf, i) => {
+      migrateKeyframe(kf);
+      const nCranes = (kf.cranes||[]).length;
+      const loaded = (kf.cranes||[]).filter(s => s.load).length;
+      const loadNames = (kf.cranes||[]).filter(s => s.load).map(s => s.load.name.replace(/_/g,' ')).join(', ');
+      const primary = (kf.cranes||[])[0] || {pos:{x:0,z:0},state:{armAAngle:0,armBExtension:0,hookDepth:0}};
+      html += '<div style="border:1px solid var(--border);border-radius:6px;padding:6px 7px;margin-bottom:5px;background:var(--bg2);">'
+        + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">'
+        + '<span style="color:var(--crane);font-size:10px;">●</span>'
+        + '<input class="rl-name-input" style="flex:1;font-size:9px;" value="'+kf.label+'" oninput="capRenameKeyframe('+i+',this.value)">'
+        + '<button title="Ver" onclick="capGotoKeyframe('+i+')" style="width:22px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--crane);cursor:pointer;font-size:10px;">👁</button>'
+        + '<button title="Subir" onclick="capMoveKeyframe('+i+',-1)" style="width:20px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:9px;">▲</button>'
+        + '<button title="Bajar" onclick="capMoveKeyframe('+i+',1)" style="width:20px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:9px;">▼</button>'
+        + '<button title="Re-capturar aquí" onclick="capUpdateKeyframe('+i+')" style="width:22px;height:20px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--sim-blue);cursor:pointer;font-size:10px;">⤓</button>'
+        + '<button title="Eliminar" onclick="capRemoveKeyframe('+i+')" style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);cursor:pointer;font-size:9px;">✕</button>'
+        + '</div>'
+        + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">'
+        +   '🏗 '+nCranes+' grúa'+(nCranes!==1?'s':'')+' · '+(kf.physics?'🟢 física':'🔴 sin física')
+        +   ' · '+(loaded?('📦 '+loadNames):'sin carga')
+        +   '<br>pluma '+primary.state.armAAngle.toFixed(2)+' · ext '+primary.state.armBExtension.toFixed(1)+' · gancho '+primary.state.hookDepth.toFixed(1)
+        + '</div>'
+        + '</div>';
+    });
+  }
+  body.innerHTML = html;
+}
+
+window.capSetCrane = function(cid) {
+  const cap = craneCapsules.get(_capEditingId); if (!cap) return;
+  cap.craneId = parseInt(cid);
+  const c = cranes.find(x => x.id === cap.craneId);
+  cap.craneName = c ? c.customName : null;
+  if (c) { activeCraneId = c.id; if (typeof updateCraneList === 'function') updateCraneList(); }
+  renderCapsuleEditor();
+};
+
+window.addCapsuleToTimeline = function(id) {
+  const cap = craneCapsules.get(id); if (!cap) return;
+  if (!activeDay()) { alert('Crea o selecciona un día primero.'); return; }
+  if (cap.keyframes.length < 1) { alert('La secuencia no tiene puntos clave.'); return; }
+  SIM.chipCounter++;
+  const start = SIM.currentHour || 0;
+  SIM.chips.push({
+    id: 'chip_' + SIM.chipCounter, rowId: firstRowOfBlock('E'),
+    label: cap.name, desc: 'Secuencia de grúa: ' + cap.name,
+    startH: start, endH: Math.min(dayDuration(), start + 2),
+    blockData: { capsuleKey: id, capsuleName: cap.name }
+  });
+  if (!timelineOpen) toggleTimeline(); else tlRender();
+};
 
 // ══════════════════════════════════════════════════════
 // BLOCK C — VISIBILITY STATES (named, reusable, like foundations)
@@ -6142,6 +6691,75 @@ window.tlSetHeight = function(preset) {
 document.getElementById('sim-timeline').style.maxHeight = TL_HEIGHTS.md + 'px';
 renderDayStrip();
 
+// ── DRAGGABLE FLOATING WINDOWS ───────────────────────────────────────────────
+// Lets the user reposition overlapping panels by dragging their header bar.
+// Once dragged, the panel switches to explicit left/top and its show/hide
+// transform is neutralized so it stays where the user put it.
+function makeWindowDraggable(panelId, handleSelector) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const handle = panel.querySelector(handleSelector);
+  if (!handle) return;
+  handle.style.cursor = 'move';
+  handle.classList.add('win-drag-handle');
+
+  let startX, startY, startLeft, startTop, dragging = false;
+
+  const onDown = (e) => {
+    // ignore clicks on buttons/inputs inside the header
+    if (e.target.closest('button, input, select, textarea')) return;
+    const ev = e.touches ? e.touches[0] : e;
+    const rect = panel.getBoundingClientRect();
+    // Pin the panel to its current screen position, killing the CSS transform
+    panel.style.transition = 'none';
+    panel.style.transform = 'none';
+    panel.style.left = rect.left + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    panel.classList.add('user-positioned');
+    startX = ev.clientX; startY = ev.clientY;
+    startLeft = rect.left; startTop = rect.top;
+    dragging = true;
+    panel.style.zIndex = String(++_winTopZ);
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    const ev = e.touches ? e.touches[0] : e;
+    let nl = startLeft + (ev.clientX - startX);
+    let nt = startTop + (ev.clientY - startY);
+    // keep on-screen (leave at least 40px grabbable)
+    nl = Math.max(-panel.offsetWidth + 80, Math.min(window.innerWidth - 60, nl));
+    nt = Math.max(0, Math.min(window.innerHeight - 40, nt));
+    panel.style.left = nl + 'px';
+    panel.style.top = nt + 'px';
+  };
+  const onUp = () => { dragging = false; };
+
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+
+  // bring to front on any click inside
+  panel.addEventListener('mousedown', () => { panel.style.zIndex = String(++_winTopZ); });
+}
+let _winTopZ = 200;
+
+// Register all floating windows (panel id, header selector)
+[
+  ['capsule-editor', '.ce-win-header'],
+  ['crane-panel',    '#crane-panel-top'],
+  ['lift-pos-panel', '#lpp-top'],
+  ['block-a-panel',  '.bap-header'],
+  ['block-c-panel',  '.bap-header'],
+  ['block-e-panel',  '.bap-header'],
+  ['record-panel',   '.rp-header'],
+].forEach(([id, sel]) => makeWindowDraggable(id, sel));
+
 
 // Physics is hooked directly inside doAttach() and releaseAttached() above.
 // dt is exposed in the animate loop below for the physics step.
@@ -6415,6 +7033,19 @@ animate();
     </div>
   </div>
 
+  <!-- Block E: crane capsule selector -->
+  <div id="ce-cap-wrap" style="display:none;flex-direction:column;gap:8px;">
+    <div class="ce-field">
+      <div class="ce-label">🏗 Secuencia de grúa</div>
+      <select class="ce-input" id="ce-cap-state">
+        <option value="">— Selecciona una secuencia —</option>
+      </select>
+    </div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">
+      Las secuencias se crean en el panel <b style="color:#f6ad55;">Bloque E</b>. La grúa recorrerá los puntos clave durante el tiempo del chip.
+    </div>
+  </div>
+
   <!-- Block D: camera editor -->
   <div id="ce-cam-wrap" style="display:none;flex-direction:column;gap:8px;">
     <div class="ce-field">
@@ -6506,6 +7137,40 @@ animate();
   </div>
 </div>
 
+<!-- ═══════════ BLOCK E: CRANE CAPSULES PANEL ═══════════ -->
+<div id="block-e-panel">
+  <div class="bap-header" style="border-bottom-color:rgba(246,173,85,.15);">
+    <span class="bap-logo" style="color:#f6ad55;">🏗 BLOQUE E · GRÚAS</span>
+    <span class="bap-badge" id="cap-count">0 secuencias</span>
+    <button class="bap-close" onclick="toggleBlockE()">✕</button>
+  </div>
+  <div class="bap-section">
+    <div class="bap-section-title" style="color:#f6ad55;">Secuencias de movimiento</div>
+    <button class="bap-btn" style="width:100%;border-color:rgba(246,173,85,.35);color:#f6ad55;" onclick="addCraneCapsule()">＋ Nueva secuencia</button>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px;line-height:1.4;">
+      Abre el panel de grúas para tener la cruceta. Mueve la grúa, captura puntos clave y previsualiza la secuencia.
+    </div>
+  </div>
+  <div id="cap-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
+</div>
+
+<!-- CAPSULE EDITOR WINDOW (detailed) -->
+<div id="capsule-editor">
+  <div class="ce-win-header">
+    <span id="cap-editor-title" style="font-family:var(--mono);font-size:12px;font-weight:600;color:#f6ad55;flex:1;">🏗 Secuencia</span>
+    <button class="bap-close" onclick="closeCapsuleEditor()">✕</button>
+  </div>
+  <div class="ce-win-toolbar">
+    <button class="cap-tool-btn capture" onclick="capAddKeyframe()">📸 Capturar punto</button>
+    <button class="cap-tool-btn" id="cap-preview-btn" onclick="capPreview()">▶ Vista previa</button>
+    <button class="cap-tool-btn" onclick="toggleCranePanel()" title="Mostrar cruceta de grúa">🎮 Cruceta</button>
+  </div>
+  <div id="cap-editor-body" class="ce-win-body"></div>
+  <div class="ce-win-footer">
+    <span style="font-family:var(--mono);font-size:8px;color:var(--text3);">Mueve la grúa con la cruceta · captura cada posición · arrastra los puntos para reordenar</span>
+  </div>
+</div>
+
 <!-- ═══════════ SIMULATION TIMELINE ═══════════ -->
 <div id="sim-timeline">
   <!-- Drag-resize handle -->
@@ -6531,6 +7196,7 @@ animate();
     <button class="tl-btn" onclick="toggleBlockA()" id="btn-block-a" title="Configurar cimientos">🏛 Bloque A</button>
     <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
     <button class="tl-btn" onclick="toggleBlockC()" id="btn-block-c" title="Estados de visibilidad" style="color:#4fd1c5;border-color:rgba(79,209,197,.3);">👁 Bloque C</button>
+    <button class="tl-btn" onclick="toggleBlockE()" id="btn-block-e" title="Secuencias de grúa" style="color:#f6ad55;border-color:rgba(246,173,85,.3);">🏗 Bloque E</button>
 
     <div class="tl-sep"></div>
 
