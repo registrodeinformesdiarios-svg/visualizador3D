@@ -1318,6 +1318,22 @@
   }
   .cloud-anim-item .ca-load:hover { background: rgba(79,195,247,.2); }
 
+
+  /* ── SHARE LINK MODAL ── */
+  #share-modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;}
+  #share-modal.open{display:flex;}
+  .sh-box{width:440px;max-width:92vw;background:rgba(10,12,16,.98);border:1px solid rgba(79,195,247,.35);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+  .sh-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;}
+  .sh-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;}
+  .sh-link{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--accent2);font-family:var(--mono);font-size:10px;padding:7px 9px;outline:none;}
+  .sh-row{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text2);}
+  .sh-msg{font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--text2);padding:8px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);}
+  .sh-msg.warn{color:var(--warn);border-color:rgba(246,173,85,.35);}
+  .shared-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);}
+  .shared-item .si-name{font-family:var(--mono);font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .shared-item .si-meta{font-family:var(--mono);font-size:8px;color:var(--text3);}
+  .shared-item button{flex-shrink:0;padding:3px 7px;border-radius:4px;border:1px solid rgba(79,195,247,.35);background:rgba(79,195,247,.08);color:var(--accent);font-family:var(--mono);font-size:9px;cursor:pointer;}
+  .shared-item button.on{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.12);}
 </style>
 </head>
 <body>
@@ -1368,6 +1384,7 @@
   <button class="tool-btn" id="btn-lift-pos" title="Posiciones de izaje" onclick="toggleLiftPosPanel()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);">⬆</button>
   <button class="tool-btn" id="btn-floor-cfg" title="Configurar piso de proyecto" onclick="toggleFloorConfig()" style="font-size:13px;">⊟</button>
   <button class="tool-btn" id="btn-timeline" title="Línea del tiempo de simulación" onclick="toggleTimeline()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);font-size:13px;">⏱</button>
+  <button class="tool-btn" id="btn-share" title="Compartir enlace del modelo" onclick="openShareDialog()" style="font-size:14px;">🔗</button>
 </div>
 
 <!-- Floor config panel -->
@@ -3149,6 +3166,7 @@ function onModelReady(gltf,name){
 
 // ── FILE LOAD ────────────────────────────────────────────────────────────────
 function loadFromFile(file){
+  window._shareModel=null; window._shareAnim=null;
   const bar=document.getElementById('loading-bar'),barWrap=document.getElementById('loading-bar-wrap'),status=document.getElementById('hud-status');
   const name=file.name.replace(/\.(glb|gltf)$/i,'');
   document.getElementById('load-error').style.display='none';
@@ -7209,6 +7227,250 @@ function animate(){
   renderer.render(scene,camera);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ENLACES COMPARTIDOS — abrir un modelo de la carpeta compartida por URL
+// ───────────────────────────────────────────────────────────────────────────
+// Parámetros de URL:
+//   m    = ID de Drive del .glb (obligatorio)
+//   n    = nombre a mostrar (opcional)
+//   a    = ID de Drive de una animación .json de la misma carpeta (opcional)
+//   play = 1 → reproduce todos los días al cargar (opcional, requiere a)
+//   s    = URL del Web App público (solo si SHARE_SCRIPT_URL está vacío)
+// Ejemplo: subestacion-explorer.html?m=1AbC...&n=PS%20Colorado&a=1XyZ...&play=1
+// ═══════════════════════════════════════════════════════════════════════════
+const SHARE_SCRIPT_URL = '';   // ← pega aquí la URL /exec del Web App público
+
+window._shareModel = null;   // { id, name } del modelo abierto desde la carpeta compartida
+window._shareAnim  = null;   // { id, name } de la animación compartida cargada
+
+function shareScriptUrl() {
+  const qp = new URLSearchParams(location.search).get('s');
+  if (qp) return qp;
+  if (SHARE_SCRIPT_URL) return SHARE_SCRIPT_URL;
+  try { return localStorage.getItem('sim_share_script') || ''; } catch (e) { return ''; }
+}
+
+async function shareFetchFile(id) {
+  const base = shareScriptUrl();
+  if (!base) throw new Error('No hay servicio de modelos compartidos configurado');
+  const r = await fetch(base + '?action=file&id=' + encodeURIComponent(id));
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+
+// Decodifica base64 grande sin bloquear (vía data: URL)
+async function b64ToArrayBuffer(b64) {
+  const r = await fetch('data:application/octet-stream;base64,' + b64);
+  return r.arrayBuffer();
+}
+
+async function loadSharedModel(id, displayName) {
+  const bar = document.getElementById('loading-bar');
+  const barWrap = document.getElementById('loading-bar-wrap');
+  const status = document.getElementById('hud-status');
+  document.getElementById('load-error').style.display = 'none';
+  barWrap.style.display = 'block'; bar.style.width = '10%';
+  status.textContent = 'DESCARGANDO MODELO COMPARTIDO...';
+  const j = await shareFetchFile(id);
+  if (!j.data) throw new Error('El archivo no es un modelo .glb');
+  bar.style.width = '55%'; status.textContent = 'PROCESANDO MODELO...';
+  const buf = await b64ToArrayBuffer(j.data);
+  const name = displayName || (j.name || 'Modelo').replace(/\.(glb|gltf)$/i, '');
+  await new Promise((res, rej) => gltfLoader.parse(buf, '', g => {
+    bar.style.width = '95%';
+    onModelReady(g, name);
+    res();
+  }, err => rej(new Error(err && err.message ? err.message : String(err)))));
+  window._shareModel = { id, name };
+  window._shareAnim = null;
+}
+
+async function loadSharedAnim(id, name) {
+  const j = await shareFetchFile(id);
+  if (j.text === undefined) throw new Error('El archivo no es una animación .json');
+  loadSimObject(JSON.parse(j.text));
+  window._shareAnim = { id, name: (name || j.name || '').replace(/\.json$/i, '') };
+}
+
+// Arranque automático cuando la URL trae ?m=
+(async function bootFromLink() {
+  const p = new URLSearchParams(location.search);
+  const m = p.get('m');
+  if (!m) return;
+  if (!shareScriptUrl()) {
+    showError('El enlace no indica el servicio de modelos (falta el parámetro s o SHARE_SCRIPT_URL).');
+    return;
+  }
+  try {
+    await loadSharedModel(m, p.get('n'));
+    const a = p.get('a');
+    if (a) {
+      document.getElementById('hud-status').textContent = 'CARGANDO ANIMACIÓN...';
+      await loadSharedAnim(a);
+      if (!timelineOpen) toggleTimeline();
+      if (p.get('play') === '1') setTimeout(() => simPlayAll(), 600);
+    }
+    document.getElementById('hud-status').textContent = 'EXPLORANDO';
+  } catch (err) {
+    document.getElementById('load-zone').classList.remove('hidden');
+    showError('No se pudo abrir el enlace: ' + err.message);
+    document.getElementById('loading-bar-wrap').style.display = 'none';
+    document.getElementById('hud-status').textContent = 'ERROR';
+  }
+})();
+
+// Un modelo recibido desde el visor BIM (postMessage) no es compartible por enlace
+window.addEventListener('message', ev => {
+  if (ev.data && ev.data.type === 'LOAD_GLB') { window._shareModel = null; window._shareAnim = null; }
+});
+
+// ── Construcción del enlace ─────────────────────────────────────────────────
+function buildShareLink(opts) {
+  const base = location.origin + location.pathname;
+  const q = new URLSearchParams();
+  q.set('m', window._shareModel.id);
+  if (window._shareModel.name) q.set('n', window._shareModel.name);
+  if (opts.anim && window._shareAnim) {
+    q.set('a', window._shareAnim.id);
+    if (opts.play) q.set('play', '1');
+  }
+  if (!SHARE_SCRIPT_URL) q.set('s', shareScriptUrl());
+  return base + '?' + q.toString();
+}
+
+window.openShareDialog = function () {
+  const body = document.getElementById('sh-body');
+  const modal = document.getElementById('share-modal');
+  if (!window._shareModel) {
+    body.innerHTML = '<div class="sh-msg warn">Este modelo se cargó desde un archivo local o desde el visor BIM, así que no tiene enlace público.<br><br>'
+      + 'Súbelo a la carpeta <b>Modelos compartidos</b> de Drive y ábrelo desde <b>⏱ → ☁ Drive → Carpeta de modelos compartidos</b>. Después vuelve a pulsar 🔗.</div>';
+    modal.classList.add('open');
+    return;
+  }
+  const hostWarn = location.protocol === 'file:'
+    ? '<div class="sh-msg warn">Estás abriendo el visor desde el disco (file://). El enlace solo funciona si el HTML está publicado (p. ej. GitHub Pages). Abre el visor desde su URL pública y vuelve a generar el enlace.</div>'
+    : '';
+  const animRow = window._shareAnim
+    ? '<label class="sh-row"><input type="checkbox" id="sh-anim" checked onchange="shareUpdateLink()"> Incluir animación «' + window._shareAnim.name + '»</label>'
+      + '<label class="sh-row"><input type="checkbox" id="sh-play" onchange="shareUpdateLink()"> Reproducir automáticamente al abrir</label>'
+    : '<div class="sh-msg">Sin animación compartida cargada. Para incluir una, guárdala como .json en la carpeta compartida y cárgala desde el panel ☁ Drive.</div>';
+  body.innerHTML = hostWarn
+    + '<div class="sh-label">Modelo</div><div class="sh-msg">' + window._shareModel.name + '</div>'
+    + animRow
+    + '<div class="sh-label">Enlace</div>'
+    + '<input class="sh-link" id="sh-link" readonly onclick="this.select()">'
+    + '<div style="display:flex;gap:6px;">'
+    +   '<button class="cp-btn save" style="flex:1;" onclick="shareCopyLink(this)">📋 Copiar enlace</button>'
+    +   '<button class="cp-btn" onclick="window.open(document.getElementById(\'sh-link\').value,\'_blank\')">Probar ↗</button>'
+    + '</div>'
+    + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">Cualquier persona con el enlace verá el modelo; no necesita cuenta de Google ni acceso a la carpeta.</div>';
+  modal.classList.add('open');
+  shareUpdateLink();
+};
+
+window.shareUpdateLink = function () {
+  const el = document.getElementById('sh-link'); if (!el) return;
+  const anim = document.getElementById('sh-anim');
+  const play = document.getElementById('sh-play');
+  el.value = buildShareLink({ anim: anim ? anim.checked : false, play: play ? play.checked : false });
+};
+
+window.shareCopyLink = function (btn) {
+  const v = document.getElementById('sh-link').value;
+  navigator.clipboard.writeText(v).then(() => {
+    const t = btn.textContent; btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = t; }, 1800);
+  });
+};
+window.closeShareDialog = function () { document.getElementById('share-modal').classList.remove('open'); };
+
+// ── Listado de la carpeta compartida (panel ☁ Drive) ───────────────────────
+window.shareSaveScriptUrl = function () {
+  const v = document.getElementById('shared-script-input').value.trim();
+  if (!v) return;
+  try { localStorage.setItem('sim_share_script', v); } catch (e) {}
+  shareRefreshList();
+};
+
+window.shareRefreshList = async function () {
+  const list = document.getElementById('shared-list');
+  const cfg = document.getElementById('shared-script-cfg');
+  if (!list) return;
+  if (!shareScriptUrl()) {
+    cfg.style.display = 'block';
+    list.innerHTML = '<div style="color:var(--text3);font-size:10px;padding:8px;text-align:center;">Configura la URL del Web App público.</div>';
+    return;
+  }
+  cfg.style.display = SHARE_SCRIPT_URL ? 'none' : 'block';
+  const inp = document.getElementById('shared-script-input');
+  if (inp && !inp.value) inp.value = shareScriptUrl();
+  list.innerHTML = '<div style="color:var(--text3);font-size:10px;padding:8px;text-align:center;">Cargando…</div>';
+  try {
+    const r = await fetch(shareScriptUrl() + '?action=list');
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    const files = j.files || [];
+    if (!files.length) { list.innerHTML = '<div style="color:var(--text3);font-size:10px;padding:8px;text-align:center;">La carpeta está vacía.</div>'; return; }
+    list.innerHTML = '';
+    files.forEach(f => {
+      const isModel = f.kind === 'model';
+      const isOpen = isModel
+        ? (window._shareModel && window._shareModel.id === f.id)
+        : (window._shareAnim && window._shareAnim.id === f.id);
+      const row = document.createElement('div');
+      row.className = 'shared-item';
+      const mb = f.size ? (f.size / 1048576).toFixed(1) + ' MB' : '';
+      row.innerHTML = '<span>' + (isModel ? '🧊' : '🎞') + '</span>'
+        + '<div style="flex:1;min-width:0;"><div class="si-name"></div><div class="si-meta"></div></div>';
+      row.querySelector('.si-name').textContent = f.name.replace(/\.(glb|gltf|json)$/i, '');
+      row.querySelector('.si-meta').textContent = [f.path, mb, f.modified].filter(Boolean).join(' · ');
+      const btn = document.createElement('button');
+      btn.textContent = isOpen ? '✓ Abierto' : (isModel ? 'Abrir' : 'Cargar');
+      if (isOpen) btn.classList.add('on');
+      btn.onclick = async () => {
+        btn.textContent = '…';
+        try {
+          if (isModel) await loadSharedModel(f.id, f.name.replace(/\.(glb|gltf)$/i, ''));
+          else {
+            if (!state.modelLoaded) throw new Error('Abre primero un modelo');
+            await loadSharedAnim(f.id, f.name);
+          }
+          document.getElementById('hud-status').textContent = 'EXPLORANDO';
+        } catch (e) { alert('Error: ' + e.message); }
+        shareRefreshList();
+      };
+      row.appendChild(btn);
+      if (isModel) {
+        const lb = document.createElement('button');
+        lb.textContent = '🔗';
+        lb.title = 'Copiar enlace de este modelo';
+        lb.onclick = () => {
+          const prev = window._shareModel;
+          window._shareModel = { id: f.id, name: f.name.replace(/\.(glb|gltf)$/i, '') };
+          const link = buildShareLink({ anim: false });
+          window._shareModel = prev;
+          navigator.clipboard.writeText(link).then(() => { lb.textContent = '✓'; setTimeout(() => lb.textContent = '🔗', 1500); });
+        };
+        row.appendChild(lb);
+      }
+      list.appendChild(row);
+    });
+  } catch (e) {
+    list.innerHTML = '<div style="color:var(--danger);font-size:10px;padding:8px;">Error al listar: ' + e.message + '</div>';
+  }
+};
+
+// Refrescar el listado cada vez que se abre el panel ☁ Drive
+(function () {
+  const orig = window.toggleCloudPanel;
+  window.toggleCloudPanel = function () {
+    orig();
+    if (document.getElementById('cloud-panel').classList.contains('open')) shareRefreshList();
+  };
+})();
+
 animate();
 </script>
 
@@ -7261,6 +7523,17 @@ animate();
     </div>
 
     <div id="cloud-op-status" style="font-family:var(--mono);font-size:9px;min-height:12px;color:var(--accent2);"></div>
+
+    <div class="cp-section-title" style="color:var(--accent2);">🔗 Carpeta de modelos compartidos</div>
+    <div id="shared-script-cfg" style="display:none;">
+      <div class="cp-label">URL del Web App público (/exec)</div>
+      <div style="display:flex;gap:5px;">
+        <input id="shared-script-input" class="cp-input" style="flex:1;" placeholder="https://script.google.com/macros/s/.../exec">
+        <button class="cp-btn" onclick="shareSaveScriptUrl()">OK</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;"><button class="cp-btn" style="padding:3px 8px;font-size:9px;" onclick="shareRefreshList()">⟳ Actualizar</button></div>
+    <div id="shared-list" class="cp-anim-list"></div>
 
     <div class="cp-section-title">Animaciones guardadas</div>
     <div id="cloud-anim-list" class="cp-anim-list"></div>
@@ -7592,5 +7865,11 @@ animate();
 </div>
 <!-- End simulation timeline -->
 
+<div id="share-modal" onclick="if(event.target===this)closeShareDialog()">
+  <div class="sh-box">
+    <div class="sh-title">🔗 COMPARTIR MODELO<button class="bap-close" onclick="closeShareDialog()">✕</button></div>
+    <div id="sh-body"></div>
+  </div>
+</div>
 </body>
 </html>
