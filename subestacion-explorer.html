@@ -1135,7 +1135,11 @@
     padding: 0 14px; border-bottom: 1px solid rgba(239,83,80,.15);
   }
   .rp-logo { font-family: var(--mono); font-size: 11px; font-weight: 600; color: #ef5350; letter-spacing: .5px; flex: 1; }
-  .rp-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .rp-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: calc(100vh - 140px); }
+  .mus-row { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; color: var(--text2); }
+  .mus-num { width: 52px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; color: var(--accent); font-family: var(--mono); font-size: 10px; padding: 3px 5px; outline: none; }
+  .mus-num:focus { border-color: #ef5350; }
+  #mus-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text3); }
   .rp-field { display: flex; flex-direction: column; gap: 5px; }
   .rp-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; }
   .rp-btn-row { display: flex; gap: 4px; }
@@ -1334,6 +1338,92 @@
   .shared-item .si-meta{font-family:var(--mono);font-size:8px;color:var(--text3);}
   .shared-item button{flex-shrink:0;padding:3px 7px;border-radius:4px;border:1px solid rgba(79,195,247,.35);background:rgba(79,195,247,.08);color:var(--accent);font-family:var(--mono);font-size:9px;cursor:pointer;}
   .shared-item button.on{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.12);}
+
+  /* ═══ VISTAS Y COTAS ═══ */
+  #dv-modal { position:fixed; inset:0; z-index:400; background:rgba(4,6,9,.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; }
+  #dv-modal.open { display:flex; }
+  #dv-win { width:min(1600px, 97vw); height:95vh; background:var(--bg2); border:1px solid rgba(79,195,247,.25); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #dv-head { height:46px; flex-shrink:0; display:flex; align-items:center; gap:10px; padding:0 12px 0 16px; border-bottom:1px solid var(--border); }
+  .dv-title { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--accent); letter-spacing:.6px; }
+  .dv-sub { font-family:var(--mono); font-size:10px; color:var(--text2); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dv-head-btns { display:flex; gap:6px; align-items:center; }
+  .dv-btn { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:10px; padding:6px 10px; border-radius:6px; cursor:pointer; white-space:nowrap; }
+  .dv-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .dv-btn.pdf { border-color:rgba(239,83,80,.35); }
+  .dv-btn.pdf:hover { border-color:#ef5350; color:#ef5350; }
+  .dv-btn.sm { padding:4px 8px; font-size:9px; }
+  .dv-x { width:30px; height:30px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; font-size:13px; margin-left:4px; }
+  .dv-x:hover { color:#ef5350; border-color:#ef5350; }
+  #dv-body { flex:1; display:flex; min-height:0; }
+  #dv-side { width:258px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg); }
+  .dv-sec { padding:10px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:7px; }
+  details.dv-sec { display:block; }
+  details.dv-sec[open] > *:not(summary) { margin-top:7px; }
+  .dv-sec-t { font-family:var(--mono); font-size:9px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text2); cursor:default; }
+  summary.dv-sec-t { cursor:pointer; list-style:none; }
+  summary.dv-sec-t::before { content:'▸ '; color:var(--accent); }
+  details[open] > summary.dv-sec-t::before { content:'▾ '; }
+  .dv-in { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:var(--mono); font-size:10px; padding:5px 7px; outline:none; }
+  .dv-in:focus { border-color:var(--accent); }
+  .dv-new { color:var(--accent); cursor:pointer; }
+  .dv-f { display:grid; grid-template-columns:78px 1fr; align-items:center; gap:6px; font-family:var(--mono); font-size:9px; color:var(--text2); }
+  .dv-chk { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:9px; color:var(--text2); cursor:pointer; }
+  .dv-chk input, .dv-cut input { accent-color:var(--accent); }
+  .dv-cut input { width:100%; }
+  .dv-cut-l, .dv-note { font-family:var(--mono); font-size:8.5px; color:var(--text3); line-height:1.45; }
+  .dv-cut-l { color:var(--warn); }
+  .dv-btnrow { display:flex; gap:6px; flex-wrap:wrap; }
+  #dv-list { display:flex; flex-direction:column; gap:3px; }
+  .dv-row { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:5px; border:1px solid transparent; cursor:pointer; font-family:var(--mono); font-size:10px; color:var(--text); }
+  .dv-row:hover { background:var(--bg3); }
+  .dv-row.active { border-color:rgba(79,195,247,.45); background:rgba(79,195,247,.08); }
+  .dv-row-k { width:16px; height:16px; border-radius:3px; background:var(--bg3); color:var(--accent); font-size:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .dv-row-n { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dv-row-c { color:var(--text3); font-size:9px; }
+  .dv-ib { background:none; border:none; color:var(--text3); cursor:pointer; font-size:10px; padding:0 2px; }
+  .dv-ib:hover { color:var(--accent); }
+  .dv-empty-list { font-family:var(--mono); font-size:9px; color:var(--text3); padding:4px 2px; }
+  #dv-main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  #dv-tools { flex-shrink:0; display:flex; align-items:center; gap:4px; padding:6px 10px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .dv-tb { background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:10px; padding:5px 8px; border-radius:5px; cursor:pointer; white-space:nowrap; }
+  .dv-tb:hover { color:var(--text); border-color:rgba(255,255,255,.2); }
+  .dv-tb.active { color:var(--accent); border-color:var(--accent); background:rgba(79,195,247,.1); }
+  .dv-tb.snap.active { color:var(--warn); border-color:rgba(246,173,85,.6); background:rgba(246,173,85,.08); }
+  .dv-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+  .dv-lbl { font-family:var(--mono); font-size:9px; color:var(--text3); margin-right:2px; }
+  #dv-stage { flex:1; position:relative; background:#fff; overflow:hidden; cursor:grab; touch-action:none; }
+  #dv-stage.drawing { cursor:crosshair; }
+  #dv-stage.panning { cursor:grabbing; }
+  #dv-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #dv-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  #dv-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; font-family:var(--mono); font-size:11px; color:#5a6a7a; line-height:1.7; background:#f7f8fa; }
+  #dv-status { flex-shrink:0; min-height:28px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 12px; border-top:1px solid var(--border); font-family:var(--mono); font-size:9.5px; color:var(--text2); }
+  #dv-st-hint b { color:var(--accent); font-weight:600; }
+  #dv-st-coord { color:var(--accent2); white-space:nowrap; }
+  .dv-warn { color:var(--warn); }
+  .dv-busy { color:var(--accent); }
+  /* cotas (SVG) */
+  .dv-it .dv-l { stroke:#1a4fa8; stroke-width:1; }
+  .dv-it .dv-a { fill:#1a4fa8; }
+  .dv-it .dv-t { fill:#0f3478; font:500 12px 'IBM Plex Mono', monospace; paint-order:stroke; stroke:#fff; stroke-width:3.5px; stroke-linejoin:round; pointer-events:all; cursor:pointer; }
+  .dv-it .dv-hit { stroke:#000; stroke-opacity:0; stroke-width:12; pointer-events:stroke; cursor:pointer; }
+  .dv-it.sel .dv-l { stroke:#e65100; stroke-width:1.5; }
+  .dv-it.sel .dv-a { fill:#e65100; }
+  .dv-it.sel .dv-t { fill:#e65100; }
+  .dv-it.pv { opacity:.85; }
+  .dv-it.pv .dv-l { stroke:#e65100; stroke-dasharray:4 3; }
+  .dv-it.pv .dv-a, .dv-it.pv .dv-t { fill:#e65100; }
+  .dv-it.pv .dv-hit, .dv-it.pv .dv-t { pointer-events:none; }
+  #dv-stage.drawing .dv-it .dv-hit, #dv-stage.drawing .dv-it .dv-t { pointer-events:none; }
+  .dv-snap { fill:none; stroke:#00a152; stroke-width:2; }
+  .dv-snap.thin { stroke-width:1.2; stroke:#607080; }
+  .dv-snap-t { font:600 10px 'IBM Plex Mono', monospace; fill:#00a152; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+  .dv-seg { stroke:#00c853; stroke-width:3; stroke-opacity:.45; }
+  .dv-seg.keep { stroke:#e65100; stroke-opacity:.55; }
+  .dv-pt { fill:#e65100; }
+  .dv-rubber { stroke:#e65100; stroke-width:1; stroke-dasharray:5 4; }
+  .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
+  .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
 </style>
 </head>
 <body>
@@ -1380,6 +1470,7 @@
 <!-- Toolbar -->
 <div id="toolbar">
   <button class="tool-btn" id="btn-measure" title="Medir distancia (M)" onclick="toggleMeasure()">📏</button>
+  <button class="tool-btn" id="btn-dimviews" title="Vistas y cotas — planos acotados (JSON / PDF)" onclick="openDimViews()" style="font-size:15px;">📐</button>
   <button class="tool-btn crane-tool" id="btn-crane-panel" title="Módulo de grúas (G)" onclick="toggleCranePanel()">🏗</button>
   <button class="tool-btn" id="btn-lift-pos" title="Posiciones de izaje" onclick="toggleLiftPosPanel()" style="color:#a78bfa;border-color:rgba(167,139,250,.3);">⬆</button>
   <button class="tool-btn" id="btn-floor-cfg" title="Configurar piso de proyecto" onclick="toggleFloorConfig()" style="font-size:13px;">⊟</button>
@@ -1880,6 +1971,92 @@
   </div>
   <div id="load-error"></div>
   <input type="file" id="file-input" accept=".glb,.gltf">
+</div>
+
+<!-- ═══ VISTAS Y COTAS ═══ -->
+<div id="dv-modal">
+  <div id="dv-win">
+    <div id="dv-head">
+      <span class="dv-title">📐 VISTAS Y COTAS</span>
+      <span id="dv-model" class="dv-sub"></span>
+      <div class="dv-head-btns">
+        <button class="dv-btn" onclick="dvOpenJSON()" title="Recuperar vistas y cotas desde un JSON">📂 Abrir JSON</button>
+        <button class="dv-btn" onclick="dvSaveJSON()" title="Guardar todas las vistas y cotas (Ctrl+S)">💾 Guardar JSON</button>
+        <button class="dv-btn pdf" onclick="dvExportPDF(false)" title="Lámina PDF de la vista activa">📄 PDF vista</button>
+        <button class="dv-btn pdf" onclick="dvExportPDF(true)" title="PDF con una lámina por vista">📚 PDF todas</button>
+        <button class="dv-x" onclick="closeDimViews()" title="Cerrar">✕</button>
+      </div>
+      <input type="file" id="dv-json-input" accept=".json,application/json" style="display:none" onchange="dvLoadJSONFile(this)">
+    </div>
+    <div id="dv-body">
+      <div id="dv-side">
+        <div class="dv-sec">
+          <div class="dv-sec-t">Vistas</div>
+          <select class="dv-in dv-new" onchange="dvNewView(this.value);this.value=''">
+            <option value="">＋ Nueva vista…</option>
+            <option value="plan">Planta (superior)</option>
+            <option value="north">Alzado Norte (desde el N)</option>
+            <option value="south">Alzado Sur (desde el S)</option>
+            <option value="east">Alzado Este (desde el E)</option>
+            <option value="west">Alzado Oeste (desde el O)</option>
+            <option value="iso">Isométrica (desde el SE)</option>
+            <option value="camera">Desde la cámara actual</option>
+          </select>
+          <div id="dv-list"></div>
+        </div>
+        <div class="dv-sec" id="dv-props"></div>
+        <details class="dv-sec">
+          <summary class="dv-sec-t">Lámina y cajetín</summary>
+          <label class="dv-f"><span>Tamaño</span><select class="dv-in" id="dvs-page" onchange="dvSetSetting('page',this.value)">
+            <option value="A4">A4 horizontal</option><option value="A3">A3 horizontal</option><option value="A2">A2 horizontal</option><option value="A1">A1 horizontal</option></select></label>
+          <label class="dv-f"><span>Empresa</span><input class="dv-in" id="dvs-t-empresa" oninput="dvSetSetting('t-empresa',this.value)" placeholder="p. ej. ICE — DISA"></label>
+          <label class="dv-f"><span>Proyecto</span><input class="dv-in" id="dvs-t-proyecto" oninput="dvSetSetting('t-proyecto',this.value)"></label>
+          <label class="dv-f"><span>Elaboró</span><input class="dv-in" id="dvs-t-elaboro" oninput="dvSetSetting('t-elaboro',this.value)"></label>
+          <label class="dv-f"><span>Revisó</span><input class="dv-in" id="dvs-t-reviso" oninput="dvSetSetting('t-reviso',this.value)"></label>
+          <label class="dv-f"><span>Notas</span><input class="dv-in" id="dvs-t-notas" oninput="dvSetSetting('t-notas',this.value)"></label>
+          <label class="dv-chk"><input type="checkbox" id="dvs-frame" onchange="dvSetSetting('showFrame',this.checked)"> Mostrar área de impresión</label>
+        </details>
+        <details class="dv-sec">
+          <summary class="dv-sec-t">Cotas y unidades</summary>
+          <label class="dv-f"><span>Unidad</span><select class="dv-in" id="dvs-unit" onchange="dvSetSetting('unit',this.value)">
+            <option value="m">metros (m)</option><option value="cm">centímetros (cm)</option><option value="mm">milímetros (mm)</option></select></label>
+          <label class="dv-f"><span>Decimales</span><input class="dv-in" type="number" min="0" max="4" step="1" id="dvs-dec" onchange="dvSetSetting('decimals',this.value)"></label>
+          <label class="dv-chk"><input type="checkbox" id="dvs-showunit" onchange="dvSetSetting('showUnit',this.checked)"> Mostrar unidad en cada cota</label>
+          <label class="dv-f"><span>Nivel ±0.00 (Y)</span><input class="dv-in" type="number" step="0.01" id="dvs-ref" onchange="dvSetSetting('refLevel',this.value)"></label>
+          <label class="dv-f"><span>Norte (°)</span><input class="dv-in" type="number" step="1" id="dvs-north" onchange="dvSetSetting('northDeg',this.value)" title="Giro horario del norte respecto a −Z. Aplica a vistas nuevas."></label>
+          <label class="dv-f"><span>Aristas (°)</span><input class="dv-in" type="number" min="1" max="89" step="1" id="dvs-edge" onchange="dvSetSetting('edgeAngle',this.value)" title="Ángulo mínimo entre caras para considerar una arista"></label>
+          <div class="dv-note">El norte aplica a las vistas nuevas. Por defecto el norte es −Z (arriba en el minimapa).</div>
+        </details>
+      </div>
+      <div id="dv-main">
+        <div id="dv-tools">
+          <button class="dv-tb" data-tool="nav" onclick="dvSetTool('nav')" title="Navegar / seleccionar (V)">🖐</button>
+          <span class="dv-sep"></span>
+          <button class="dv-tb" data-tool="linear" onclick="dvSetTool('linear')" title="Cota lineal horizontal/vertical (L)">↔ Lineal</button>
+          <button class="dv-tb" data-tool="aligned" onclick="dvSetTool('aligned')" title="Cota alineada entre dos puntos (A)">⤢ Alineada</button>
+          <button class="dv-tb" data-tool="edges" onclick="dvSetTool('edges')" title="Distancia entre dos aristas paralelas (E)">∥ Entre aristas</button>
+          <button class="dv-tb" data-tool="level" onclick="dvSetTool('level')" title="Nivel / elevación (N)">▽ Nivel</button>
+          <button class="dv-tb" data-tool="note" onclick="dvSetTool('note')" title="Nota con flecha (T)">✎ Nota</button>
+          <span class="dv-sep"></span>
+          <span class="dv-lbl">Ajuste</span>
+          <button class="dv-tb snap active" data-snap="end" onclick="dvToggleSnap('end')" title="Extremos de arista">▫ Extremo</button>
+          <button class="dv-tb snap active" data-snap="mid" onclick="dvToggleSnap('mid')" title="Punto medio de arista">△ Medio</button>
+          <button class="dv-tb snap active" data-snap="edge" onclick="dvToggleSnap('edge')" title="Punto más cercano sobre la arista">⧖ Arista</button>
+          <button class="dv-tb snap active" data-snap="face" onclick="dvToggleSnap('face')" title="Punto sobre la superficie">○ Superficie</button>
+          <span class="dv-sep"></span>
+          <button class="dv-tb" onclick="dvFitActive()" title="Encuadrar (F)">⤢</button>
+          <button class="dv-tb" onclick="dvUndo()" title="Deshacer (Ctrl+Z)">↶</button>
+          <button class="dv-tb" onclick="dvDeleteSel()" title="Borrar cota seleccionada (Supr)">🗑</button>
+        </div>
+        <div id="dv-stage">
+          <canvas id="dv-canvas"></canvas>
+          <svg id="dv-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div id="dv-empty"><div>Crea una vista con <b>＋ Nueva vista…</b><br>Planta, alzados, isométrica o desde la cámara actual.</div></div>
+        </div>
+        <div id="dv-status"><span id="dv-st-hint"></span><span id="dv-st-coord"></span></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="importmap">
@@ -2864,6 +3041,7 @@ window.addCrane=addCrane;
 window.addEventListener('keydown',e=>{
   // Explorer controls
   state.keys[e.code]=true;
+  if(e.code.startsWith('Arrow') && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) releaseSimCamera();
   if(e.code==='KeyR' && !cranePanelOpen){ charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
   if(e.code==='KeyM') toggleMeasure();
   if(e.code==='KeyG') window.toggleCranePanel();
@@ -2881,6 +3059,7 @@ const mouse = { ldown:false, rdown:false, x:0, y:0 };
 
 canvas.addEventListener('mousedown', e => {
   if(state.measuring || cranePickMode) return;
+  releaseSimCamera();
   if(e.button === 0) mouse.ldown = true;
   if(e.button === 2) mouse.rdown = true;
   mouse.x = e.clientX; mouse.y = e.clientY;
@@ -2999,7 +3178,7 @@ window.setFloorOffset=function(val){ applyFloor(parseFloat(val)); };
 const joystickBase=document.getElementById('joystick-base');
 const joystickKnob=document.getElementById('joystick-knob');
 const JR=33;
-joystickBase.addEventListener('touchstart',e=>{ e.preventDefault(); const t=e.changedTouches[0]; const r=joystickBase.getBoundingClientRect(); state.joy.active=true; state.joy.id=t.identifier; state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2; joystickKnob.classList.add('active'); },{passive:false});
+joystickBase.addEventListener('touchstart',e=>{ e.preventDefault(); releaseSimCamera(); const t=e.changedTouches[0]; const r=joystickBase.getBoundingClientRect(); state.joy.active=true; state.joy.id=t.identifier; state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2; joystickKnob.classList.add('active'); },{passive:false});
 joystickBase.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches){ if(t.identifier!==state.joy.id)continue; let dx=t.clientX-state.joy.startX,dy=t.clientY-state.joy.startY; const d=Math.sqrt(dx*dx+dy*dy); if(d>JR){dx=dx/d*JR;dy=dy/d*JR;} state.joy.dx=dx/JR; state.joy.dy=dy/JR; joystickKnob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }},{passive:false});
 function resetJoy(){ state.joy.active=false; state.joy.dx=0; state.joy.dy=0; joystickKnob.style.transform='translate(-50%,-50%)'; joystickKnob.classList.remove('active'); }
 joystickBase.addEventListener('touchend',e=>{ for(const t of e.changedTouches)if(t.identifier===state.joy.id)resetJoy(); });
@@ -3013,6 +3192,7 @@ const touch2={id:null,x:0,y:0};
 
 canvas.addEventListener('touchstart',e=>{
   e.preventDefault();
+  releaseSimCamera();
   for(const t of e.changedTouches){
     const r=joystickBase.getBoundingClientRect();
     const inJoy=t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
@@ -3195,32 +3375,58 @@ dropArea.addEventListener('drop',e=>{
 });
 fileInput.addEventListener('change',e=>{const f=e.target.files[0];if(f)loadFromFile(f);fileInput.value='';});
 
-window.setCamMode=function(mode){
-  // Leaving free cam: restore camera smoothly
-  if(state.camMode==='free' && mode!=='free'){
-    freeCam.active=false;
-    canvas.classList.remove('free-cam');
-  }
+// ── CAMERA MODE UI (shared by user clicks and timeline playback) ─────────
+let _camUIMode=null;
+function setCamModeUI(mode){
   state.camMode=mode;
+  freeCam.active=(mode==='free');
+  if(_camUIMode===mode) return;          // avoid DOM writes every frame during playback
+  _camUIMode=mode;
+  canvas.classList.toggle('free-cam',mode==='free');
   document.getElementById('btn-third').classList.toggle('active',mode==='third');
   document.getElementById('btn-first').classList.toggle('active',mode==='first');
   document.getElementById('btn-free').classList.toggle('active',mode==='free');
   document.getElementById('crosshair').style.display=mode==='first'?'block':'none';
   const fch=document.getElementById('free-cam-hint');
   if(fch) fch.style.display=mode==='free'?'flex':'none';
+}
+
+// Seed the free (orbit) camera so it reproduces exactly the view eye→look
+function syncFreeCamFromView(eye,look){
+  const d=eye.clone().sub(look);
+  let r=d.length();
+  if(r<0.5){
+    const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
+    look=eye.clone().addScaledVector(fwd,10); d.copy(eye).sub(look); r=10;
+  }
+  freeCam.pos.copy(look);
+  freeCam.orbitRadius=Math.max(2,Math.min(200,r));
+  freeCam.yaw=Math.atan2(d.x,d.z);
+  freeCam.pitch=Math.max(-1.5,Math.min(1.5,Math.asin(Math.max(-1,Math.min(1,d.y/r)))));
+}
+
+// Point the camera is currently looking at, according to the active mode
+function currentLookPoint(){
+  if(simCamPose) return simCamPose.look.clone();
+  if(state.camMode==='free'||ridingCraneId!==null) return freeCam.pos.clone();
+  if(state.camMode==='third') return charGroup.position.clone().add(new THREE.Vector3(0,1,0));
+  const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
+  return camera.position.clone().addScaledVector(fwd,10);
+}
+
+window.setCamMode=function(mode){
+  const eye=camera.position.clone();
+  const look=currentLookPoint();
+  const prev=state.camMode;
+  simCamPose=null;                       // user takes control from the timeline
+  setCamModeUI(mode);
   if(mode==='free'){
-    // Seed pivot at the character, camera orbits around it
-    freeCam.pos.copy(charGroup.position).add(new THREE.Vector3(0,2,0));
-    // Extract yaw from current camera direction
-    const dir=new THREE.Vector3();
-    camera.getWorldDirection(dir);
-    freeCam.yaw  = Math.atan2(dir.x,dir.z);
-    freeCam.pitch = 0.35;
-    freeCam.orbitRadius = camera.position.distanceTo(freeCam.pos);
-    if(freeCam.orbitRadius < 3) freeCam.orbitRadius = 20;
-    freeCam.active=true;
-    canvas.classList.add('free-cam');
-    craneLog('Vista libre — clic izq: orbitar · clic der: desplazar · 2 dedos: desplazar');
+    if(prev!=='free'){
+      syncFreeCamFromView(eye,look);     // same view, no jump / no 180° flip
+      craneLog('Vista libre — clic izq: orbitar · clic der: desplazar · 2 dedos: desplazar');
+    }
+  } else {
+    camCurrent.copy(eye);                // 3ª persona se desliza desde la vista actual
   }
 };
 
@@ -3255,6 +3461,7 @@ window.toggleRideCrane=function(){
 
 // Mouse wheel → zoom (change orbit radius) in free cam
 canvas.addEventListener('wheel', e=>{
+  if(simCamPose && state.camMode==='free') releaseSimCamera();
   if(state.camMode==='free' || ridingCraneId!==null){
     freeCam.orbitRadius = Math.max(2, Math.min(200, freeCam.orbitRadius + e.deltaY*0.05));
     e.preventDefault();
@@ -4855,6 +5062,7 @@ function ceUpdateCamInfo() {
     + _ceCam.px.toFixed(1)+', '+_ceCam.py.toFixed(1)+', '+_ceCam.pz.toFixed(1)+')';
 }
 window.ceCaptureCamera = function() {
+  releaseSimCamera();
   _ceCam = captureCameraSnapshot();
   ceUpdateCamInfo();
 };
@@ -4994,6 +5202,7 @@ const REC = {
   recording: false, recorder: null, chunks: [], stream: null,
   resolution: '1080', fps: 30, bitrateMbps: 8,
   savedW: 0, savedH: 0, savedPR: 0,
+  finishing: false, fadeVisual: true, startTs: 0, finishStart: 0, finishDur: 0, withAudio: false,
 };
 const REC_RES = {
   '720':  { w: 1280, h: 720 },
@@ -5001,8 +5210,10 @@ const REC_RES = {
   '1440': { w: 2560, h: 1440 },
 };
 
-function pickRecorderMime() {
-  const prefs = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+function pickRecorderMime(withAudio) {
+  const prefs = withAudio
+    ? ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4']
+    : ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
   for (const m of prefs) { if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; }
   return '';
 }
@@ -5048,8 +5259,8 @@ function estimateTotalSeconds() {
   return Math.max(1, total);
 }
 function recUpdateEstimate() {
-  const secs = estimateTotalSeconds();
-  const sizeMB = (REC.bitrateMbps * secs) / 8;
+  const secs = estimateTotalSeconds() + (musicWanted() || REC.fadeVisual ? MUSIC.fadeOut : 0);
+  const sizeMB = ((REC.bitrateMbps + (musicWanted() ? 0.128 : 0)) * secs) / 8;
   const est = document.getElementById('rec-estimate');
   if (est) est.textContent = '≈ ' + secs.toFixed(0) + 's · ' + sizeMB.toFixed(1) + ' MB aprox.';
 }
@@ -5063,9 +5274,14 @@ window.toggleRecordPanel = function() {
 };
 
 window.startRecording = function(mode) {
-  if (REC.recording) { stopRecording(); return; }
+  if (REC.recording || REC.finishing) { stopRecording(); return; }
   if (!SIM.days.length) { alert('No hay días para grabar.'); return; }
-  const mime = pickRecorderMime();
+  if (MUSIC.mode === 'custom' && !MUSIC.customBuf) { alert('Elige un archivo de audio o cambia la música a "Épica" / "Sin música".'); return; }
+  const withAudio = musicWanted();
+  if (withAudio) { musicCtx(); if (MUSIC.previewing) musicStop(); }   // el AudioContext debe activarse en el clic
+  REC.withAudio = withAudio;
+  REC.startTs = 0; REC.finishStart = 0; REC.finishDur = 0;
+  const mime = pickRecorderMime(withAudio);
   if (!mime || !window.MediaRecorder) { alert('Tu navegador no soporta grabación de video (MediaRecorder).'); return; }
   applyRecordResolution();
   setTimeout(() => {
@@ -5082,12 +5298,18 @@ window.startRecording = function(mode) {
     try { REC.stream = REC.compCanvas.captureStream(REC.fps); }
     catch (err) { alert('No se pudo capturar: ' + err.message); restoreRenderResolution(); REC.compActive=false; return; }
     REC.chunks = [];
+    if (withAudio && musicStart()) {
+      const at = MUSIC.dest && MUSIC.dest.stream.getAudioTracks()[0];
+      if (at) REC.stream.addTrack(at);
+    }
     const opts = { mimeType: mime, videoBitsPerSecond: Math.round(REC.bitrateMbps * 1e6) };
+    if (withAudio) opts.audioBitsPerSecond = 128000;
     try { REC.recorder = new MediaRecorder(REC.stream, opts); }
     catch (err) { REC.recorder = new MediaRecorder(REC.stream); }
     REC.recorder.ondataavailable = e => { if (e.data && e.data.size) REC.chunks.push(e.data); };
     REC.recorder.onstop = () => finalizeRecording(mime);
     REC.recorder.start();
+    REC.startTs = performance.now();
     REC.recording = true;
     updateRecordUI();
     if (mode === 'all') simPlayAll(); else simPlay();
@@ -5142,6 +5364,15 @@ function drawCompositeFrame() {
     ctx.restore();
   }
 
+  // 4) fundido de imagen (abre desde negro, cierra a negro)
+  if (REC.fadeVisual) {
+    let blk = 0;
+    const nowMs = performance.now();
+    if (REC.startTs && MUSIC.fadeIn > 0.05) blk = Math.max(blk, 1 - (nowMs - REC.startTs) / (MUSIC.fadeIn * 1000));
+    if (REC.finishStart && REC.finishDur > 0.05) blk = Math.max(blk, (nowMs - REC.finishStart) / (REC.finishDur * 1000));
+    if (blk > 0) { ctx.fillStyle = 'rgba(0,0,0,' + Math.min(1, blk).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+  }
+
   REC.compRAF = requestAnimationFrame(drawCompositeFrame);
 }
 function roundRect(ctx, x, y, w, h, r) {
@@ -5152,13 +5383,33 @@ function roundRect(ctx, x, y, w, h, r) {
 
 function stopRecording() {
   if (!REC.recording) return;
-  if (REC.recorder && REC.recorder.state !== 'inactive') REC.recorder.stop();
-  REC.recording = false;
+  recFinish();
   if (SIM.playing) simPause();
+}
+
+// Termina la grabación con cierre suave: baja la música y funde la imagen a negro,
+// y solo después detiene el MediaRecorder (la última imagen se mantiene durante el fundido).
+function recFinish() {
+  if (!REC.recording || REC.finishing) return;
+  REC.recording = false;
+  REC.finishing = true;
+  const fo = Math.max(0, MUSIC.fadeOut || 0);
+  const needTail = fo > 0.05 && (MUSIC.active || REC.fadeVisual);
+  if (MUSIC.active) musicFadeOut(fo);
+  REC.finishStart = performance.now();
+  REC.finishDur = needTail ? fo : 0;
   updateRecordUI();
+  setTimeout(() => {
+    if (REC.recorder && REC.recorder.state !== 'inactive') REC.recorder.stop();
+    else { REC.finishing = false; musicStop(); updateRecordUI(); }
+  }, needTail ? fo * 1000 + 150 : 0);
 }
 
 function finalizeRecording(mime) {
+  REC.finishing = false;
+  REC.finishStart = 0;
+  musicStop();
+  updateRecordUI();
   REC.compActive = false;
   if (REC.compRAF) cancelAnimationFrame(REC.compRAF);
   restoreRenderResolution();
@@ -5176,9 +5427,285 @@ function finalizeRecording(mime) {
 function updateRecordUI() {
   const btn = document.getElementById('rec-start-btn');
   const dot = document.getElementById('rec-indicator');
-  if (btn) { btn.textContent = REC.recording ? '■ Detener y guardar' : '● Grabar todos los días'; btn.classList.toggle('recording', REC.recording); }
-  if (dot) dot.style.display = REC.recording ? 'flex' : 'none';
+  if (btn) {
+    btn.textContent = REC.finishing ? '⏳ Cerrando con fundido…' : REC.recording ? '■ Detener y guardar' : '● Grabar todos los días';
+    btn.classList.toggle('recording', REC.recording || REC.finishing);
+  }
+  if (dot) dot.style.display = (REC.recording || REC.finishing) ? 'flex' : 'none';
+  const pv = document.getElementById('mus-preview-btn');
+  if (pv) pv.disabled = REC.recording || REC.finishing;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MÚSICA DEL VIDEO
+// Pista épica generada en el navegador (Web Audio, sin archivos ni derechos de
+// autor): La menor, 76 BPM, bucle de 8 compases. Primer ciclo de introducción
+// (pads + taikos), luego ostinato, metales y percusión completa en bucle.
+// También admite un archivo de audio propio, reproducido en bucle.
+// ═══════════════════════════════════════════════════════════════════════════
+const MUSIC = {
+  mode: 'epic',            // 'epic' | 'custom' | 'none'
+  volume: 0.7, fadeIn: 2.5, fadeOut: 3,
+  ctx: null, active: false, previewing: false,
+  customBuf: null, customName: '',
+  fade: null, master: null, bus: null, dest: null, src: null,
+  timer: null, bar: 0, nextBarTime: 0, noise: null, impulse: null,
+};
+function musicWanted() { return MUSIC.mode === 'epic' || (MUSIC.mode === 'custom' && !!MUSIC.customBuf); }
+
+function musicCtx() {
+  if (!MUSIC.ctx) { const AC = window.AudioContext || window.webkitAudioContext; MUSIC.ctx = new AC(); }
+  if (MUSIC.ctx.state === 'suspended') MUSIC.ctx.resume();
+  return MUSIC.ctx;
+}
+function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function musicNoise(ctx) {
+  if (!MUSIC.noise) {
+    const b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    MUSIC.noise = b;
+  }
+  return MUSIC.noise;
+}
+function musicImpulse(ctx) {
+  if (!MUSIC.impulse) {
+    const len = Math.floor(ctx.sampleRate * 3.2), b = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    MUSIC.impulse = b;
+  }
+  return MUSIC.impulse;
+}
+
+// instrumentos → bus → (seco + reverb) → compresor → volumen → fundido → parlantes + pista del video
+function musicBuild() {
+  const ctx = musicCtx();
+  const fade = ctx.createGain(); fade.gain.value = 0;
+  const master = ctx.createGain(); master.gain.value = MUSIC.volume;
+  const bus = ctx.createGain();
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.3;
+  const rev = ctx.createConvolver(); rev.buffer = musicImpulse(ctx);
+  const wet = ctx.createGain(); wet.gain.value = 0.32;
+  bus.connect(comp); bus.connect(rev); rev.connect(wet); wet.connect(comp);
+  comp.connect(master); master.connect(fade);
+  fade.connect(ctx.destination);
+  const dest = ctx.createMediaStreamDestination(); fade.connect(dest);
+  Object.assign(MUSIC, { fade, master, bus, dest });
+}
+
+function mEnv(g, t, a, peak, hold, rel) {
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(peak, t + a);
+  g.gain.setValueAtTime(peak, t + a + Math.max(0, hold));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + a + Math.max(0, hold) + rel);
+}
+function musPad(out, notes, t, dur) {
+  const ctx = MUSIC.ctx;
+  const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7;
+  f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1300, t + dur * 0.6);
+  const g = ctx.createGain(); mEnv(g, t, 0.9, 1, dur - 0.9, 1.4);
+  f.connect(g); g.connect(out);
+  notes.forEach(n => [-7, 7].forEach(cents => {
+    const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(n); o.detune.value = cents;
+    const og = ctx.createGain(); og.gain.value = 0.028;
+    o.connect(og); og.connect(f); o.start(t); o.stop(t + dur + 1.6);
+  }));
+}
+function musBass(out, n, t, dur) {
+  const ctx = MUSIC.ctx;
+  const g = ctx.createGain(); mEnv(g, t, 0.04, 1, dur - 0.3, 0.5); g.connect(out);
+  [['triangle', n, 0.18], ['sine', n - 12, 0.22]].forEach(([type, m, v]) => {
+    const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m);
+    const og = ctx.createGain(); og.gain.value = v; o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.6);
+  });
+}
+function musTaiko(out, t, v) {
+  const ctx = MUSIC.ctx;
+  const o = ctx.createOscillator(); o.type = 'sine';
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.35);
+  const g = ctx.createGain(); g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(v * 0.9, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + 1);
+  const ns = ctx.createBufferSource(); ns.buffer = musicNoise(ctx);
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+  const ng = ctx.createGain(); ng.gain.setValueAtTime(v * 0.35, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+  ns.connect(lp); lp.connect(ng); ng.connect(out); ns.start(t, Math.random() * 1.5, 0.2);
+}
+function musPluck(out, n, t) {
+  const ctx = MUSIC.ctx;
+  const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(n);
+  const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200;
+  const g = ctx.createGain(); g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.045, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + 0.3);
+}
+function musHorn(out, n, t, dur) {
+  const ctx = MUSIC.ctx;
+  const f = ctx.createBiquadFilter(); f.type = 'lowpass';
+  f.frequency.setValueAtTime(1100, t); f.frequency.linearRampToValueAtTime(1700, t + 0.15);
+  const g = ctx.createGain(); mEnv(g, t, 0.12, 0.075, dur - 0.12, 0.35);
+  f.connect(g); g.connect(out);
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 5;
+  const lg = ctx.createGain(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(5, t + 0.4);
+  lfo.connect(lg); lfo.start(t); lfo.stop(t + dur + 0.5);
+  [-5, 5].forEach(c => {
+    const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(n); o.detune.value = c;
+    lg.connect(o.detune); o.connect(f); o.start(t); o.stop(t + dur + 0.5);
+  });
+}
+function musCrash(out, t) {
+  const ctx = MUSIC.ctx;
+  const ns = ctx.createBufferSource(); ns.buffer = musicNoise(ctx); ns.loop = true;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 4500;
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.10, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+  ns.connect(hp); hp.connect(g); g.connect(out); ns.start(t); ns.stop(t + 2.6);
+}
+function musRiser(out, t, dur) {
+  const ctx = MUSIC.ctx;
+  const ns = ctx.createBufferSource(); ns.buffer = musicNoise(ctx); ns.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2;
+  bp.frequency.setValueAtTime(600, t); bp.frequency.exponentialRampToValueAtTime(5000, t + dur);
+  const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07, t + dur);
+  g.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+  ns.connect(bp); bp.connect(g); g.connect(out); ns.start(t); ns.stop(t + dur + 0.1);
+}
+
+const M_BPM = 76;
+// [notas del pad (MIDI), bajo] — Am · F · C · G · Am · F · G · E
+const M_CH = [
+  [[57,60,64,69],45], [[53,57,60,65],41], [[55,60,64,67],36], [[55,59,62,67],43],
+  [[57,60,64,69],45], [[53,57,60,65],41], [[55,59,62,67],43], [[56,59,64,68],40],
+];
+// melodía de metales: [nota, tiempo de inicio, duración] en negras
+const M_MEL = [
+  [[69,0,1.5],[72,1.5,0.5],[76,2,2]], [[77,0,3],[76,3,1]], [[72,0,2],[74,2,1],[76,3,1]], [[74,0,4]],
+  [[69,0,1.5],[72,1.5,0.5],[76,2,2]], [[77,0,2],[81,2,2]], [[79,0,2],[77,2,1],[74,3,1]], [[76,0,4]],
+];
+function musScheduleBar(out, bar, t) {
+  const beat = 60 / M_BPM, b = bar % 8, intro = bar < 8;
+  const [pad, bass] = M_CH[b];
+  musPad(out, pad, t, beat * 4);
+  if (!intro || b >= 2) { musBass(out, bass, t, beat * 2); musBass(out, bass, t + beat * 2, beat * 2); }
+  if (!intro || b >= 4) {
+    const arp = [pad[0], pad[2], pad[3], pad[2]];
+    for (let i = 0; i < 8; i++) musPluck(out, arp[i % 4] + 12, t + i * beat / 2);
+  }
+  if (intro && b < 4) { if (b % 2 === 0) musTaiko(out, t, 0.7); }
+  else {
+    musTaiko(out, t, 1); musTaiko(out, t + beat * 1.5, 0.6); musTaiko(out, t + beat * 2, 0.9);
+    if (b % 2 === 1) [3, 3.25, 3.5, 3.75].forEach((x, i) => musTaiko(out, t + beat * x, 0.45 + i * 0.12));
+  }
+  if (!intro) M_MEL[b].forEach(([n, st, d]) => musHorn(out, n, t + st * beat, d * beat));
+  if (b === 0 && bar > 0) musCrash(out, t);
+  if (b === 7) musRiser(out, t + beat * 2, beat * 2);
+}
+function musicTick() {
+  if (!MUSIC.active || !MUSIC.bus) return;
+  const ctx = MUSIC.ctx, barDur = 4 * 60 / M_BPM;
+  while (MUSIC.nextBarTime < ctx.currentTime + 0.8) {
+    musScheduleBar(MUSIC.bus, MUSIC.bar, MUSIC.nextBarTime);
+    MUSIC.nextBarTime += barDur; MUSIC.bar++;
+  }
+}
+
+function musicStart() {
+  musicStop();
+  if (!musicWanted()) return false;
+  musicBuild();
+  const ctx = MUSIC.ctx, now = ctx.currentTime;
+  MUSIC.active = true;
+  if (MUSIC.mode === 'custom') {
+    const src = ctx.createBufferSource(); src.buffer = MUSIC.customBuf; src.loop = true;
+    src.connect(MUSIC.master); src.start(now + 0.05); MUSIC.src = src;
+  } else {
+    MUSIC.bar = 0; MUSIC.nextBarTime = now + 0.1;
+    musicTick(); MUSIC.timer = setInterval(musicTick, 120);
+  }
+  const g = MUSIC.fade.gain;
+  g.cancelScheduledValues(now); g.setValueAtTime(0, now);
+  g.linearRampToValueAtTime(1, now + Math.max(0.02, MUSIC.fadeIn));
+  return true;
+}
+function musicFadeOut(sec) {
+  if (!MUSIC.active || !MUSIC.fade) return;
+  const now = MUSIC.ctx.currentTime, g = MUSIC.fade.gain;
+  if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(now);
+  else { g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); }
+  g.linearRampToValueAtTime(0, now + Math.max(0.02, sec));
+}
+function musicStop() {
+  if (MUSIC.timer) { clearInterval(MUSIC.timer); MUSIC.timer = null; }
+  if (MUSIC.src) { try { MUSIC.src.stop(); } catch (e) {} MUSIC.src = null; }
+  const fade = MUSIC.fade;
+  if (fade) {
+    try { fade.gain.cancelScheduledValues(0); fade.gain.setValueAtTime(0, MUSIC.ctx.currentTime); } catch (e) {}
+    setTimeout(() => { try { fade.disconnect(); } catch (e) {} }, 60);
+  }
+  MUSIC.fade = MUSIC.master = MUSIC.bus = null;
+  MUSIC.active = false;
+  MUSIC.previewing = false;
+  const pv = document.getElementById('mus-preview-btn');
+  if (pv) pv.textContent = '▶ Escuchar';
+}
+
+// ── controles del panel ──
+window.musSetMode = function(mode) {
+  if (REC.recording || REC.finishing) return;
+  if (mode === 'custom' && !MUSIC.customBuf) { document.getElementById('mus-file').click(); return; }
+  const wasPreview = MUSIC.previewing;
+  if (wasPreview) musicStop();
+  MUSIC.mode = mode;
+  ['epic','custom','none'].forEach(k => document.getElementById('mus-mode-'+k)?.classList.toggle('active', k === mode));
+  document.getElementById('mus-custom-row').style.display = (mode === 'custom') ? 'flex' : 'none';
+  document.getElementById('mus-opts').style.display = (mode === 'none') ? 'none' : 'flex';
+  if (wasPreview && mode !== 'none') musPreview();
+  recUpdateEstimate();
+};
+window.musLoadFile = async function(input) {
+  const file = input.files[0]; if (!file) return;
+  const lbl = document.getElementById('mus-file-name');
+  lbl.textContent = 'Cargando…';
+  try {
+    const buf = await file.arrayBuffer();
+    MUSIC.customBuf = await musicCtx().decodeAudioData(buf);
+    MUSIC.customName = file.name;
+    lbl.textContent = file.name + ' · ' + MUSIC.customBuf.duration.toFixed(0) + ' s';
+    lbl.title = file.name;
+    musSetMode('custom');
+  } catch (e) {
+    lbl.textContent = 'No se pudo leer el audio';
+  }
+  input.value = '';
+};
+window.musSetVolume = function(v) {
+  MUSIC.volume = Math.max(0, Math.min(1, parseFloat(v) / 100 || 0));
+  document.getElementById('mus-vol-val').textContent = Math.round(MUSIC.volume * 100) + '%';
+  if (MUSIC.master) MUSIC.master.gain.setTargetAtTime(MUSIC.volume, MUSIC.ctx.currentTime, 0.05);
+};
+window.musSetFade = function(which, v) {
+  const n = Math.max(0, Math.min(15, parseFloat(v)));
+  if (isNaN(n)) return;
+  if (which === 'in') MUSIC.fadeIn = n; else MUSIC.fadeOut = n;
+  recUpdateEstimate();
+};
+window.musSetFadeVisual = function(on) { REC.fadeVisual = !!on; recUpdateEstimate(); };
+window.musPreview = function() {
+  if (REC.recording || REC.finishing) return;
+  if (MUSIC.previewing) {
+    musicFadeOut(0.6);
+    MUSIC.previewing = false;
+    document.getElementById('mus-preview-btn').textContent = '▶ Escuchar';
+    setTimeout(() => { if (!MUSIC.previewing && !REC.recording) musicStop(); }, 700);
+    return;
+  }
+  if (!musicWanted()) { if (MUSIC.mode === 'custom') document.getElementById('mus-file').click(); return; }
+  musicCtx();
+  if (musicStart()) {
+    MUSIC.previewing = true;
+    document.getElementById('mus-preview-btn').textContent = '■ Detener';
+  }
+};
 
 // ── PLAYBACK (smooth, hour-based, per-day speed) ─────────────────────────────
 // ── CAMERA SNAPSHOT (Block D) ────────────────────────────────────────────────
@@ -5199,37 +5726,107 @@ function captureCameraSnapshot() {
   return snap;
 }
 
-// Apply a camera snapshot. If `lerpT` (0..1) given, blends from a "from" snapshot.
+// ── CAMERA POSE (mode-independent) ───────────────────────────────────────────
+// Any snapshot (1ª, 3ª persona o libre) se convierte a una pose {eye, look}
+// usando exactamente las mismas fórmulas del loop de render. Las transiciones
+// se interpolan sobre esa pose, así no hay saltos al cambiar de modo.
+// El formato del JSON NO cambia: funciona con animaciones antiguas.
+let simCamPose = null;   // {eye, look} mientras la línea del tiempo controla la cámara
+
+function _n(v, d) { return (typeof v === 'number' && isFinite(v)) ? v : d; }
+function snapIsChar(s) { return s && s.mode !== 'free'; }
+
+function snapshotPose(s) {
+  const eye = new THREE.Vector3(), look = new THREE.Vector3();
+  if (s.mode === 'free') {
+    const r = _n(s.radius, 20), yaw = _n(s.yaw, 0), p = _n(s.pitch, 0.35);
+    look.set(_n(s.fcx, 0), _n(s.fcy, 0), _n(s.fcz, 0));
+    eye.set(look.x + r*Math.sin(yaw)*Math.cos(p), look.y + r*Math.sin(p), look.z + r*Math.cos(yaw)*Math.cos(p));
+  } else {
+    const cx = _n(s.cx, _n(s.px, 0)), cy = _n(s.cy, 0), cz = _n(s.cz, _n(s.pz, 0));
+    const rot = _n(s.charRot, 0), cp = _n(s.camPitch, 0.35);
+    if (s.mode === 'first') {
+      eye.set(cx + Math.sin(rot)*0.3, cy + 1.65, cz + Math.cos(rot)*0.3);
+      look.set(cx + Math.sin(rot)*10, cy + 1.65 + (cp - 0.35)*10, cz + Math.cos(rot)*10);
+    } else {
+      const d = 6;
+      eye.set(cx - Math.sin(rot)*d*Math.cos(cp), cy + d*Math.sin(cp), cz - Math.cos(rot)*d*Math.cos(cp));
+      look.set(cx, cy + 1.0, cz);
+    }
+  }
+  return { eye, look };
+}
+
+// Same-family interpolation of native parameters (keeps orbit arcs / walking paths)
+function lerpFreeSnap(a, b, t) {
+  return { mode: 'free',
+    fcx: lerp(_n(a.fcx,b.fcx), b.fcx, t), fcy: lerp(_n(a.fcy,b.fcy), b.fcy, t), fcz: lerp(_n(a.fcz,b.fcz), b.fcz, t),
+    yaw: lerpAngle(_n(a.yaw,b.yaw), b.yaw, t), pitch: lerp(_n(a.pitch,b.pitch), b.pitch, t),
+    radius: lerp(_n(a.radius,b.radius), b.radius, t) };
+}
+function lerpCharSnap(a, b, t, mode) {
+  return { mode: mode || b.mode,
+    cx: lerp(_n(a.cx,b.cx), b.cx, t), cy: lerp(_n(a.cy,b.cy), b.cy, t), cz: lerp(_n(a.cz,b.cz), b.cz, t),
+    charRot: lerpAngle(_n(a.charRot,b.charRot), b.charRot, t),
+    camPitch: lerp(_n(a.camPitch,b.camPitch), b.camPitch, t) };
+}
+
+// Apply a camera snapshot. If fromSnap + t (0..1) are given, blends from fromSnap.
 function applyCameraSnapshot(snap, fromSnap, t) {
   if (!snap) return;
   t = (t === undefined) ? 1 : Math.max(0, Math.min(1, t));
-  const ease = t<=0?0:t>=1?1:t*t*(3-2*t);
+  const e = t<=0?0:t>=1?1:t*t*(3-2*t);
+  const A = (fromSnap && e < 1) ? fromSnap : null;
+  const B = snap;
 
-  // switch mode immediately to target's mode
-  state.camMode = snap.mode;
+  // 1) Rendered pose
+  let pose;
+  if (!A) pose = snapshotPose(B);
+  else if (A.mode === B.mode) pose = snapshotPose(B.mode === 'free' ? lerpFreeSnap(A, B, e) : lerpCharSnap(A, B, e));
+  else {
+    const pa = snapshotPose(A), pb = snapshotPose(B);
+    pose = { eye: pa.eye.lerp(pb.eye, e), look: pa.look.lerp(pb.look, e) };
+  }
+  simCamPose = pose;
 
-  if (snap.mode === 'free') {
-    const f = (fromSnap && fromSnap.mode === 'free') ? fromSnap : snap;
-    freeCam.pos.set(
-      lerp(f.fcx ?? snap.fcx, snap.fcx, ease),
-      lerp(f.fcy ?? snap.fcy, snap.fcy, ease),
-      lerp(f.fcz ?? snap.fcz, snap.fcz, ease)
-    );
-    freeCam.yaw    = lerp(f.yaw ?? snap.yaw, snap.yaw, ease);
-    freeCam.pitch  = lerp(f.pitch ?? snap.pitch, snap.pitch, ease);
-    freeCam.orbitRadius = lerp(f.radius ?? snap.radius, snap.radius, ease);
-  } else {
-    const f = (fromSnap && fromSnap.mode !== 'free') ? fromSnap : snap;
-    charGroup.position.set(
-      lerp(f.cx ?? snap.cx, snap.cx, ease),
-      lerp(f.cy ?? snap.cy, snap.cy, ease),
-      lerp(f.cz ?? snap.cz, snap.cz, ease)
-    );
-    state.charRot  = lerp(f.charRot ?? snap.charRot, snap.charRot, ease);
-    state.camPitch = lerp(f.camPitch ?? snap.camPitch, snap.camPitch, ease);
+  // 2) Native state (used when the user retakes control after playback)
+  const freeSrc = B.mode === 'free' ? (A && A.mode === 'free' ? lerpFreeSnap(A, B, e) : B)
+                                    : (A && A.mode === 'free' ? A : null);
+  const charSrc = snapIsChar(B) ? (snapIsChar(A) ? lerpCharSnap(A, B, e) : B)
+                                : (snapIsChar(A) ? A : null);
+  if (freeSrc) {
+    freeCam.pos.set(_n(freeSrc.fcx,0), _n(freeSrc.fcy,0), _n(freeSrc.fcz,0));
+    freeCam.yaw = _n(freeSrc.yaw,0); freeCam.pitch = _n(freeSrc.pitch,0.35);
+    freeCam.orbitRadius = _n(freeSrc.radius,20);
+  }
+  if (charSrc) {
+    charGroup.position.set(_n(charSrc.cx,charGroup.position.x), _n(charSrc.cy,charGroup.position.y), _n(charSrc.cz,charGroup.position.z));
+    state.charRot = _n(charSrc.charRot, state.charRot);
+    state.camPitch = _n(charSrc.camPitch, state.camPitch);
     charGroup.rotation.y = state.charRot;
   }
+  setCamModeUI((A && A.mode !== B.mode && e < 0.5) ? A.mode : B.mode);
 }
+
+// Hand the camera back to the user exactly where the timeline left it.
+function releaseSimCamera() {
+  if (!simCamPose) return;
+  const pose = simCamPose;
+  simCamPose = null;
+  if (state.camMode !== 'free') {
+    const np = snapshotPose(captureCameraSnapshot());
+    // mid-transition between modes: native view differs → continue in free mode, same view
+    if (np.eye.distanceTo(pose.eye) > 0.15 || np.look.distanceTo(pose.look) > 0.15) {
+      setCamModeUI('free');
+      syncFreeCamFromView(pose.eye, pose.look);
+    }
+  } else {
+    syncFreeCamFromView(pose.eye, pose.look);
+  }
+  camera.position.copy(pose.eye); camera.lookAt(pose.look);
+  camCurrent.copy(pose.eye);
+}
+window.releaseSimCamera = releaseSimCamera;
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 // ── VISIBILITY (Block C) ─────────────────────────────────────────────────────
@@ -5382,14 +5979,10 @@ function simPause() {
   document.getElementById('tl-play-btn').textContent = '▶ Reproducir';
   document.getElementById('tl-playall-btn')?.classList.remove('active');
   // If we were recording, finish the recording when playback stops/ends.
-  if (REC.recording) {
-    if (REC.recorder && REC.recorder.state !== 'inactive') REC.recorder.stop();
-    REC.recording = false;
-    updateRecordUI();
-  }
+  if (REC.recording) recFinish();
 }
 window.simStop = function() {
-  simPause(); SIM.currentHour = 0; updatePlayhead(); restoreSimState(); updateDateBanner();
+  simPause(); releaseSimCamera(); SIM.currentHour = 0; updatePlayhead(); restoreSimState(); updateDateBanner();
 };
 window.simRewind = function() { simPause(); SIM.currentHour = 0; updatePlayhead(); applySimFrame(0); updateDateBanner(); };
 
@@ -7086,6 +7679,7 @@ function animate(){
   const dt=Math.min(clock.getDelta(),0.05);
   window._liftDt = dt;  // expose to lift physics
   const time=performance.now();
+  if (window.__dimOpen) return;   // Vistas y cotas usa el renderer mientras está abierta
 
   // ── EXPLORER CHARACTER + CAMERA ──
   if(state.modelLoaded){
@@ -7143,6 +7737,12 @@ function animate(){
     // ── CAMERA MODES ──
     const pos=charGroup.position;
 
+    // Timeline (Bloque D) drives the camera: render its pose directly
+    if(simCamPose){
+      camera.position.copy(simCamPose.eye);
+      if(simCamPose.eye.distanceToSquared(simCamPose.look)>1e-6) camera.lookAt(simCamPose.look);
+      camCurrent.copy(simCamPose.eye);
+    } else
     // When riding, camera always orbits the crane regardless of camMode
     if(ridingCraneId!==null && state.camMode!=='free'){
       const sy2=Math.sin(freeCam.yaw), cy2=Math.cos(freeCam.yaw);
@@ -7238,7 +7838,7 @@ function animate(){
 //   s    = URL del Web App público (solo si SHARE_SCRIPT_URL está vacío)
 // Ejemplo: subestacion-explorer.html?m=1AbC...&n=PS%20Colorado&a=1XyZ...&play=1
 // ═══════════════════════════════════════════════════════════════════════════
-const SHARE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9XBhQ0LKCsDxyanM0S7otTlEMuK1MOLcsXoE0w9zBE5_bSNIIAThEWFZoJfrcXiXE/exec';   // ← pega aquí la URL /exec del Web App público
+const SHARE_SCRIPT_URL = '';   // ← pega aquí la URL /exec del Web App público
 
 window._shareModel = null;   // { id, name } del modelo abierto desde la carpeta compartida
 window._shareAnim  = null;   // { id, name } de la animación compartida cargada
@@ -7471,6 +8071,1037 @@ window.shareRefreshList = async function () {
   };
 })();
 
+// ═══════════════════════════════════════════════════════════════════════════
+// VISTAS Y COTAS — vistas ortográficas del modelo, cotas con ajuste a aristas,
+// guardado/recuperación en JSON y lámina PDF con cajetín.
+// Ventana emergente; usa el mismo renderer del explorador (sin duplicar memoria).
+// ═══════════════════════════════════════════════════════════════════════════
+const DV_FORMAT = 'substation-explorer-views';
+const DV_PAGES  = { A4:[297,210], A3:[420,297], A2:[594,420], A1:[841,594] };
+const DV_SCALES = [1,2,5,10,20,25,50,75,100,125,150,200,250,300,400,500,750,1000,1250,1500,2000,2500,3000,4000,5000,7500,10000];
+const DV_SNAP_PX = 12;
+const DV_KIND_LABEL = { plan:'Planta', north:'Alzado Norte', south:'Alzado Sur', east:'Alzado Este', west:'Alzado Oeste', iso:'Isométrica', camera:'Vista 3D' };
+const DV_STYLE_LABEL = { tech:'Técnico (blanco + aristas)', 'color-edges':'Color + aristas', color:'Color' };
+
+const DIMV = {
+  open:false, doc:null, activeId:null, tool:'nav',
+  snaps:{ end:true, mid:true, edge:true, face:true },
+  pending:null, hover:null, hoverReq:false, selId:null, down:null, cursor:null,
+  undo:[], cam:new THREE.OrthographicCamera(-1,1,1,-1,0.01,1000), ray:new THREE.Raycaster(),
+  stage:null, cv:null, ctx2d:null, svg:null, W:0, H:0, dpr:1,
+  dirty:true, ovDirty:true, raf:0, flashT:0, flashMsg:'',
+  meshes:[], meshSet:new Set(), visMeshes:[], box:new THREE.Box3(),
+  edgeGroup:null, edgeMap:new Map(), edgeGeoCache:new Map(), edgeQueue:[], edgeTotal:0, segCache:new Map(),
+  saveTimer:0, _pdfP:null,
+};
+const dvWhiteMat = new THREE.MeshLambertMaterial({ color:0xdfe1e4, emissive:0x5c5e62, toneMapped:false, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1 });
+const dvEdgeMat  = new THREE.LineBasicMaterial({ color:0x15191f, toneMapped:false });
+const dvBg       = new THREE.Color(0xffffff);
+
+// ── utilidades ──────────────────────────────────────────────────────────────
+const dvV3  = a => new THREE.Vector3(a[0], a[1], a[2]);
+const dvArr = v => [+v.x.toFixed(5), +v.y.toFixed(5), +v.z.toFixed(5)];
+const dvId  = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const dvEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const dvF1  = n => (Math.round(n * 10) / 10);
+function dvModelName() { return (document.getElementById('model-name')?.textContent || '').trim() || 'modelo'; }
+function dvActive() { return DIMV.doc ? DIMV.doc.views.find(v => v.id === DIMV.activeId) || null : null; }
+function dvFindItem(id) { const v = dvActive(); return v ? v.items.find(i => i.id === id) || null : null; }
+
+function dvDefaultSettings() {
+  return { unit:'m', decimals:2, showUnit:false, refLevel:0, northDeg:0, page:'A3', edgeAngle:30, showFrame:true,
+    title:{ empresa:'', proyecto:dvModelName().replace(/\.(glb|gltf)$/i, ''), elaboro:'', reviso:'', notas:'' } };
+}
+function dvNewDoc() { return { format:DV_FORMAT, version:1, model:dvModelName(), saved:null, settings:dvDefaultSettings(), views:[] }; }
+
+// Completa campos faltantes (JSON de versiones anteriores o editados a mano)
+function dvNormalize(d) {
+  const def = dvDefaultSettings();
+  d.format = DV_FORMAT; d.version = d.version || 1;
+  d.settings = Object.assign({}, def, d.settings || {});
+  d.settings.title = Object.assign({}, def.title, (d.settings && d.settings.title) || {});
+  d.views = Array.isArray(d.views) ? d.views : [];
+  d.views.forEach(v => {
+    v.id = v.id || dvId(); v.name = v.name || 'Vista';
+    v.kind = v.kind || 'camera';
+    v.dir = v.dir || [0,-1,0]; v.up = v.up || [0,0,-1]; v.center = v.center || [0,0,0];
+    v.halfH = +v.halfH > 0 ? +v.halfH : 10;
+    v.style = DV_STYLE_LABEL[v.style] ? v.style : 'tech';
+    v.equip = v.equip !== false;
+    v.section = Object.assign({ on:false, depth:0 }, v.section || {});
+    v.scale = v.scale || 'auto';
+    v.items = Array.isArray(v.items) ? v.items.filter(i => i && i.type && i.a) : [];
+    v.items.forEach(i => { i.id = i.id || dvId(); });
+  });
+  return d;
+}
+
+// ── orientación ─────────────────────────────────────────────────────────────
+// Norte del proyecto: por defecto −Z (arriba en el minimapa), girado northDeg° en sentido horario.
+function dvNorth() { const t = (DIMV.doc.settings.northDeg || 0) * Math.PI / 180; return new THREE.Vector3(Math.sin(t), 0, -Math.cos(t)); }
+function dvEast()  { return new THREE.Vector3().crossVectors(dvNorth(), new THREE.Vector3(0,1,0)).normalize(); }
+function dvKindDir(kind) {
+  const N = dvNorth(), E = dvEast(), Y = new THREE.Vector3(0,1,0);
+  switch (kind) {
+    case 'plan':  return { dir:[0,-1,0], up:dvArr(N) };
+    case 'north': return { dir:dvArr(N.clone().negate()), up:[0,1,0] };   // visto desde el norte, mirando al sur
+    case 'south': return { dir:dvArr(N), up:[0,1,0] };
+    case 'east':  return { dir:dvArr(E.clone().negate()), up:[0,1,0] };
+    case 'west':  return { dir:dvArr(E), up:[0,1,0] };
+    case 'iso':   return { dir:dvArr(N.clone().sub(E).sub(Y).normalize()), up:[0,1,0] };  // desde el SE, arriba
+    default: {
+      const d = new THREE.Vector3(); camera.getWorldDirection(d);
+      if (Math.abs(d.y) > 0.995) d.set(0.002, Math.sign(d.y), 0.002).normalize();
+      return { dir:dvArr(d), up:[0,1,0] };
+    }
+  }
+}
+function dvBasis(v) {
+  const dir = dvV3(v.dir).normalize();
+  let r = new THREE.Vector3().crossVectors(dir, dvV3(v.up));
+  if (r.lengthSq() < 1e-10) r.set(1,0,0);
+  r.normalize();
+  const u = new THREE.Vector3().crossVectors(r, dir).normalize();
+  return { dir, r, u, c:dvV3(v.center) };
+}
+function dvTo2(B, p) { const x = p.x - B.c.x, y = p.y - B.c.y, z = p.z - B.c.z; return [x*B.r.x + y*B.r.y + z*B.r.z, x*B.u.x + y*B.u.y + z*B.u.z]; }
+function dvFrom2(B, x, y) { return B.c.clone().addScaledVector(B.r, x).addScaledVector(B.u, y); }
+function dvScreen(v) {
+  const B = dvBasis(v), wpp = 2 * v.halfH / Math.max(1, DIMV.H);
+  return { B, wpp, k:1/wpp,
+    to:(x, y) => [DIMV.W/2 + x/wpp, DIMV.H/2 - y/wpp],
+    from:(px, py) => [(px - DIMV.W/2) * wpp, (DIMV.H/2 - py) * wpp] };
+}
+function dvCanOrbit(v) { return v && (v.kind === 'iso' || v.kind === 'camera'); }
+
+// ── contenido del dibujo ────────────────────────────────────────────────────
+function dvExcluded(o) {
+  return o === gridHelper || o === charGroup || o === pickHighlight || o === DIMV.edgeGroup || o.isLight || o.isCamera
+    || state.measureMarkers.includes(o) || o === state.measureLine;
+}
+function dvContentRoots(v) {
+  const model = scene.getObjectByName('__model__'), roots = [];
+  if (model) roots.push(model);
+  if (v && v.equip) scene.children.forEach(c => { if (c !== model && !dvExcluded(c)) roots.push(c); });
+  return roots;
+}
+function dvVisible(o) { for (let p = o; p; p = p.parent) { if (!p.visible) return false; if (p === scene) return true; } return false; }
+
+function dvCollect() {
+  scene.updateMatrixWorld();
+  const v = dvActive(), ms = [];
+  dvContentRoots(v).forEach(r => r.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position) ms.push(o); }));
+  DIMV.meshes = ms; DIMV.meshSet = new Set(ms);
+  DIMV.visMeshes = ms.filter(dvVisible);
+  DIMV.edgeMap.forEach((ls, m) => { let p = m; while (p && p !== scene) p = p.parent; if (!p) { DIMV.edgeGroup.remove(ls); DIMV.edgeMap.delete(m); DIMV.segCache.delete(m); } });
+  DIMV.edgeQueue = DIMV.visMeshes.filter(m => !m.isInstancedMesh && !DIMV.edgeMap.has(m));
+  DIMV.edgeTotal = DIMV.edgeQueue.length;
+  const box = new THREE.Box3(), tmp = new THREE.Box3();
+  DIMV.visMeshes.forEach(m => {
+    if (m.isInstancedMesh) { if (m.computeBoundingBox) { m.computeBoundingBox(); tmp.copy(m.boundingBox).applyMatrix4(m.matrixWorld); box.union(tmp); } return; }
+    const g = m.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    tmp.copy(g.boundingBox).applyMatrix4(m.matrixWorld); box.union(tmp);
+  });
+  if (box.isEmpty()) box.setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(10,10,10));
+  DIMV.box = box;
+}
+
+// Aristas (EdgesGeometry por geometría, compartidas entre mallas)
+function dvEdgeGeo(geom) {
+  let e = DIMV.edgeGeoCache.get(geom.uuid);
+  if (!e) { e = new THREE.EdgesGeometry(geom, DIMV.doc.settings.edgeAngle || 30); DIMV.edgeGeoCache.set(geom.uuid, e); }
+  return e;
+}
+function dvEnsureEdgeObj(mesh) {
+  if (DIMV.edgeMap.has(mesh)) return;
+  let eg; try { eg = dvEdgeGeo(mesh.geometry); } catch (err) { return; }
+  const ls = new THREE.LineSegments(eg, dvEdgeMat);
+  ls.matrixAutoUpdate = false; ls.raycast = () => {}; ls.userData.__dimHelper = true;
+  DIMV.edgeMap.set(mesh, ls); DIMV.edgeGroup.add(ls);
+  const c = DIMV.segCache.get(mesh); if (c) c.segs = null;
+}
+function dvProcessEdges() {
+  if (!DIMV.edgeQueue.length) return;
+  const t0 = performance.now();
+  while (DIMV.edgeQueue.length && performance.now() - t0 < 10) dvEnsureEdgeObj(DIMV.edgeQueue.shift());
+  DIMV.dirty = true; dvUpdateStatus();
+}
+function dvFlushEdges() { while (DIMV.edgeQueue.length) dvEnsureEdgeObj(DIMV.edgeQueue.shift()); }
+function dvResetEdges() {
+  DIMV.edgeMap.forEach(ls => DIMV.edgeGroup.remove(ls));
+  DIMV.edgeMap.clear(); DIMV.edgeGeoCache.forEach(g => g.dispose()); DIMV.edgeGeoCache.clear(); DIMV.segCache.clear();
+  dvCollect(); DIMV.dirty = true;
+}
+
+// ── encuadre y profundidad ──────────────────────────────────────────────────
+function dvBoxCorners(box) {
+  const a = box.min, b = box.max, out = [];
+  for (let i = 0; i < 8; i++) out.push(new THREE.Vector3(i & 1 ? b.x : a.x, i & 2 ? b.y : a.y, i & 4 ? b.z : a.z));
+  return out;
+}
+function dvFit(v) {
+  const B = dvBasis(v);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  const ctr = DIMV.box.getCenter(new THREE.Vector3());
+  dvBoxCorners(DIMV.box).forEach(p => { const x = p.dot(B.r), y = p.dot(B.u); x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
+  const c = ctr.clone().addScaledVector(B.r, (x0 + x1) / 2 - ctr.dot(B.r)).addScaledVector(B.u, (y0 + y1) / 2 - ctr.dot(B.u));
+  v.center = dvArr(c);
+  const aspect = DIMV.W && DIMV.H ? DIMV.W / DIMV.H : 1.6;
+  v.halfH = Math.max((y1 - y0) / 2, (x1 - x0) / 2 / aspect) * 1.12 + 0.3;
+}
+function dvDepthRange(v) {
+  const d = dvV3(v.dir).normalize(); let a = Infinity, b = -Infinity;
+  dvBoxCorners(DIMV.box).forEach(p => { const t = p.dot(d); a = Math.min(a, t); b = Math.max(b, t); });
+  return [a, b];
+}
+
+// ── render ──────────────────────────────────────────────────────────────────
+function dvSetupCam(cam, v, aspect, halfH) {
+  const B = dvBasis(v);
+  const sph = DIMV.box.getBoundingSphere(new THREE.Sphere());
+  const D = sph.radius + B.c.distanceTo(sph.center) + 20;
+  cam.left = -halfH * aspect; cam.right = halfH * aspect; cam.top = halfH; cam.bottom = -halfH;
+  cam.near = 0.01; cam.far = D * 2 + 10;
+  cam.position.copy(B.c).addScaledVector(B.dir, -D);
+  cam.up.copy(B.u); cam.lookAt(B.c);
+  cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  return B;
+}
+function dvRenderTo(v, cam, w, h, halfH) {
+  if (renderer.getPixelRatio() !== 1) renderer.setPixelRatio(1);
+  const sz = renderer.getSize(new THREE.Vector2());
+  if (sz.x !== w || sz.y !== h) renderer.setSize(w, h, false);
+  const B = dvSetupCam(cam, v, w / h, halfH);
+
+  const roots = new Set(dvContentRoots(v)), hidden = [];
+  scene.children.forEach(c => { if (c === DIMV.edgeGroup || c.isLight) return; if (!roots.has(c) && c.visible) { c.visible = false; hidden.push(c); } });
+  const bg = scene.background, fog = scene.fog, fn = fog ? fog.near : 0, ff = fog ? fog.far : 0;
+  scene.background = dvBg; if (fog) { fog.near = 1e7; fog.far = 2e7; }
+  scene.updateMatrixWorld();
+
+  const edges = v.style !== 'color';
+  if (DIMV.edgeGroup.parent !== scene) scene.add(DIMV.edgeGroup);
+  DIMV.edgeGroup.visible = edges;
+  if (edges) DIMV.edgeMap.forEach((ls, m) => {
+    ls.visible = DIMV.meshSet.has(m) && dvVisible(m);
+    if (ls.visible) { ls.matrix.copy(m.matrixWorld); ls.matrixWorldNeedsUpdate = true; }
+  });
+  DIMV.edgeGroup.updateMatrixWorld(true);
+
+  const swapped = [], offs = new Set();
+  if (v.style === 'tech') DIMV.visMeshes.forEach(m => { swapped.push([m, m.material]); m.material = dvWhiteMat; });
+  else if (v.style === 'color-edges') DIMV.visMeshes.forEach(m => {
+    (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => { if (mt && !mt.polygonOffset && !offs.has(mt)) offs.add(mt); });
+  });
+  offs.forEach(mt => { mt.polygonOffset = true; mt.polygonOffsetFactor = 1; mt.polygonOffsetUnits = 1; });
+  renderer.clippingPlanes = v.section.on ? [new THREE.Plane(B.dir.clone(), -v.section.depth)] : [];
+  // dibujo sin sombras (el mapa de sombras del explorador se ve pixelado en vistas ortográficas)
+  const rs = DIMV.visMeshes.map(m => m.receiveShadow); DIMV.visMeshes.forEach(m => { m.receiveShadow = false; });
+  const smAuto = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
+
+  renderer.render(scene, cam);
+
+  renderer.shadowMap.autoUpdate = smAuto; renderer.shadowMap.needsUpdate = true;
+  DIMV.visMeshes.forEach((m, i) => { m.receiveShadow = rs[i]; });
+  renderer.clippingPlanes = [];
+  offs.forEach(mt => { mt.polygonOffset = false; mt.polygonOffsetFactor = 0; mt.polygonOffsetUnits = 0; });
+  swapped.forEach(([m, mt]) => { m.material = mt; });
+  DIMV.edgeGroup.visible = false;
+  scene.background = bg; if (fog) { fog.near = fn; fog.far = ff; }
+  hidden.forEach(c => { c.visible = true; });
+}
+function dvRender() {
+  const ctx = DIMV.ctx2d, v = dvActive();
+  const w = Math.max(2, Math.round(DIMV.W * DIMV.dpr)), h = Math.max(2, Math.round(DIMV.H * DIMV.dpr));
+  if (!v) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); return; }
+  dvRenderTo(v, DIMV.cam, w, h, v.halfH);
+  ctx.drawImage(renderer.domElement, 0, 0, w, h, 0, 0, w, h);
+}
+function dvLoop() {
+  if (!DIMV.open) return;
+  DIMV.raf = requestAnimationFrame(dvLoop);
+  dvProcessEdges();
+  if (DIMV.dirty) { DIMV.dirty = false; DIMV.ovDirty = true; dvRender(); }
+  if (DIMV.hoverReq) { DIMV.hoverReq = false; dvUpdateHover(); }
+  if (DIMV.ovDirty) { DIMV.ovDirty = false; dvDrawOverlay(); }
+  if (DIMV.flashT && performance.now() > DIMV.flashT) { DIMV.flashT = 0; dvUpdateStatus(); }
+}
+
+// ── ajuste a extremos / puntos medios / aristas / superficie ───────────────
+function dvMeshCache(mesh) {
+  const me = mesh.matrixWorld.elements; let c = DIMV.segCache.get(mesh);
+  if (c) { let same = true; for (let i = 0; i < 16; i++) if (c.m[i] !== me[i]) { same = false; break; } if (same) return c; }
+  const g = mesh.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+  c = { m:Float64Array.from(me), center:g.boundingSphere.center.clone().applyMatrix4(mesh.matrixWorld),
+        radius:g.boundingSphere.radius * mesh.matrixWorld.getMaxScaleOnAxis(), segs:null };
+  DIMV.segCache.set(mesh, c); return c;
+}
+function dvSegs(mesh, c) {
+  if (c.segs) return c.segs;
+  if (mesh.isInstancedMesh) return null;
+  const eg = DIMV.edgeGeoCache.get(mesh.geometry.uuid); if (!eg) return null;
+  const s = eg.attributes.position.array, e = c.m, o = new Float32Array(s.length);
+  for (let i = 0; i < s.length; i += 3) {
+    const x = s[i], y = s[i+1], z = s[i+2];
+    o[i] = e[0]*x + e[4]*y + e[8]*z + e[12]; o[i+1] = e[1]*x + e[5]*y + e[9]*z + e[13]; o[i+2] = e[2]*x + e[6]*y + e[10]*z + e[14];
+  }
+  return (c.segs = o);
+}
+function dvSnap(px, py) {
+  const v = dvActive(), sc = dvScreen(v), B = sc.B, dir = B.dir, r = B.r, u = B.u;
+  const [cx, cy] = sc.from(px, py), tol = DV_SNAP_PX * sc.wpp;
+  const cut = v.section.on ? v.section.depth : -Infinity;
+  let hit = null;
+  if (DIMV.visMeshes.length) {
+    dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH);
+    DIMV.ray.setFromCamera(new THREE.Vector2(px / DIMV.W * 2 - 1, -py / DIMV.H * 2 + 1), DIMV.cam);
+    const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false);
+    for (const h of hs) if (h.point.dot(dir) >= cut - 1e-4) { hit = h; break; }
+  }
+  const hitDepth = hit ? hit.point.dot(dir) : Infinity, epsD = Math.max(0.005, tol * 0.6);
+  const cr = B.c.dot(r), cu = B.c.dot(u), S = DIMV.snaps;
+  let bE = null, bM = null, bG = null;
+  const better = (cur, d, depth) => !cur || d < cur.d - tol * 0.05 || (Math.abs(d - cur.d) <= tol * 0.05 && depth < cur.depth);
+  if (S.end || S.mid || S.edge) for (const mesh of DIMV.visMeshes) {
+    const c = dvMeshCache(mesh);
+    const sx = c.center.dot(r) - cr, sy = c.center.dot(u) - cu;
+    if (Math.hypot(sx - cx, sy - cy) > c.radius + tol) continue;
+    if (c.center.dot(dir) + c.radius < cut) continue;
+    const sg = dvSegs(mesh, c); if (!sg) continue;
+    for (let i = 0; i < sg.length; i += 6) {
+      let x1 = sg[i], y1 = sg[i+1], z1 = sg[i+2], x2 = sg[i+3], y2 = sg[i+4], z2 = sg[i+5];
+      let d1 = x1*dir.x + y1*dir.y + z1*dir.z, d2 = x2*dir.x + y2*dir.y + z2*dir.z;
+      if (d1 < cut && d2 < cut) continue;
+      if (d1 < cut || d2 < cut) {
+        const t = (cut - d1) / (d2 - d1), ix = x1 + (x2-x1)*t, iy = y1 + (y2-y1)*t, iz = z1 + (z2-z1)*t;
+        if (d1 < cut) { x1 = ix; y1 = iy; z1 = iz; d1 = cut; } else { x2 = ix; y2 = iy; z2 = iz; d2 = cut; }
+      }
+      const ax = x1*r.x + y1*r.y + z1*r.z - cr, ay = x1*u.x + y1*u.y + z1*u.z - cu;
+      const bx = x2*r.x + y2*r.y + z2*r.z - cr, by = x2*u.x + y2*u.y + z2*u.z - cu;
+      if ((ax < cx - tol && bx < cx - tol) || (ax > cx + tol && bx > cx + tol) || (ay < cy - tol && by < cy - tol) || (ay > cy + tol && by > cy + tol)) continue;
+      const ex = bx - ax, ey = by - ay, L2 = ex*ex + ey*ey;
+      let t = L2 > 1e-18 ? ((cx - ax)*ex + (cy - ay)*ey) / L2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const dd = Math.hypot(ax + ex*t - cx, ay + ey*t - cy); if (dd > tol) continue;
+      const dT = d1 + (d2 - d1) * t; if (dT > hitDepth + epsD) continue;
+      const seg = [x1, y1, z1, x2, y2, z2];
+      if (S.end) {
+        const da = Math.hypot(ax - cx, ay - cy), db = Math.hypot(bx - cx, by - cy);
+        if (da <= tol && d1 <= hitDepth + epsD && better(bE, da, d1)) bE = { d:da, p:[x1,y1,z1], seg, depth:d1 };
+        if (db <= tol && d2 <= hitDepth + epsD && better(bE, db, d2)) bE = { d:db, p:[x2,y2,z2], seg, depth:d2 };
+      }
+      if (S.mid) {
+        const dm = Math.hypot((ax + bx)/2 - cx, (ay + by)/2 - cy), dmD = (d1 + d2) / 2;
+        if (dm <= tol && dmD <= hitDepth + epsD && better(bM, dm, dmD)) bM = { d:dm, p:[(x1+x2)/2, (y1+y2)/2, (z1+z2)/2], seg, depth:dmD };
+      }
+      if (S.edge && better(bG, dd, dT)) bG = { d:dd, p:[x1 + (x2-x1)*t, y1 + (y2-y1)*t, z1 + (z2-z1)*t], seg, depth:dT };
+    }
+  }
+  let best = null, kind = null;
+  if (bE && (!bM || bE.d <= bM.d)) { best = bE; kind = 'end'; }
+  else if (bM) { best = bM; kind = 'mid'; }
+  else if (bG) { best = bG; kind = 'edge'; }
+  if (best) return { kind, p:dvV3(best.p), seg:[dvV3(best.seg.slice(0,3)), dvV3(best.seg.slice(3))] };
+  if (hit && S.face) return { kind:'face', p:hit.point.clone(), seg:null };
+  return { kind:'free', p:dvFrom2(B, cx, cy), seg:null };
+}
+function dvStepNeedsSnap() {
+  const t = DIMV.tool, s = DIMV.pending ? DIMV.pending.step : 0;
+  if (t === 'nav') return false;
+  if (t === 'linear' || t === 'aligned' || t === 'edges') return s < 2;
+  return s < 1;
+}
+function dvUpdateHover() {
+  if (!DIMV.cursor || !dvActive() || !dvStepNeedsSnap() || (DIMV.down && DIMV.down.moved)) { if (DIMV.hover) { DIMV.hover = null; DIMV.ovDirty = true; } dvUpdateCoords(); return; }
+  DIMV.hover = dvSnap(DIMV.cursor[0], DIMV.cursor[1]);
+  DIMV.ovDirty = true; dvUpdateCoords();
+}
+
+// ── cotas: medición, texto y geometría ──────────────────────────────────────
+function dvFmt(m) {
+  const st = DIMV.doc.settings, f = { m:1, cm:100, mm:1000 }[st.unit] || 1;
+  let s = (m * f).toFixed(Math.max(0, Math.min(4, st.decimals | 0)));
+  if (st.showUnit) s += ' ' + st.unit;
+  return s;
+}
+function dvMeasure(it, B) {
+  if (it.type === 'level') return it.a[1] - (+DIMV.doc.settings.refLevel || 0);
+  if (it.type === 'note') return 0;
+  const d = dvV3(it.b).sub(dvV3(it.a));
+  if (it.type === 'linear') return Math.abs(d.dot(it.axis === 'v' ? B.u : B.r));
+  return d.addScaledVector(B.dir, -d.dot(B.dir)).length();
+}
+function dvLabel(it, B) {
+  if (it.type === 'note') return it.text || '';
+  const val = dvMeasure(it, B);
+  const base = it.type === 'level' ? ('N ' + (val >= 0 ? '+' : '-') + dvFmt(Math.abs(val))) : dvFmt(val);
+  return it.text ? it.text.replace(/<>/g, base) : base;
+}
+// Tamaños en unidades de salida (px en pantalla, mm en PDF) → metros del modelo
+function dvSizes(k, pdf) {
+  const b = pdf ? { txt:2.5, arrow:2.2, gap:1.0, ext:1.8, tgap:0.9, mark:1.4 } : { txt:12, arrow:9, gap:3, ext:6, tgap:4, mark:6 };
+  const o = {}; for (const key in b) o[key] = b[key] / k; return o;
+}
+function dvArrowTri(P, w, S) {   // punta en P; cuerpo hacia w
+  const a = S.arrow, h = a * 0.19, nx = -w[1], ny = w[0];
+  return [[P[0], P[1]], [P[0] + w[0]*a + nx*h, P[1] + w[1]*a + ny*h], [P[0] + w[0]*a - nx*h, P[1] + w[1]*a - ny*h]];
+}
+// Geometría de una cota en coordenadas de vista (metros, y hacia arriba)
+function dvItemGeom(it, B, S) {
+  const g = { lines:[], tris:[], texts:[], n:null };
+  if (it.type === 'linear' || it.type === 'aligned') {
+    const A = dvTo2(B, dvV3(it.a)), Bp = dvTo2(B, dvV3(it.b));
+    let u;
+    if (it.type === 'linear') u = it.axis === 'v' ? [0, 1] : [1, 0];
+    else { const dx = Bp[0] - A[0], dy = Bp[1] - A[1], L = Math.hypot(dx, dy); if (L < 1e-9) return null; u = [dx / L, dy / L]; }
+    const n = [-u[1], u[0]]; g.n = n;
+    const dA = A[0]*n[0] + A[1]*n[1], dB = Bp[0]*n[0] + Bp[1]*n[1], c = dA + (it.offset || 0);
+    const P1 = [A[0] + n[0]*(c - dA), A[1] + n[1]*(c - dA)], P2 = [Bp[0] + n[0]*(c - dB), Bp[1] + n[1]*(c - dB)];
+    [[A, c - dA, P1], [Bp, c - dB, P2]].forEach(([Q, dd, P]) => {
+      if (Math.abs(dd) < S.gap * 1.3) return;
+      const s = Math.sign(dd);
+      g.lines.push([Q[0] + n[0]*s*S.gap, Q[1] + n[1]*s*S.gap, P[0] + n[0]*s*S.ext, P[1] + n[1]*s*S.ext]);
+    });
+    const L = Math.hypot(P2[0] - P1[0], P2[1] - P1[1]); if (L < 1e-9) return null;
+    const w = [(P2[0] - P1[0]) / L, (P2[1] - P1[1]) / L];
+    if (L > S.arrow * 2.6) { g.lines.push([P1[0], P1[1], P2[0], P2[1]]); g.tris.push(dvArrowTri(P1, w, S), dvArrowTri(P2, [-w[0], -w[1]], S)); }
+    else { const e = S.arrow * 1.8; g.lines.push([P1[0] - w[0]*e, P1[1] - w[1]*e, P2[0] + w[0]*e, P2[1] + w[1]*e]); g.tris.push(dvArrowTri(P1, [-w[0], -w[1]], S), dvArrowTri(P2, w, S)); }
+    const wr = (w[0] > 1e-9 || (Math.abs(w[0]) <= 1e-9 && w[1] > 0)) ? w : [-w[0], -w[1]];
+    const tu = [-wr[1], wr[0]], M = [(P1[0] + P2[0]) / 2, (P1[1] + P2[1]) / 2];
+    g.texts.push({ x:M[0] + tu[0]*S.tgap, y:M[1] + tu[1]*S.tgap, str:dvLabel(it, B), dir:wr, anchor:'middle' });
+    return g;
+  }
+  if (it.type === 'level' || it.type === 'note') {
+    const A = dvTo2(B, dvV3(it.a)), off = it.off || [S.mark*4, S.mark*3], Lp = [A[0] + off[0], A[1] + off[1]];
+    const str = dvLabel(it, B), tw = str.length * S.txt * 0.58, side = off[0] >= 0 ? 1 : -1, s = S.mark;
+    if (it.type === 'level') g.tris.push([[A[0], A[1]], [A[0] - s, A[1] + 1.7*s], [A[0] + s, A[1] + 1.7*s]]);
+    else {
+      const dx = A[0] - Lp[0], dy = A[1] - Lp[1], L = Math.hypot(dx, dy);
+      if (L > 1e-9) g.tris.push(dvArrowTri(A, [-dx / L, -dy / L], S));
+    }
+    if (Math.hypot(off[0], off[1]) > s * 0.5) g.lines.push([A[0], A[1], Lp[0], Lp[1]]);
+    g.lines.push([Lp[0], Lp[1], Lp[0] + side * (tw + S.tgap * 2), Lp[1]]);
+    g.texts.push({ x:Lp[0] + side * S.tgap, y:Lp[1] + S.tgap, str, dir:[1, 0], anchor:side > 0 ? 'start' : 'end' });
+    return g;
+  }
+  return null;
+}
+
+// ── colocación de cotas ─────────────────────────────────────────────────────
+function dvAutoAxis(B, a, b, cur) {
+  const A = dvTo2(B, a), Bp = dvTo2(B, b);
+  const x0 = Math.min(A[0], Bp[0]), x1 = Math.max(A[0], Bp[0]), y0 = Math.min(A[1], Bp[1]), y1 = Math.max(A[1], Bp[1]);
+  const inX = cur[0] >= x0 && cur[0] <= x1, inY = cur[1] >= y0 && cur[1] <= y1;
+  if (inX && !inY) return 'h';
+  if (inY && !inX) return 'v';
+  if (inX && inY) return (x1 - x0) >= (y1 - y0) ? 'h' : 'v';
+  const ex = Math.min(Math.abs(cur[0] - x0), Math.abs(cur[0] - x1)), ey = Math.min(Math.abs(cur[1] - y0), Math.abs(cur[1] - y1));
+  return ey > ex ? 'h' : 'v';
+}
+function dvBuildDim(P, cur, sc) {
+  const type = P.type === 'edges' ? 'aligned' : P.type;
+  const it = { id:dvId(), type, a:dvArr(P.a), b:dvArr(P.b), offset:0, text:'' };
+  if (P.type === 'edges') it.edges = true;
+  if (type === 'linear') it.axis = P.force || dvAutoAxis(sc.B, P.a, P.b, cur);
+  const g = dvItemGeom(it, sc.B, dvSizes(sc.k)); if (!g) return null;
+  const A2 = dvTo2(sc.B, P.a);
+  it.offset = (cur[0] - A2[0]) * g.n[0] + (cur[1] - A2[1]) * g.n[1];
+  if (dvMeasure(it, sc.B) < 1e-6) return null;
+  return it;
+}
+function dvFootOnEdge(a, segA, seg, B) {
+  const a2 = dvTo2(B, a), q1 = dvTo2(B, seg[0]), q2 = dvTo2(B, seg[1]);
+  const ex = q2[0] - q1[0], ey = q2[1] - q1[1], L2 = ex*ex + ey*ey; if (L2 < 1e-12) return null;
+  const t = ((a2[0] - q1[0]) * ex + (a2[1] - q1[1]) * ey) / L2;
+  const p1 = dvTo2(B, segA[0]), p2 = dvTo2(B, segA[1]), fx = p2[0] - p1[0], fy = p2[1] - p1[1], Lf = Math.hypot(fx, fy);
+  const parallel = Lf > 1e-9 && Math.abs(fx * ey - fy * ex) / (Lf * Math.sqrt(L2)) < Math.sin(1.5 * Math.PI / 180);
+  return { p:seg[0].clone().lerp(seg[1], t), parallel };
+}
+function dvPushUndo() {
+  const v = dvActive(); if (!v) return;
+  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items) });
+  if (DIMV.undo.length > 100) DIMV.undo.shift();
+}
+window.dvUndo = function () {
+  const s = DIMV.undo.pop(); if (!s) { dvFlash('Nada que deshacer'); return; }
+  const v = DIMV.doc.views.find(x => x.id === s.id); if (!v) return;
+  v.items = JSON.parse(s.items); DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
+  dvChanged(true);
+};
+function dvCommit(it) { dvPushUndo(); dvActive().items.push(it); DIMV.selId = it.id; dvChanged(true); }
+window.dvDeleteSel = function () {
+  const v = dvActive(); if (!v || !DIMV.selId) { dvFlash('Selecciona una cota con 🖐 Navegar'); return; }
+  dvPushUndo(); v.items = v.items.filter(i => i.id !== DIMV.selId); DIMV.selId = null; dvChanged(true);
+};
+function dvEditText(it) {
+  if (!it) return;
+  let val;
+  if (it.type === 'note') { val = prompt('Texto de la nota:', it.text || ''); if (val === null) return; if (!val.trim()) return; }
+  else { val = prompt('Texto de la cota («<>» = valor medido; vacío = automático):', it.text || '<>'); if (val === null) return; if (val.trim() === '<>') val = ''; }
+  dvPushUndo(); it.text = val; dvChanged(true);
+}
+function dvToolClick(x, y) {
+  const v = dvActive(), sc = dvScreen(v), t = DIMV.tool, P = DIMV.pending, step = P ? P.step : 0;
+  const snap = dvStepNeedsSnap() ? dvSnap(x, y) : null, cur = sc.from(x, y);
+  if (t === 'linear' || t === 'aligned') {
+    if (step === 0) DIMV.pending = { type:t, step:1, a:snap.p };
+    else if (step === 1) { if (snap.p.distanceTo(P.a) < 1e-6) return; P.b = snap.p; P.step = 2; }
+    else { const it = dvBuildDim(P, cur, sc); DIMV.pending = null; if (it) dvCommit(it); else dvFlash('Cota de longitud cero en esta vista'); }
+  } else if (t === 'edges') {
+    if (step < 2 && !snap.seg) { dvFlash('Haz clic sobre una arista (activa Extremo, Medio o Arista)'); return; }
+    if (step === 0) DIMV.pending = { type:'edges', step:1, a:snap.p, segA:snap.seg };
+    else if (step === 1) {
+      const f = dvFootOnEdge(P.a, P.segA, snap.seg, sc.B);
+      if (!f) { dvFlash('Arista degenerada en esta vista'); return; }
+      if (dvTo2(sc.B, f.p).every((c, i) => Math.abs(c - dvTo2(sc.B, P.a)[i]) < 1e-6)) { dvFlash('Las aristas coinciden en esta vista'); return; }
+      P.b = f.p; P.par = f.parallel; P.step = 2;
+    } else {
+      const it = dvBuildDim(P, cur, sc); DIMV.pending = null;
+      if (it) { dvCommit(it); if (!P.par) dvFlash('Aristas no paralelas: se midió la perpendicular a la 2ª arista'); }
+    }
+  } else if (t === 'level' || t === 'note') {
+    if (step === 0) DIMV.pending = { type:t, step:1, a:snap.p };
+    else {
+      const A2 = dvTo2(sc.B, P.a), it = { id:dvId(), type:t, a:dvArr(P.a), off:[cur[0] - A2[0], cur[1] - A2[1]], text:'' };
+      DIMV.pending = null;
+      if (t === 'note') { const txt = prompt('Texto de la nota:', ''); if (!txt || !txt.trim()) { DIMV.ovDirty = true; dvUpdateStatus(); return; } it.text = txt.trim(); }
+      dvCommit(it);
+    }
+  }
+  DIMV.hoverReq = true; DIMV.ovDirty = true; dvUpdateStatus();
+}
+function dvPreviewItem(sc) {
+  const P = DIMV.pending; if (!P || !DIMV.cursor) return null;
+  const cur = sc.from(DIMV.cursor[0], DIMV.cursor[1]);
+  if ((P.type === 'linear' || P.type === 'aligned' || P.type === 'edges') && P.step === 2) { const it = dvBuildDim(P, cur, sc); if (it) it.id = '__pv'; return it; }
+  if ((P.type === 'level' || P.type === 'note') && P.step === 1) {
+    const A2 = dvTo2(sc.B, P.a);
+    return { id:'__pv', type:P.type, a:dvArr(P.a), off:[cur[0] - A2[0], cur[1] - A2[1]], text:P.type === 'note' ? 'Nota…' : '' };
+  }
+  return null;
+}
+
+// ── superposición SVG ───────────────────────────────────────────────────────
+function dvLayout(page) {
+  const [PW, PH] = DV_PAGES[page] || DV_PAGES.A3, tbH = page === 'A4' ? 22 : 26;
+  const frame = { x:10, y:10, w:PW - 20, h:PH - 20 };
+  return { PW, PH, frame, tb:{ x:frame.x, y:frame.y + frame.h - tbH, w:frame.w, h:tbH },
+           area:{ x:frame.x + 3, y:frame.y + 3, w:frame.w - 6, h:frame.h - tbH - 6 } };
+}
+function dvPrintScale(v, aspect, area) {
+  if (v.scale !== 'auto' && +v.scale > 0) return +v.scale;
+  const Hh = 2 * v.halfH, Ww = Hh * aspect, need = Math.max(Ww * 1000 / area.w, Hh * 1000 / area.h);
+  return DV_SCALES.find(s => s >= need * 0.999) || Math.ceil(need / 1000) * 1000;
+}
+function dvItemSVG(it, sc, S, cls) {
+  const g = dvItemGeom(it, sc.B, S); if (!g) return '';
+  const P = (x, y) => sc.to(x, y).map(dvF1);
+  let s = `<g class="dv-it ${cls}" data-id="${it.id}">`, hit = '';
+  g.lines.forEach(l => { const a = P(l[0], l[1]), b = P(l[2], l[3]);
+    s += `<line class="dv-l" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
+    hit += `<line class="dv-hit" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; });
+  g.tris.forEach(t => { s += `<polygon class="dv-a" points="${t.map(p => P(p[0], p[1]).join(',')).join(' ')}"/>`; });
+  g.texts.forEach(t => { const p = P(t.x, t.y), deg = dvF1(Math.atan2(-t.dir[1], t.dir[0]) * 180 / Math.PI);
+    s += `<text class="dv-t" x="${p[0]}" y="${p[1]}" text-anchor="${t.anchor}" transform="rotate(${deg} ${p[0]} ${p[1]})">${dvEsc(t.str)}</text>`; });
+  return s + hit + '</g>';
+}
+function dvSnapSVG(h, sc) {
+  const [x, y] = sc.to(...dvTo2(sc.B, h.p)).map(dvF1), lab = { end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie', free:'' }[h.kind];
+  let s = '';
+  if (h.seg) { const a = sc.to(...dvTo2(sc.B, h.seg[0])).map(dvF1), b = sc.to(...dvTo2(sc.B, h.seg[1])).map(dvF1);
+    s += `<line class="dv-seg" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; }
+  if (h.kind === 'end') s += `<rect class="dv-snap" x="${x-5}" y="${y-5}" width="10" height="10"/>`;
+  else if (h.kind === 'mid') s += `<polygon class="dv-snap" points="${x},${y-6} ${x+6},${y+5} ${x-6},${y+5}"/>`;
+  else if (h.kind === 'edge') s += `<path class="dv-snap" d="M${x-5} ${y-5}L${x+5} ${y-5}L${x-5} ${y+5}L${x+5} ${y+5}Z"/>`;
+  else if (h.kind === 'face') s += `<circle class="dv-snap" cx="${x}" cy="${y}" r="4"/>`;
+  else s += `<path class="dv-snap thin" d="M${x-6} ${y}H${x+6}M${x} ${y-6}V${y+6}"/>`;
+  if (lab) s += `<text class="dv-snap-t" x="${x + 10}" y="${y - 9}">${lab}</text>`;
+  return s;
+}
+function dvDrawOverlay() {
+  const svg = DIMV.svg, v = dvActive();
+  svg.setAttribute('viewBox', `0 0 ${DIMV.W} ${DIMV.H}`);
+  if (!v) { svg.innerHTML = ''; return; }
+  const sc = dvScreen(v), S = dvSizes(sc.k, false), st = DIMV.doc.settings;
+  let h = '';
+  if (st.showFrame) {
+    const L = dvLayout(st.page), Sc = dvPrintScale(v, DIMV.W / DIMV.H, L.area);
+    const fw = L.area.w * Sc / 1000 / sc.wpp, fh = L.area.h * Sc / 1000 / sc.wpp, fx = DIMV.W/2 - fw/2, fy = DIMV.H/2 - fh/2;
+    h += `<rect class="dv-frame" x="${dvF1(fx)}" y="${dvF1(fy)}" width="${dvF1(fw)}" height="${dvF1(fh)}"/>`;
+    h += `<text class="dv-frame-t" x="${dvF1(Math.max(6, fx + 6))}" y="${dvF1(Math.max(14, fy + 14))}">${st.page} · 1:${Sc}${v.scale === 'auto' ? ' (auto)' : ''}</text>`;
+  }
+  v.items.forEach(it => { h += dvItemSVG(it, sc, S, it.id === DIMV.selId ? 'sel' : ''); });
+  const P = DIMV.pending;
+  if (P) {
+    const a = sc.to(...dvTo2(sc.B, P.a)).map(dvF1);
+    if (P.segA) { const p = sc.to(...dvTo2(sc.B, P.segA[0])).map(dvF1), q = sc.to(...dvTo2(sc.B, P.segA[1])).map(dvF1);
+      h += `<line class="dv-seg keep" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"/>`; }
+    h += `<circle class="dv-pt" cx="${a[0]}" cy="${a[1]}" r="3.5"/>`;
+    if (P.step === 1 && DIMV.hover && P.type !== 'level' && P.type !== 'note') {
+      const b = sc.to(...dvTo2(sc.B, DIMV.hover.p)).map(dvF1);
+      h += `<line class="dv-rubber" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
+    }
+    const pv = dvPreviewItem(sc); if (pv) h += dvItemSVG(pv, sc, S, 'pv');
+  }
+  if (DIMV.hover && dvStepNeedsSnap()) h += dvSnapSVG(DIMV.hover, sc);
+  svg.innerHTML = h;
+}
+
+// ── estado / UI ─────────────────────────────────────────────────────────────
+const DV_HINTS = {
+  nav:['Arrastrar: desplazar · Rueda: zoom · Shift+arrastrar: orbitar (isométrica / 3D) · Clic en una cota: seleccionar y arrastrar · Doble clic: editar texto · Supr: borrar'],
+  linear:['Lineal: clic en el primer punto', 'Lineal: clic en el segundo punto', 'Ubica la línea de cota · H / V fuerza horizontal o vertical'],
+  aligned:['Alineada: clic en el primer punto', 'Alineada: clic en el segundo punto', 'Ubica la línea de cota'],
+  edges:['Entre aristas: clic sobre la primera arista', 'Clic sobre la segunda arista (paralela)', 'Ubica la línea de cota'],
+  level:['Nivel: clic en el punto a nivelar', 'Ubica la etiqueta del nivel'],
+  note:['Nota: clic en el punto a señalar', 'Ubica el texto de la nota'],
+};
+function dvFlash(msg) { DIMV.flashMsg = msg; DIMV.flashT = performance.now() + 3500; dvUpdateStatus(); }
+function dvUpdateStatus() {
+  const el = document.getElementById('dv-st-hint'); if (!el) return;
+  if (DIMV.flashT) { el.innerHTML = '<span class="dv-warn">⚠ ' + dvEsc(DIMV.flashMsg) + '</span>'; return; }
+  let s;
+  if (!dvActive()) s = 'Crea una vista con «＋ Nueva vista…» para empezar.';
+  else if (DIMV.tool === 'nav' && DIMV.selId) {
+    const it = dvFindItem(DIMV.selId), v = dvActive();
+    s = it ? `Seleccionado: <b>${{ linear:'Lineal ' + (it.axis === 'v' ? 'vertical' : 'horizontal'), aligned:it.edges ? 'Entre aristas' : 'Alineada', level:'Nivel', note:'Nota' }[it.type]}</b> ${dvEsc(dvLabel(it, dvBasis(v)))} · Arrastrar: mover · Doble clic: editar texto · Supr: borrar` : DV_HINTS.nav[0];
+  } else { const arr = DV_HINTS[DIMV.tool]; s = arr[Math.min(arr.length - 1, DIMV.pending ? DIMV.pending.step : 0)] + (DIMV.tool !== 'nav' ? ' · Esc: cancelar · clic der.: cancelar' : ''); }
+  if (DIMV.edgeQueue.length) s += ` · <span class="dv-busy">Calculando aristas ${DIMV.edgeTotal - DIMV.edgeQueue.length}/${DIMV.edgeTotal}…</span>`;
+  el.innerHTML = s;
+}
+function dvUpdateCoords() {
+  const el = document.getElementById('dv-st-coord'); if (!el) return;
+  const h = DIMV.hover;
+  if (!h) { el.textContent = ''; return; }
+  const lv = h.p.y - (+DIMV.doc.settings.refLevel || 0);
+  el.textContent = `X ${h.p.x.toFixed(3)}  Y ${h.p.y.toFixed(3)}  Z ${h.p.z.toFixed(3)}  ·  N ${lv >= 0 ? '+' : ''}${lv.toFixed(3)}`;
+}
+window.dvSetTool = function (t) {
+  DIMV.tool = t; DIMV.pending = null; if (t !== 'nav') DIMV.selId = null;
+  document.querySelectorAll('#dv-tools [data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  DIMV.stage.classList.toggle('drawing', t !== 'nav');
+  DIMV.hoverReq = true; DIMV.ovDirty = true; dvUpdateStatus();
+};
+window.dvToggleSnap = function (k) {
+  DIMV.snaps[k] = !DIMV.snaps[k];
+  document.querySelector(`#dv-tools [data-snap="${k}"]`)?.classList.toggle('active', DIMV.snaps[k]);
+  DIMV.hoverReq = true;
+};
+function dvSaveLocal() { try { if (DIMV.doc) localStorage.setItem('sim_dimviews:' + DIMV.doc.model, JSON.stringify(DIMV.doc)); } catch (e) {} }
+function dvLoadLocal(model) { try { const s = localStorage.getItem('sim_dimviews:' + model); return s ? dvNormalize(JSON.parse(s)) : null; } catch (e) { return null; } }
+function dvChanged(items) {
+  DIMV.ovDirty = true;
+  if (items) dvRefreshList();
+  dvUpdateStatus();
+  clearTimeout(DIMV.saveTimer); DIMV.saveTimer = setTimeout(dvSaveLocal, 700);
+}
+function dvRefreshList() {
+  const el = document.getElementById('dv-list'); if (!el) return;
+  if (!DIMV.doc.views.length) { el.innerHTML = '<div class="dv-empty-list">Sin vistas todavía.</div>'; return; }
+  el.innerHTML = DIMV.doc.views.map(v => `<div class="dv-row${v.id === DIMV.activeId ? ' active' : ''}" onclick="dvSelectView('${v.id}')">
+      <span class="dv-row-k">${dvEsc((DV_KIND_LABEL[v.kind] || '').slice(0, 1))}</span>
+      <span class="dv-row-n" title="${dvEsc(v.name)}">${dvEsc(v.name)}</span>
+      <span class="dv-row-c" title="Cotas">${v.items.length}</span>
+      <button class="dv-ib" title="Duplicar" onclick="event.stopPropagation();dvDupView('${v.id}')">⧉</button>
+      <button class="dv-ib" title="Eliminar" onclick="event.stopPropagation();dvDelView('${v.id}')">✕</button></div>`).join('');
+}
+function dvSectionLabel(v) {
+  const rg = dvDepthRange(v);
+  if (v.kind === 'plan') return 'Altura de corte  Y = ' + (-v.section.depth).toFixed(2) + ' m';
+  return 'Profundidad de corte  ' + (v.section.depth - rg[0]).toFixed(2) + ' m';
+}
+function dvRefreshProps() {
+  const el = document.getElementById('dv-props'), v = dvActive();
+  if (!v) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  const rg = dvDepthRange(v), sl = rg[1] > rg[0] ? Math.round((v.section.depth - rg[0]) / (rg[1] - rg[0]) * 1000) : 500;
+  const L = dvLayout(DIMV.doc.settings.page), Sc = dvPrintScale(v, (DIMV.W / DIMV.H) || 1.6, L.area);
+  el.innerHTML = `<div class="dv-sec-t">Vista activa · ${dvEsc(DV_KIND_LABEL[v.kind] || '')}</div>
+    <label class="dv-f"><span>Nombre</span><input class="dv-in" value="${dvEsc(v.name)}" onchange="dvSetProp('name',this.value)"></label>
+    <label class="dv-f"><span>Estilo</span><select class="dv-in" onchange="dvSetProp('style',this.value)">
+      ${Object.keys(DV_STYLE_LABEL).map(k => `<option value="${k}"${v.style === k ? ' selected' : ''}>${DV_STYLE_LABEL[k]}</option>`).join('')}</select></label>
+    <label class="dv-chk"><input type="checkbox"${v.equip ? ' checked' : ''} onchange="dvSetProp('equip',this.checked)"> Incluir grúas y equipos</label>
+    <label class="dv-chk"><input type="checkbox"${v.section.on ? ' checked' : ''} onchange="dvSetProp('sectionOn',this.checked)"> Corte / sección</label>
+    <div class="dv-cut"${v.section.on ? '' : ' style="display:none"'}>
+      <input type="range" min="0" max="1000" value="${sl}" oninput="dvSetProp('sectionPos',this.value)">
+      <div class="dv-cut-l" id="dv-cut-l">${dvSectionLabel(v)}</div></div>
+    <label class="dv-f"><span>Escala PDF</span><select class="dv-in" onchange="dvSetProp('scale',this.value)">
+      <option value="auto"${v.scale === 'auto' ? ' selected' : ''}>Automática</option>
+      ${[10,20,25,50,75,100,125,150,200,250,300,400,500,750,1000,1500,2000,2500,5000].map(s => `<option value="${s}"${+v.scale === s ? ' selected' : ''}>1:${s}</option>`).join('')}</select></label>
+    <div class="dv-note" id="dv-scale-note">Lámina ${DIMV.doc.settings.page} → 1:${Sc}</div>
+    <div class="dv-btnrow"><button class="dv-btn sm" onclick="dvFitActive()">⤢ Encuadrar</button>
+      ${dvCanOrbit(v) ? '<button class="dv-btn sm" onclick="dvFromCamera()" title="Tomar la dirección de la cámara del explorador">🎥 Desde cámara</button>' : ''}</div>`;
+}
+function dvRefreshSettings() {
+  const st = DIMV.doc.settings, set = (id, val) => { const e = document.getElementById(id); if (e) { if (e.type === 'checkbox') e.checked = !!val; else e.value = val; } };
+  set('dvs-page', st.page); set('dvs-unit', st.unit); set('dvs-dec', st.decimals); set('dvs-showunit', st.showUnit);
+  set('dvs-ref', st.refLevel); set('dvs-north', st.northDeg); set('dvs-edge', st.edgeAngle); set('dvs-frame', st.showFrame);
+  ['empresa', 'proyecto', 'elaboro', 'reviso', 'notas'].forEach(k => set('dvs-t-' + k, st.title[k] || ''));
+  document.getElementById('dv-model').textContent = DIMV.doc.model;
+}
+function dvRefreshUI() {
+  dvRefreshList(); dvRefreshProps(); dvRefreshSettings(); dvUpdateStatus();
+  document.getElementById('dv-empty').style.display = dvActive() ? 'none' : 'flex';
+}
+window.dvSetProp = function (k, val) {
+  const v = dvActive(); if (!v) return;
+  if (k === 'name') { v.name = String(val).trim() || v.name; dvRefreshList(); }
+  else if (k === 'style') { v.style = val; DIMV.dirty = true; }
+  else if (k === 'equip') { v.equip = !!val; dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; }
+  else if (k === 'sectionOn') { v.section.on = !!val; dvRefreshProps(); DIMV.dirty = true; DIMV.hoverReq = true; }
+  else if (k === 'sectionPos') {
+    const rg = dvDepthRange(v); v.section.depth = rg[0] + (rg[1] - rg[0]) * (+val / 1000);
+    const l = document.getElementById('dv-cut-l'); if (l) l.textContent = dvSectionLabel(v);
+    DIMV.dirty = true; DIMV.hoverReq = true;
+  }
+  else if (k === 'scale') { v.scale = val === 'auto' ? 'auto' : +val; dvRefreshProps(); }
+  dvChanged(false);
+};
+window.dvSetSetting = function (k, val) {
+  const st = DIMV.doc.settings;
+  if (k.startsWith('t-')) st.title[k.slice(2)] = val;
+  else if (k === 'decimals') st.decimals = Math.max(0, Math.min(4, parseInt(val) || 0));
+  else if (k === 'refLevel' || k === 'northDeg') st[k] = parseFloat(val) || 0;
+  else if (k === 'edgeAngle') { const a = Math.max(1, Math.min(89, parseFloat(val) || 30)); if (a !== st.edgeAngle) { st.edgeAngle = a; dvResetEdges(); } }
+  else if (k === 'showUnit' || k === 'showFrame') st[k] = !!val;
+  else st[k] = val;
+  if (k === 'page') dvRefreshProps();
+  dvChanged(false); DIMV.ovDirty = true;
+};
+window.dvFitActive = function () { const v = dvActive(); if (!v) return; dvFit(v); DIMV.dirty = true; dvRefreshProps(); dvChanged(false); };
+window.dvFromCamera = function () {
+  const v = dvActive(); if (!v) return;
+  const k = dvKindDir('camera'); v.dir = k.dir; v.up = k.up;
+  const look = currentLookPoint(); v.center = dvArr(look);
+  v.halfH = Math.max(1, camera.position.distanceTo(look) * Math.tan(camera.fov * Math.PI / 360));
+  DIMV.dirty = true; dvRefreshProps(); dvChanged(false);
+};
+function dvUniqueName(base) { const names = new Set(DIMV.doc.views.map(v => v.name)); if (!names.has(base)) return base; let i = 2; while (names.has(base + ' ' + i)) i++; return base + ' ' + i; }
+window.dvNewView = function (kind) {
+  if (!kind) return;
+  const k = dvKindDir(kind);
+  const v = { id:dvId(), name:dvUniqueName(DV_KIND_LABEL[kind]), kind, dir:k.dir, up:k.up, center:[0,0,0], halfH:10,
+              style:(kind === 'iso' || kind === 'camera') ? 'color-edges' : 'tech', equip:true, section:{ on:false, depth:0 }, scale:'auto', items:[] };
+  DIMV.doc.views.push(v); DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
+  dvCollect();
+  if (kind === 'camera') dvFromCamera(); else dvFit(v);
+  const rg = dvDepthRange(v); v.section.depth = (rg[0] + rg[1]) / 2;
+  DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+};
+window.dvSelectView = function (id) {
+  if (id === DIMV.activeId) return;
+  DIMV.activeId = id; DIMV.selId = null; DIMV.pending = null; DIMV.hover = null;
+  dvCollect(); DIMV.dirty = true; dvRefreshUI();
+};
+window.dvDupView = function (id) {
+  const v = DIMV.doc.views.find(x => x.id === id); if (!v) return;
+  const c = JSON.parse(JSON.stringify(v)); c.id = dvId(); c.name = dvUniqueName(v.name + ' (copia)'); c.items.forEach(i => { i.id = dvId(); });
+  DIMV.doc.views.splice(DIMV.doc.views.indexOf(v) + 1, 0, c); DIMV.activeId = c.id;
+  dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+};
+window.dvDelView = function (id) {
+  const v = DIMV.doc.views.find(x => x.id === id); if (!v) return;
+  if (!confirm(`¿Eliminar la vista «${v.name}»${v.items.length ? ' y sus ' + v.items.length + ' cotas' : ''}?`)) return;
+  const i = DIMV.doc.views.indexOf(v); DIMV.doc.views.splice(i, 1);
+  DIMV.undo = DIMV.undo.filter(u => u.id !== id);
+  if (DIMV.activeId === id) { const n = DIMV.doc.views[Math.min(i, DIMV.doc.views.length - 1)]; DIMV.activeId = n ? n.id : null; }
+  DIMV.selId = null; DIMV.pending = null; dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+};
+
+// ── JSON ────────────────────────────────────────────────────────────────────
+function dvFileBase() { return (DIMV.doc.settings.title.proyecto || DIMV.doc.model || 'vistas').replace(/\.(glb|gltf)$/i, '').replace(/[^\w\-áéíóúñÁÉÍÓÚÑ]+/g, '_'); }
+window.dvSaveJSON = function () {
+  const d = DIMV.doc; d.saved = new Date().toISOString(); d.model = dvModelName();
+  const url = URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type:'application/json' }));
+  Object.assign(document.createElement('a'), { href:url, download:dvFileBase() + '_vistas-cotas.json' }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  dvSaveLocal(); dvFlash('JSON guardado');
+};
+window.dvOpenJSON = function () { document.getElementById('dv-json-input').click(); };
+window.dvLoadJSONFile = async function (input) {
+  const f = input.files[0]; input.value = ''; if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch (e) { alert('El archivo no es un JSON válido.'); return; }
+  if (!d || d.format !== DV_FORMAT || !Array.isArray(d.views)) { alert('Este JSON no es un archivo de «Vistas y cotas».'); return; }
+  if (d.model && d.model !== dvModelName() && !confirm(`El archivo se creó para el modelo «${d.model}» y el cargado es «${dvModelName()}».\n¿Abrirlo de todos modos?`)) return;
+  DIMV.doc = dvNormalize(d); DIMV.doc.model = dvModelName();
+  DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null;
+  DIMV.undo = []; DIMV.selId = null; DIMV.pending = null;
+  dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+  dvFlash(`Cargadas ${DIMV.doc.views.length} vistas`);
+};
+
+// ── PDF ─────────────────────────────────────────────────────────────────────
+function dvLoadJsPDF() {
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (DIMV._pdfP) return DIMV._pdfP;
+  DIMV._pdfP = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => res(window.jspdf.jsPDF);
+    s.onerror = () => { DIMV._pdfP = null; rej(new Error('No se pudo cargar jsPDF')); };
+    document.head.appendChild(s);
+  });
+  return DIMV._pdfP;
+}
+const dvPS = s => String(s == null ? '' : s).replace(/[−–—]/g, '-').replace(/[^\x20-\xFF]/g, '');
+function dvPdfPage(doc, v, idx, total, aspect) {
+  const st = DIMV.doc.settings, L = dvLayout(st.page), A = L.area, S = dvPrintScale(v, aspect, A), k = 1000 / S;
+  // 1) imagen de la vista
+  const prevActive = DIMV.activeId; DIMV.activeId = v.id; dvCollect(); dvFlushEdges();
+  const dpi = Math.min(150, 4096 / (A.w / 25.4), 4096 / (A.h / 25.4));   // ~0.17 mm por línea de arista
+  const wpx = Math.round(A.w / 25.4 * dpi), hpx = Math.round(A.h / 25.4 * dpi);
+  dvRenderTo(v, new THREE.OrthographicCamera(), wpx, hpx, A.h / 2 / k);
+  const png = v.style === 'tech';
+  const img = renderer.domElement.toDataURL(png ? 'image/png' : 'image/jpeg', 0.92);
+  DIMV.activeId = prevActive;
+  doc.addImage(img, png ? 'PNG' : 'JPEG', A.x, A.y, A.w, A.h, undefined, 'FAST');
+
+  // 2) cotas vectoriales
+  const B = dvBasis(v), cx = A.x + A.w / 2, cy = A.y + A.h / 2, to = (x, y) => [cx + x * k, cy - y * k];
+  const Sz = dvSizes(k, true), fontPt = 2.5 / 0.3528;
+  doc.saveGraphicsState();
+  doc.rect(A.x, A.y, A.w, A.h, null); doc.clip(); doc.discardPath();
+  doc.setDrawColor(20, 45, 110); doc.setFillColor(20, 45, 110); doc.setTextColor(20, 45, 110);
+  doc.setLineWidth(0.18); doc.setFont('helvetica', 'normal'); doc.setFontSize(fontPt);
+  v.items.forEach(it => {
+    const g = dvItemGeom(it, B, Sz); if (!g) return;
+    g.lines.forEach(l => { const a = to(l[0], l[1]), b = to(l[2], l[3]); doc.line(a[0], a[1], b[0], b[1]); });
+    g.tris.forEach(t => { const p = t.map(q => to(q[0], q[1])); doc.triangle(p[0][0], p[0][1], p[1][0], p[1][1], p[2][0], p[2][1], 'F'); });
+    g.texts.forEach(t => {
+      const str = dvPS(t.str), p = to(t.x, t.y), wo = [t.dir[0], -t.dir[1]], up = [wo[1], -wo[0]];
+      const tw = doc.getTextWidth(str), th = 2.5 * 0.78, pad = 0.35;
+      const sh = t.anchor === 'middle' ? tw / 2 : t.anchor === 'end' ? tw : 0;
+      const sx = p[0] - wo[0] * sh, sy = p[1] - wo[1] * sh;
+      const c0 = [sx - wo[0]*pad - up[0]*pad, sy - wo[1]*pad - up[1]*pad], c1 = [c0[0] + wo[0]*(tw + 2*pad), c0[1] + wo[1]*(tw + 2*pad)];
+      const c2 = [c1[0] + up[0]*(th + 2*pad), c1[1] + up[1]*(th + 2*pad)], c3 = [c0[0] + up[0]*(th + 2*pad), c0[1] + up[1]*(th + 2*pad)];
+      doc.setFillColor(255, 255, 255);
+      doc.triangle(c0[0], c0[1], c1[0], c1[1], c2[0], c2[1], 'F'); doc.triangle(c0[0], c0[1], c2[0], c2[1], c3[0], c3[1], 'F');
+      doc.setFillColor(20, 45, 110);
+      doc.text(str, sx, sy, { angle:Math.atan2(t.dir[1], t.dir[0]) * 180 / Math.PI });
+    });
+  });
+  doc.restoreGraphicsState();
+
+  // 3) escala gráfica y norte
+  doc.setDrawColor(0); doc.setTextColor(0); doc.setLineWidth(0.2);
+  const Lm = [0.1,0.2,0.5,1,2,5,10,20,25,50,100,200,500,1000].filter(m => m * k <= 60).pop() || 0.1;
+  const len = Lm * k, x0 = A.x + 6, y0 = A.y + A.h - 6;
+  doc.setFillColor(255, 255, 255); doc.rect(x0 - 3, y0 - 7, len + 22, 10, 'F');
+  for (let i = 0; i < 4; i++) { doc.setFillColor(i % 2 ? 255 : 0); doc.rect(x0 + i * len / 4, y0 - 1.6, len / 4, 1.6, 'FD'); }
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
+  doc.text('0', x0, y0 + 2.5, { align:'center' }); doc.text(dvPS(Lm + ' m'), x0 + len, y0 + 2.5, { align:'center' });
+  doc.setFont('helvetica', 'bold'); doc.text('ESCALA 1:' + S, x0, y0 - 3);
+  if (v.kind === 'plan') {
+    const N = dvNorth(), nx = N.dot(B.r), ny = -N.dot(B.u), nl = Math.hypot(nx, ny) || 1, d = [nx / nl, ny / nl], pr = [-d[1], d[0]];
+    const c = [A.x + A.w - 12, A.y + 12];
+    doc.setFillColor(255, 255, 255); doc.circle(c[0], c[1], 7.5, 'F');
+    doc.setLineWidth(0.25); doc.circle(c[0], c[1], 6, 'S'); doc.setFillColor(0);
+    doc.triangle(c[0] + d[0]*5.5, c[1] + d[1]*5.5, c[0] + pr[0]*2 - d[0]*3, c[1] + pr[1]*2 - d[1]*3, c[0] - d[0]*1.2, c[1] - d[1]*1.2, 'F');
+    doc.triangle(c[0] + d[0]*5.5, c[1] + d[1]*5.5, c[0] - pr[0]*2 - d[0]*3, c[1] - pr[1]*2 - d[1]*3, c[0] - d[0]*1.2, c[1] - d[1]*1.2, 'S');
+    doc.setFontSize(7); doc.text('N', c[0] + d[0]*9.5, c[1] + d[1]*9.5 + 1.2, { align:'center' });
+  }
+
+  // 4) marco y cajetín
+  const F = L.frame, T = L.tb, t = st.title;
+  doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(F.x, F.y, F.w, F.h, 'S');
+  doc.setLineWidth(0.35); doc.line(T.x, T.y, T.x + T.w, T.y);
+  const unitName = { m:'metros', cm:'centímetros', mm:'milímetros' }[st.unit] || st.unit;
+  const today = new Date(), fecha = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  const cells = [
+    ['EMPRESA / PROYECTO', 0.29, [[t.empresa || '', 'bold', 9], [t.proyecto || '', 'normal', 8], ['Modelo: ' + DIMV.doc.model, 'normal', 5.5]]],
+    ['VISTA', 0.28, [[v.name, 'bold', 10.5], [(DV_KIND_LABEL[v.kind] || '') + (v.section.on ? ' · ' + dvSectionLabel(v) : ''), 'normal', 6.5],
+                     ['Cotas en ' + unitName + ' · Niveles: N +0.00 = Y ' + (+st.refLevel || 0).toFixed(3), 'normal', 5.5], [t.notas || '', 'normal', 5.5]]],
+    ['ESCALA', 0.08, [['1:' + S, 'bold', 10], [st.page, 'normal', 6.5]]],
+    ['FECHA', 0.09, [[fecha, 'normal', 8]]],
+    ['ELABORÓ', 0.10, [[t.elaboro || '', 'normal', 7.5]]],
+    ['REVISÓ', 0.09, [[t.reviso || '', 'normal', 7.5]]],
+    ['LÁMINA', 0.07, [[idx + ' / ' + total, 'bold', 10]]],
+  ];
+  let x = T.x;
+  cells.forEach(([lab, fr, rows], i) => {
+    const w = T.w * fr;
+    if (i > 0) doc.line(x, T.y, x, T.y + T.h);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(5); doc.setTextColor(110); doc.text(dvPS(lab), x + 1.5, T.y + 2.8);
+    doc.setTextColor(0);
+    let yy = T.y + 2.8;
+    rows.forEach(([txt, wgt, pt]) => {
+      if (!txt) return;
+      doc.setFont('helvetica', wgt); doc.setFontSize(pt);
+      const lines = doc.splitTextToSize(dvPS(txt), w - 3).slice(0, 2);
+      lines.forEach(ln => { yy += pt * 0.3528 * 1.25; if (yy < T.y + T.h - 0.8) doc.text(ln, x + 1.5, yy); });
+    });
+    x += w;
+  });
+}
+window.dvExportPDF = async function (all) {
+  const views = all ? DIMV.doc.views.slice() : [dvActive()].filter(Boolean);
+  if (!views.length) { alert('No hay vistas para exportar.'); return; }
+  const el = document.getElementById('dv-st-hint'); if (el) el.innerHTML = '<span class="dv-busy">Generando PDF…</span>';
+  let jsPDF;
+  try { jsPDF = await dvLoadJsPDF(); } catch (e) { alert('No se pudo cargar la librería de PDF. Revisa la conexión a internet.'); dvUpdateStatus(); return; }
+  try {
+    const st = DIMV.doc.settings, fmt = st.page.toLowerCase(), aspect = (DIMV.W / DIMV.H) || 1.6;
+    const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:fmt, compress:true });
+    for (let i = 0; i < views.length; i++) {
+      if (i > 0) doc.addPage(fmt, 'landscape');
+      dvPdfPage(doc, views[i], i + 1, views.length, aspect);
+      await new Promise(r => setTimeout(r, 0));
+    }
+    doc.setProperties({ title:(st.title.proyecto || DIMV.doc.model) + ' — Vistas y cotas', creator:'Substation Explorer' });
+    doc.save(dvFileBase() + (all ? '_vistas' : '_' + views[0].name.replace(/[^\w\-áéíóúñÁÉÍÓÚÑ]+/g, '_')) + '.pdf');
+    dvFlash('PDF generado (' + views.length + (views.length === 1 ? ' lámina)' : ' láminas)'));
+  } catch (e) {
+    console.error(e); alert('Error al generar el PDF: ' + e.message);
+  } finally {
+    dvCollect(); DIMV.dirty = true; dvUpdateStatus();
+  }
+};
+
+// ── abrir / cerrar ──────────────────────────────────────────────────────────
+function dvResize() {
+  const r = DIMV.stage.getBoundingClientRect();
+  DIMV.W = Math.max(50, Math.round(r.width)); DIMV.H = Math.max(50, Math.round(r.height));
+  DIMV.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  DIMV.cv.width = Math.round(DIMV.W * DIMV.dpr); DIMV.cv.height = Math.round(DIMV.H * DIMV.dpr);
+  DIMV.dirty = true;
+  if (dvActive()) dvRefreshProps();
+}
+window.openDimViews = function () {
+  if (!state.modelLoaded) { alert('Carga primero un modelo.'); return; }
+  if (REC.recording || REC.finishing) { alert('Termina la grabación antes de abrir Vistas y cotas.'); return; }
+  if (SIM.playing) simPause();
+  if (state.measuring) toggleMeasure();
+  Object.keys(state.keys).forEach(k => { state.keys[k] = false; });
+  const mn = dvModelName();
+  if (!DIMV.doc || DIMV.doc.model !== mn) {
+    DIMV.doc = dvLoadLocal(mn) || dvNewDoc(); DIMV.doc.model = mn;
+    DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null; DIMV.undo = []; DIMV.selId = null;
+  }
+  if (!DIMV.edgeGroup) { DIMV.edgeGroup = new THREE.Group(); DIMV.edgeGroup.name = '__dimviews_edges__'; DIMV.edgeGroup.userData.__dimHelper = true; }
+  scene.add(DIMV.edgeGroup); DIMV.edgeGroup.visible = false;
+  DIMV.open = true; window.__dimOpen = true;
+  document.getElementById('dv-modal').classList.add('open');
+  canvas.style.visibility = 'hidden';
+  dvResize(); dvCollect(); dvRefreshUI(); dvSetTool(DIMV.tool);
+  DIMV.dirty = true;
+  cancelAnimationFrame(DIMV.raf); dvLoop();
+};
+window.closeDimViews = function () {
+  if (!DIMV.open) return;
+  DIMV.open = false; window.__dimOpen = false; cancelAnimationFrame(DIMV.raf);
+  DIMV.pending = null; DIMV.down = null; DIMV.hover = null;
+  document.getElementById('dv-modal').classList.remove('open');
+  if (DIMV.edgeGroup && DIMV.edgeGroup.parent) scene.remove(DIMV.edgeGroup);
+  renderer.clippingPlanes = [];
+  canvas.style.visibility = '';
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  window.dispatchEvent(new Event('resize'));
+  clearTimeout(DIMV.saveTimer); dvSaveLocal();
+};
+
+// ── eventos ─────────────────────────────────────────────────────────────────
+(function dvBindEvents() {
+  const st = document.getElementById('dv-stage');
+  DIMV.stage = st; DIMV.cv = document.getElementById('dv-canvas'); DIMV.ctx2d = DIMV.cv.getContext('2d'); DIMV.svg = document.getElementById('dv-svg');
+  const xy = e => { const r = st.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  st.addEventListener('contextmenu', e => e.preventDefault());
+  st.addEventListener('pointerdown', e => {
+    if (!dvActive()) return;
+    const [x, y] = xy(e), el = e.target.closest ? e.target.closest('[data-id]') : null;
+    const itemId = el && !el.classList.contains('pv') ? el.getAttribute('data-id') : null;
+    DIMV.down = { x, y, lx:x, ly:y, btn:e.button, moved:false, shift:e.shiftKey, itemId, mode:null };
+    if (e.button === 0 && DIMV.tool === 'nav' && itemId) {
+      const it = dvFindItem(itemId);
+      if (it) { DIMV.selId = itemId; DIMV.down.mode = 'item'; DIMV.down.orig = (it.type === 'linear' || it.type === 'aligned') ? (it.offset || 0) : (it.off || [0, 0]).slice(); }
+      DIMV.ovDirty = true; dvUpdateStatus();
+    }
+    try { st.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  st.addEventListener('pointermove', e => {
+    const [x, y] = xy(e); DIMV.cursor = [x, y];
+    const d = DIMV.down, v = dvActive();
+    if (d && v) {
+      if (!d.moved && Math.hypot(x - d.x, y - d.y) > 4) {
+        d.moved = true;
+        if (!d.mode) d.mode = (d.shift && d.btn === 0 && dvCanOrbit(v)) ? 'orbit' : 'pan';
+        if (d.mode === 'item') dvPushUndo();
+        st.classList.add('panning');
+      }
+      if (d.moved) {
+        const sc = dvScreen(v);
+        if (d.mode === 'pan') {
+          const c = dvV3(v.center).addScaledVector(sc.B.r, -(x - d.lx) * sc.wpp).addScaledVector(sc.B.u, (y - d.ly) * sc.wpp);
+          v.center = dvArr(c); DIMV.dirty = true;
+        } else if (d.mode === 'orbit') {
+          const dir = dvV3(v.dir).applyAxisAngle(new THREE.Vector3(0, 1, 0), -(x - d.lx) * 0.006);
+          const r = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+          const d2 = dir.clone().applyAxisAngle(r, -(y - d.ly) * 0.006);
+          if (Math.abs(d2.y) < 0.995) dir.copy(d2);
+          v.dir = dvArr(dir.normalize()); v.up = [0, 1, 0]; DIMV.dirty = true;
+        } else if (d.mode === 'item') {
+          const it = dvFindItem(d.itemId);
+          if (it) {
+            const a = sc.from(d.x, d.y), b = sc.from(x, y);
+            if (it.type === 'linear' || it.type === 'aligned') { const g = dvItemGeom(it, sc.B, dvSizes(sc.k)); const n = g ? g.n : [0, 1]; it.offset = d.orig + (b[0] - a[0]) * n[0] + (b[1] - a[1]) * n[1]; }
+            else it.off = [d.orig[0] + b[0] - a[0], d.orig[1] + b[1] - a[1]];
+          }
+        }
+        d.lx = x; d.ly = y; DIMV.ovDirty = true;
+        return;
+      }
+    }
+    DIMV.hoverReq = true; DIMV.ovDirty = true;
+  });
+  const up = e => {
+    const d = DIMV.down; DIMV.down = null; st.classList.remove('panning');
+    try { st.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (!d || !dvActive()) return;
+    if (d.moved) { dvChanged(d.mode === 'item'); DIMV.hoverReq = true; return; }
+    if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
+    if (d.btn !== 0) return;
+    if (DIMV.tool === 'nav') { if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
+    dvToolClick(d.x, d.y);
+  };
+  st.addEventListener('pointerup', up);
+  st.addEventListener('pointercancel', () => { DIMV.down = null; st.classList.remove('panning'); });
+  st.addEventListener('pointerleave', () => { if (!DIMV.down) { DIMV.cursor = null; DIMV.hover = null; DIMV.ovDirty = true; dvUpdateCoords(); } });
+  st.addEventListener('dblclick', e => {
+    if (DIMV.tool !== 'nav') return;
+    const el = e.target.closest ? e.target.closest('[data-id]') : null;
+    if (el) dvEditText(dvFindItem(el.getAttribute('data-id')));
+  });
+  st.addEventListener('wheel', e => {
+    e.preventDefault();
+    const v = dvActive(); if (!v) return;
+    const [x, y] = xy(e), sc = dvScreen(v), p = sc.from(x, y);
+    const nh = Math.min(20000, Math.max(0.02, v.halfH * Math.exp(e.deltaY * 0.0012)));
+    const s = 1 - (2 * nh / DIMV.H) / sc.wpp;
+    v.center = dvArr(dvV3(v.center).addScaledVector(sc.B.r, p[0] * s).addScaledVector(sc.B.u, p[1] * s));
+    v.halfH = nh; DIMV.dirty = true; DIMV.hoverReq = true;
+    clearTimeout(DIMV._zt); DIMV._zt = setTimeout(() => { dvRefreshProps(); dvChanged(false); }, 250);
+  }, { passive:false });
+
+  // teclado: mientras la ventana está abierta, el explorador no recibe teclas
+  window.addEventListener('keydown', e => {
+    if (!DIMV.open) return;
+    e.stopImmediatePropagation();
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) { if (e.key === 'Escape') e.target.blur(); return; }
+    const k = e.key, lk = k.toLowerCase();
+    if (k === 'Escape') { e.preventDefault(); if (DIMV.pending) DIMV.pending = null; else if (DIMV.selId) DIMV.selId = null; else if (DIMV.tool !== 'nav') dvSetTool('nav'); DIMV.ovDirty = true; dvUpdateStatus(); return; }
+    if ((e.ctrlKey || e.metaKey) && lk === 'z') { e.preventDefault(); dvUndo(); return; }
+    if ((e.ctrlKey || e.metaKey) && lk === 's') { e.preventDefault(); dvSaveJSON(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (k === 'Delete' || k === 'Backspace') { e.preventDefault(); dvDeleteSel(); return; }
+    if (DIMV.pending && DIMV.pending.type === 'linear' && DIMV.pending.step === 2 && (lk === 'h' || lk === 'v')) { DIMV.pending.force = lk; DIMV.ovDirty = true; return; }
+    const map = { v:'nav', l:'linear', a:'aligned', e:'edges', n:'level', t:'note' };
+    if (map[lk]) { dvSetTool(map[lk]); return; }
+    if (lk === 'f') dvFitActive();
+  }, true);
+  window.addEventListener('keyup', e => { if (DIMV.open) e.stopImmediatePropagation(); }, true);
+  window.addEventListener('resize', () => { if (DIMV.open) dvResize(); });
+})();
+
 animate();
 </script>
 
@@ -7576,6 +9207,37 @@ animate();
       <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text3);">
         <span>← menor peso</span><span>mayor calidad →</span>
       </div>
+    </div>
+
+    <div class="rp-field">
+      <div class="rp-label">Música</div>
+      <div class="rp-btn-row">
+        <button class="rp-opt active" id="mus-mode-epic" onclick="musSetMode('epic')" title="Pista épica generada (libre de derechos)">🎺 Épica</button>
+        <button class="rp-opt" id="mus-mode-custom" onclick="musSetMode('custom')" title="Usar un archivo de audio propio">📂 Mi archivo</button>
+        <button class="rp-opt" id="mus-mode-none" onclick="musSetMode('none')">🔇 Sin música</button>
+      </div>
+      <div id="mus-custom-row" class="mus-row" style="display:none;">
+        <span id="mus-file-name">Ningún archivo</span>
+        <button class="rp-opt" style="flex:none;padding:4px 8px;" onclick="document.getElementById('mus-file').click()">Cambiar…</button>
+        <input type="file" id="mus-file" accept="audio/*" style="display:none" onchange="musLoadFile(this)">
+      </div>
+      <div id="mus-opts" style="display:flex;flex-direction:column;gap:7px;margin-top:2px;">
+        <div class="mus-row">
+          <span>Volumen</span>
+          <input type="range" min="0" max="100" step="1" value="70" oninput="musSetVolume(this.value)" style="flex:1;accent-color:#ef5350;">
+          <span id="mus-vol-val" style="color:var(--accent2);min-width:30px;text-align:right;">70%</span>
+        </div>
+        <div class="mus-row">
+          <span>Entrada</span><input class="mus-num" type="number" min="0" max="15" step="0.5" value="2.5" oninput="musSetFade('in',this.value)"><span>s</span>
+          <span style="margin-left:auto;">Salida</span><input class="mus-num" type="number" min="0" max="15" step="0.5" value="3" oninput="musSetFade('out',this.value)"><span>s</span>
+        </div>
+        <button class="rp-opt" id="mus-preview-btn" onclick="musPreview()">▶ Escuchar</button>
+      </div>
+      <label class="mus-row" style="cursor:pointer;">
+        <input type="checkbox" checked onchange="musSetFadeVisual(this.checked)" style="accent-color:#ef5350;">
+        Fundido de imagen desde/hacia negro
+      </label>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">La música se repite en bucle durante todo el video y se funde al inicio y al final.</div>
     </div>
 
     <div id="rec-estimate" style="font-family:var(--mono);font-size:9px;color:var(--text2);text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);">≈ — s · — MB</div>
