@@ -1422,6 +1422,24 @@
   .dv-seg.keep { stroke:#e65100; stroke-opacity:.55; }
   .dv-pt { fill:#e65100; }
   .dv-rubber { stroke:#e65100; stroke-width:1; stroke-dasharray:5 4; }
+  #dv-ctx { position:absolute; z-index:5; min-width:190px; max-width:320px; display:none; flex-direction:column; padding:4px; background:rgba(12,15,20,.97); border:1px solid rgba(79,195,247,.35); border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.45); font-family:var(--mono); }
+  #dv-ctx.open { display:flex; }
+  #dv-ctx button { display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--text); font-family:var(--mono); font-size:10.5px; padding:7px 9px; border-radius:5px; cursor:pointer; text-align:left; }
+  #dv-ctx button:hover { background:rgba(79,195,247,.12); color:var(--accent); }
+  .dv-ctx-h { font-size:10px; color:var(--accent); padding:6px 9px 5px; border-bottom:1px solid var(--border); margin-bottom:3px; display:flex; flex-direction:column; gap:2px; word-break:break-word; }
+  .dv-ctx-h small, .dv-ctx-lv small { color:var(--text3); font-size:8.5px; }
+  .dv-ctx-note { font-size:9px; color:var(--text2); padding:4px 9px 6px; line-height:1.4; }
+  .dv-ctx-sep { height:1px; background:var(--border); margin:3px 0; }
+  #dv-ctx .dv-ctx-lv { display:grid; grid-template-columns:auto 1fr auto; gap:8px; }
+  .dv-ctx-lv b { color:var(--warn); font-weight:600; white-space:nowrap; }
+  .dv-ctx-lv span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dv-hlist { display:flex; flex-direction:column; gap:2px; max-height:220px; overflow-y:auto; }
+  .dv-hrow { display:flex; align-items:center; gap:6px; padding:4px 5px; border-radius:4px; font-family:var(--mono); font-size:9.5px; color:var(--text); }
+  .dv-hrow:hover { background:rgba(255,143,0,.12); }
+  .dv-hrow.missing { opacity:.45; }
+  .dv-hm { width:16px; text-align:center; flex-shrink:0; font-size:10px; }
+  .dv-hn { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dv-hk { color:var(--warn); font-size:8.5px; }
   .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
   .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
 </style>
@@ -2005,6 +2023,7 @@
           <div id="dv-list"></div>
         </div>
         <div class="dv-sec" id="dv-props"></div>
+        <div class="dv-sec" id="dv-hidden"></div>
         <details class="dv-sec">
           <summary class="dv-sec-t">Lámina y cajetín</summary>
           <label class="dv-f"><span>Tamaño</span><select class="dv-in" id="dvs-page" onchange="dvSetSetting('page',this.value)">
@@ -2051,6 +2070,7 @@
         <div id="dv-stage">
           <canvas id="dv-canvas"></canvas>
           <svg id="dv-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div id="dv-ctx" oncontextmenu="event.preventDefault()" onpointerdown="event.stopPropagation()" onwheel="event.stopPropagation()"></div>
           <div id="dv-empty"><div>Crea una vista con <b>＋ Nueva vista…</b><br>Planta, alzados, isométrica o desde la cámara actual.</div></div>
         </div>
         <div id="dv-status"><span id="dv-st-hint"></span><span id="dv-st-coord"></span></div>
@@ -8091,12 +8111,29 @@ const DIMV = {
   stage:null, cv:null, ctx2d:null, svg:null, W:0, H:0, dpr:1,
   dirty:true, ovDirty:true, raf:0, flashT:0, flashMsg:'',
   meshes:[], meshSet:new Set(), visMeshes:[], box:new THREE.Box3(),
+  ovr:[], hidSet:new Set(), ghostUser:new Set(), ghostSet:new Set(), hlNode:null, ctx:null, _ghostHit:null,
   edgeGroup:null, edgeMap:new Map(), edgeGeoCache:new Map(), edgeQueue:[], edgeTotal:0, segCache:new Map(),
   saveTimer:0, _pdfP:null,
 };
 const dvWhiteMat = new THREE.MeshLambertMaterial({ color:0xdfe1e4, emissive:0x5c5e62, toneMapped:false, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1 });
 const dvEdgeMat  = new THREE.LineBasicMaterial({ color:0x15191f, toneMapped:false });
 const dvBg       = new THREE.Color(0xffffff);
+const dvGhostWhite   = new THREE.MeshLambertMaterial({ color:0xe8eaed, emissive:0x5c5e62, transparent:true, opacity:0.16, depthWrite:false, toneMapped:false });
+const dvEdgeGhostMat = new THREE.LineBasicMaterial({ color:0x9aa3ad, transparent:true, opacity:0.5, toneMapped:false });
+const dvHlMat        = new THREE.MeshBasicMaterial({ color:0xff8f00, transparent:true, opacity:0.6, depthWrite:false, toneMapped:false });
+const dvGhostCache   = new WeakMap();
+function dvGhostOf(mt) {
+  if (Array.isArray(mt)) return mt.map(dvGhostOf);
+  if (!mt) return mt;
+  let g = dvGhostCache.get(mt);
+  if (!g) { g = mt.clone(); g.transparent = true; g.opacity = 0.2; g.depthWrite = false; dvGhostCache.set(mt, g); }
+  return g;
+}
+// Material ya transparente en el modelo (p. ej. piso traslúcido): no tapa cotas ni ajuste
+function dvSeeThrough(m) {
+  const ms = Array.isArray(m.material) ? m.material : [m.material];
+  return ms.length > 0 && ms.every(x => x && (x.visible === false || (x.transparent && x.opacity < 0.95)));
+}
 
 // ── utilidades ──────────────────────────────────────────────────────────────
 const dvV3  = a => new THREE.Vector3(a[0], a[1], a[2]);
@@ -8131,6 +8168,8 @@ function dvNormalize(d) {
     v.section = Object.assign({ on:false, depth:0 }, v.section || {});
     v.scale = v.scale || 'auto';
     v.items = Array.isArray(v.items) ? v.items.filter(i => i && i.type && i.a) : [];
+    v.hidden = Array.isArray(v.hidden) ? v.hidden.filter(e => e && Array.isArray(e.path) && (e.mode === 'hide' || e.mode === 'ghost')) : [];
+    v.hidden.forEach(e => { e.id = e.id || dvId(); });
     v.items.forEach(i => { i.id = i.id || dvId(); });
   });
   return d;
@@ -8192,7 +8231,15 @@ function dvCollect() {
   const v = dvActive(), ms = [];
   dvContentRoots(v).forEach(r => r.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position) ms.push(o); }));
   DIMV.meshes = ms; DIMV.meshSet = new Set(ms);
-  DIMV.visMeshes = ms.filter(dvVisible);
+  const hid = new Set(), ghU = new Set(); DIMV.ovr = [];
+  if (v) v.hidden.forEach(e => {
+    const n = dvResolveEntry(e); if (!n) return;
+    DIMV.ovr.push({ e, n });
+    n.traverse(o => { if (o.isMesh) (e.mode === 'hide' ? hid : ghU).add(o); });
+  });
+  DIMV.hidSet = hid; DIMV.ghostUser = ghU;
+  DIMV.visMeshes = ms.filter(m => dvVisible(m) && !hid.has(m));
+  DIMV.ghostSet = new Set(DIMV.visMeshes.filter(m => ghU.has(m) || dvSeeThrough(m)));
   DIMV.edgeMap.forEach((ls, m) => { let p = m; while (p && p !== scene) p = p.parent; if (!p) { DIMV.edgeGroup.remove(ls); DIMV.edgeMap.delete(m); DIMV.segCache.delete(m); } });
   DIMV.edgeQueue = DIMV.visMeshes.filter(m => !m.isInstancedMesh && !DIMV.edgeMap.has(m));
   DIMV.edgeTotal = DIMV.edgeQueue.length;
@@ -8275,6 +8322,9 @@ function dvRenderTo(v, cam, w, h, halfH) {
 
   const roots = new Set(dvContentRoots(v)), hidden = [];
   scene.children.forEach(c => { if (c === DIMV.edgeGroup || c.isLight) return; if (!roots.has(c) && c.visible) { c.visible = false; hidden.push(c); } });
+  // objetos ocultos en esta vista (el resaltado de la lista los muestra momentáneamente)
+  (DIMV.ovr || []).forEach(({ e, n }) => { if (e.mode === 'hide' && n.visible && n !== DIMV.hlNode) { n.visible = false; hidden.push(n); } });
+  const hlSet = new Set(); if (DIMV.hlNode) DIMV.hlNode.traverse(o => { if (o.isMesh) hlSet.add(o); });
   const bg = scene.background, fog = scene.fog, fn = fog ? fog.near : 0, ff = fog ? fog.far : 0;
   scene.background = dvBg; if (fog) { fog.near = 1e7; fog.far = 2e7; }
   scene.updateMatrixWorld();
@@ -8284,15 +8334,19 @@ function dvRenderTo(v, cam, w, h, halfH) {
   DIMV.edgeGroup.visible = edges;
   if (edges) DIMV.edgeMap.forEach((ls, m) => {
     ls.visible = DIMV.meshSet.has(m) && dvVisible(m);
-    if (ls.visible) { ls.matrix.copy(m.matrixWorld); ls.matrixWorldNeedsUpdate = true; }
+    if (ls.visible) { ls.matrix.copy(m.matrixWorld); ls.matrixWorldNeedsUpdate = true; ls.material = DIMV.ghostSet.has(m) ? dvEdgeGhostMat : dvEdgeMat; }
   });
   DIMV.edgeGroup.updateMatrixWorld(true);
 
   const swapped = [], offs = new Set();
-  if (v.style === 'tech') DIMV.visMeshes.forEach(m => { swapped.push([m, m.material]); m.material = dvWhiteMat; });
-  else if (v.style === 'color-edges') DIMV.visMeshes.forEach(m => {
-    (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => { if (mt && !mt.polygonOffset && !offs.has(mt)) offs.add(mt); });
+  DIMV.visMeshes.forEach(m => {
+    if (hlSet.has(m)) return;
+    const gh = DIMV.ghostSet.has(m);
+    if (v.style === 'tech') { swapped.push([m, m.material]); m.material = gh ? dvGhostWhite : dvWhiteMat; }
+    else if (DIMV.ghostUser.has(m)) { swapped.push([m, m.material]); m.material = dvGhostOf(m.material); }
+    else if (v.style === 'color-edges' && !gh) (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => { if (mt && !mt.polygonOffset) offs.add(mt); });
   });
+  hlSet.forEach(m => { swapped.push([m, m.material]); m.material = dvHlMat; });
   offs.forEach(mt => { mt.polygonOffset = true; mt.polygonOffsetFactor = 1; mt.polygonOffsetUnits = 1; });
   renderer.clippingPlanes = v.section.on ? [new THREE.Plane(B.dir.clone(), -v.section.depth)] : [];
   // dibujo sin sombras (el mapa de sombras del explorador se ve pixelado en vistas ortográficas)
@@ -8356,7 +8410,13 @@ function dvSnap(px, py) {
     dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH);
     DIMV.ray.setFromCamera(new THREE.Vector2(px / DIMV.W * 2 - 1, -py / DIMV.H * 2 + 1), DIMV.cam);
     const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false);
-    for (const h of hs) if (h.point.dot(dir) >= cut - 1e-4) { hit = h; break; }
+    let ghostHit = null;
+    for (const h of hs) {
+      if (h.point.dot(dir) < cut - 1e-4) continue;
+      if (!DIMV.ghostSet.has(h.object)) { hit = h; break; }   // los traslúcidos no tapan
+      if (!ghostHit) ghostHit = h;
+    }
+    DIMV._ghostHit = ghostHit;
   }
   const hitDepth = hit ? hit.point.dot(dir) : Infinity, epsD = Math.max(0.005, tol * 0.6);
   const cr = B.c.dot(r), cu = B.c.dot(u), S = DIMV.snaps;
@@ -8401,7 +8461,8 @@ function dvSnap(px, py) {
   else if (bM) { best = bM; kind = 'mid'; }
   else if (bG) { best = bG; kind = 'edge'; }
   if (best) return { kind, p:dvV3(best.p), seg:[dvV3(best.seg.slice(0,3)), dvV3(best.seg.slice(3))] };
-  if (hit && S.face) return { kind:'face', p:hit.point.clone(), seg:null };
+  const fh = hit || DIMV._ghostHit;
+  if (fh && S.face) return { kind:'face', p:fh.point.clone(), seg:null };
   return { kind:'free', p:dvFrom2(B, cx, cy), seg:null };
 }
 function dvStepNeedsSnap() {
@@ -8518,14 +8579,15 @@ function dvFootOnEdge(a, segA, seg, B) {
 }
 function dvPushUndo() {
   const v = dvActive(); if (!v) return;
-  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items) });
+  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items), hidden:JSON.stringify(v.hidden || []) });
   if (DIMV.undo.length > 100) DIMV.undo.shift();
 }
 window.dvUndo = function () {
   const s = DIMV.undo.pop(); if (!s) { dvFlash('Nada que deshacer'); return; }
   const v = DIMV.doc.views.find(x => x.id === s.id); if (!v) return;
-  v.items = JSON.parse(s.items); DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
-  dvChanged(true);
+  v.items = JSON.parse(s.items); if (s.hidden) v.hidden = JSON.parse(s.hidden);
+  DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
+  dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshHidden(); dvChanged(true);
 };
 function dvCommit(it) { dvPushUndo(); dvActive().items.push(it); DIMV.selId = it.id; dvChanged(true); }
 window.dvDeleteSel = function () {
@@ -8648,7 +8710,7 @@ function dvDrawOverlay() {
 
 // ── estado / UI ─────────────────────────────────────────────────────────────
 const DV_HINTS = {
-  nav:['Arrastrar: desplazar · Rueda: zoom · Shift+arrastrar: orbitar (isométrica / 3D) · Clic en una cota: seleccionar y arrastrar · Doble clic: editar texto · Supr: borrar'],
+  nav:['Arrastrar: desplazar · Rueda: zoom · Shift+arrastrar: orbitar (isométrica / 3D) · Clic en una cota: seleccionar y arrastrar · Doble clic: editar texto · Supr: borrar · Clic der.: ocultar / traslúcido'],
   linear:['Lineal: clic en el primer punto', 'Lineal: clic en el segundo punto', 'Ubica la línea de cota · H / V fuerza horizontal o vertical'],
   aligned:['Alineada: clic en el primer punto', 'Alineada: clic en el segundo punto', 'Ubica la línea de cota'],
   edges:['Entre aristas: clic sobre la primera arista', 'Clic sobre la segunda arista (paralela)', 'Ubica la línea de cota'],
@@ -8730,6 +8792,7 @@ function dvRefreshProps() {
     <div class="dv-note" id="dv-scale-note">Lámina ${DIMV.doc.settings.page} → 1:${Sc}</div>
     <div class="dv-btnrow"><button class="dv-btn sm" onclick="dvFitActive()">⤢ Encuadrar</button>
       ${dvCanOrbit(v) ? '<button class="dv-btn sm" onclick="dvFromCamera()" title="Tomar la dirección de la cámara del explorador">🎥 Desde cámara</button>' : ''}</div>`;
+  dvRefreshHidden();
 }
 function dvRefreshSettings() {
   const st = DIMV.doc.settings, set = (id, val) => { const e = document.getElementById(id); if (e) { if (e.type === 'checkbox') e.checked = !!val; else e.value = val; } };
@@ -8739,7 +8802,7 @@ function dvRefreshSettings() {
   document.getElementById('dv-model').textContent = DIMV.doc.model;
 }
 function dvRefreshUI() {
-  dvRefreshList(); dvRefreshProps(); dvRefreshSettings(); dvUpdateStatus();
+  dvRefreshList(); dvRefreshProps(); dvRefreshHidden(); dvRefreshSettings(); dvUpdateStatus();
   document.getElementById('dv-empty').style.display = dvActive() ? 'none' : 'flex';
 }
 window.dvSetProp = function (k, val) {
@@ -8780,7 +8843,7 @@ window.dvNewView = function (kind) {
   if (!kind) return;
   const k = dvKindDir(kind);
   const v = { id:dvId(), name:dvUniqueName(DV_KIND_LABEL[kind]), kind, dir:k.dir, up:k.up, center:[0,0,0], halfH:10,
-              style:(kind === 'iso' || kind === 'camera') ? 'color-edges' : 'tech', equip:true, section:{ on:false, depth:0 }, scale:'auto', items:[] };
+              style:(kind === 'iso' || kind === 'camera') ? 'color-edges' : 'tech', equip:true, section:{ on:false, depth:0 }, scale:'auto', items:[], hidden:[] };
   DIMV.doc.views.push(v); DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
   dvCollect();
   if (kind === 'camera') dvFromCamera(); else dvFit(v);
@@ -8936,6 +8999,7 @@ function dvPdfPage(doc, v, idx, total, aspect) {
 window.dvExportPDF = async function (all) {
   const views = all ? DIMV.doc.views.slice() : [dvActive()].filter(Boolean);
   if (!views.length) { alert('No hay vistas para exportar.'); return; }
+  dvCtxClose(); DIMV.hlNode = null;
   const el = document.getElementById('dv-st-hint'); if (el) el.innerHTML = '<span class="dv-busy">Generando PDF…</span>';
   let jsPDF;
   try { jsPDF = await dvLoadJsPDF(); } catch (e) { alert('No se pudo cargar la librería de PDF. Revisa la conexión a internet.'); dvUpdateStatus(); return; }
@@ -8956,6 +9020,149 @@ window.dvExportPDF = async function (all) {
     dvCollect(); DIMV.dirty = true; dvUpdateStatus();
   }
 };
+
+// ── OCULTAR / TRASLÚCIDO por vista ──────────────────────────────────────────
+// Cada entrada identifica un nodo del modelo por su ruta de índices desde la raíz
+// (más el nombre como verificación) y se guarda en view.hidden → viaja en el JSON.
+function dvModelRoot() { return scene.getObjectByName('__model__'); }
+function dvInModel(o) { const r = dvModelRoot(); for (let p = o; p; p = p.parent) if (p === r) return true; return false; }
+function dvNodePath(node) {
+  const r = dvModelRoot(), path = [];
+  for (let n = node; n && n !== r; n = n.parent) { if (!n.parent) return null; path.unshift(n.parent.children.indexOf(n)); }
+  return path;
+}
+function dvResolveEntry(e) {
+  const r = dvModelRoot(); if (!r) return null;
+  let n = r;
+  for (const i of e.path) { n = n && n.children[i]; if (!n) break; }
+  if (n && n !== r && (!e.name || n.name === e.name)) return n;
+  if (e.name) { let f = null; r.traverse(o => { if (!f && o.name === e.name) f = o; }); return f; }
+  return null;
+}
+function dvMeshCount(node) { let c = 0; node.traverse(o => { if (o.isMesh) c++; }); return c; }
+// Niveles seleccionables: pieza, ensamble N1, N2… (los nodos que agrupan las mismas piezas se fusionan)
+function dvLevels(mesh) {
+  const r = dvModelRoot(), out = [];
+  for (let n = mesh; n && n !== r && n !== scene; n = n.parent) {
+    const cnt = dvMeshCount(n), last = out[out.length - 1];
+    if (last && last.count === cnt) { last.node = n; if (n.name) last.name = n.name; }
+    else out.push({ node:n, count:cnt, name:n.name || '' });
+  }
+  return out.map((l, i) => Object.assign(l, { kind:i === 0 ? 'Pieza' : 'Ensamble N' + i, name:l.name || '(sin nombre)' }));
+}
+function dvPick(px, py) {
+  const v = dvActive(); if (!v || !DIMV.visMeshes.length) return null;
+  const B = dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH), cut = v.section.on ? v.section.depth : -Infinity;
+  DIMV.ray.setFromCamera(new THREE.Vector2(px / DIMV.W * 2 - 1, -py / DIMV.H * 2 + 1), DIMV.cam);
+  const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false).filter(h => h.point.dot(B.dir) >= cut - 1e-4);
+  return hs.find(h => !DIMV.ghostSet.has(h.object)) || hs[0] || null;   // prioriza lo opaco detrás de lo traslúcido
+}
+function dvAfterHiddenChange() {
+  dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshHidden(); dvChanged(true);
+}
+function dvApplyOverride(level, mode) {
+  const v = dvActive(), path = dvNodePath(level.node); if (!v || !path) return;
+  dvPushUndo();
+  const key = path.join('/');
+  v.hidden = v.hidden.filter(e => e.path.join('/') !== key);
+  v.hidden.push({ id:dvId(), path, name:level.node.name || '', label:level.name, kind:level.kind, count:level.count, mode });
+  DIMV.hlNode = null;
+  dvAfterHiddenChange();
+  dvFlash(`${mode === 'hide' ? 'Oculto' : 'Traslúcido'}: ${level.kind} «${level.name}»`);
+}
+window.dvUnhide = function (id) {
+  const v = dvActive(); if (!v) return;
+  dvPushUndo(); v.hidden = v.hidden.filter(e => e.id !== id); DIMV.hlNode = null; dvAfterHiddenChange();
+};
+window.dvToggleHideMode = function (id) {
+  const v = dvActive(), e = v && v.hidden.find(x => x.id === id); if (!e) return;
+  dvPushUndo(); e.mode = e.mode === 'hide' ? 'ghost' : 'hide'; dvAfterHiddenChange();
+};
+window.dvShowAll = function (mode) {
+  const v = dvActive(); if (!v || !v.hidden.length) return;
+  dvPushUndo(); v.hidden = mode ? v.hidden.filter(e => e.mode !== mode) : []; DIMV.hlNode = null; dvCtxClose(); dvAfterHiddenChange();
+};
+window.dvHlEntry = function (id) {
+  const v = dvActive(), e = id && v ? v.hidden.find(x => x.id === id) : null;
+  const n = e ? dvResolveEntry(e) : null;
+  if (DIMV.hlNode !== n) { DIMV.hlNode = n; DIMV.dirty = true; }
+};
+function dvRefreshHidden() {
+  const el = document.getElementById('dv-hidden'), v = dvActive(); if (!el) return;
+  if (!v) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = '';
+  const nH = v.hidden.filter(e => e.mode === 'hide').length, nG = v.hidden.length - nH;
+  let h = `<div class="dv-sec-t">Ocultos / traslúcidos${v.hidden.length ? ` · ${nH} 🚫 ${nG} ◐` : ''}</div>`;
+  if (!v.hidden.length) h += '<div class="dv-note">Clic derecho sobre un objeto de la vista para ocultarlo o hacerlo traslúcido. Cada vista guarda su propia lista.</div>';
+  else {
+    h += '<div class="dv-hlist">' + v.hidden.map(e => {
+      const ok = !!dvResolveEntry(e);
+      return `<div class="dv-hrow${ok ? '' : ' missing'}" onmouseenter="dvHlEntry('${e.id}')" onmouseleave="dvHlEntry(null)" title="${dvEsc(e.kind + ': ' + e.label + ' · ' + e.count + ' pieza(s)' + (ok ? '' : ' · no encontrado en el modelo'))}">
+        <span class="dv-hm ${e.mode}">${e.mode === 'hide' ? '🚫' : '◐'}</span>
+        <span class="dv-hn"><span class="dv-hk">${dvEsc(e.kind)}</span> ${dvEsc(e.label)}</span>
+        <button class="dv-ib" title="${e.mode === 'hide' ? 'Cambiar a traslúcido' : 'Cambiar a oculto'}" onclick="dvToggleHideMode('${e.id}')">${e.mode === 'hide' ? '◐' : '🚫'}</button>
+        <button class="dv-ib" title="Mostrar de nuevo" onclick="dvUnhide('${e.id}')">↺</button></div>`;
+    }).join('') + '</div>';
+    h += `<div class="dv-btnrow"><button class="dv-btn sm" onclick="dvShowAll()">↺ Mostrar todos</button>${nH && nG ? `<button class="dv-btn sm" onclick="dvShowAll('hide')" title="Volver a mostrar solo los ocultos">↺ Ocultos</button><button class="dv-btn sm" onclick="dvShowAll('ghost')" title="Quitar la transparencia solo a los traslúcidos">↺ Traslúcidos</button>` : ''}</div>`;
+  }
+  el.innerHTML = h;
+}
+// menú contextual
+function dvCtxIsOpen() { const m = document.getElementById('dv-ctx'); return !!(m && m.classList.contains('open')); }
+function dvCtxClose() {
+  const m = document.getElementById('dv-ctx'); if (m) m.classList.remove('open');
+  if (DIMV.ctx && DIMV.hlNode && DIMV.ctx.hl) { DIMV.hlNode = null; DIMV.dirty = true; }
+  DIMV.ctx = null;
+}
+function dvCtxShow(html) {
+  const m = document.getElementById('dv-ctx'), c = DIMV.ctx;
+  m.innerHTML = html; m.classList.add('open');
+  const W = DIMV.stage.clientWidth, H = DIMV.stage.clientHeight;
+  m.style.left = Math.max(4, Math.min(c.x, W - m.offsetWidth - 4)) + 'px';
+  m.style.top  = Math.max(4, Math.min(c.y, H - m.offsetHeight - 4)) + 'px';
+}
+function dvCtxOpen(cx, cy, x, y) {
+  const v = dvActive(); if (!v) return;
+  const h = dvPick(x, y);
+  DIMV.ctx = { x, y };
+  let html = '';
+  if (h && dvInModel(h.object)) {
+    const lv = dvLevels(h.object);
+    DIMV.ctx.levels = lv; DIMV.ctx.mesh = h.object;
+    const ghosted = v.hidden.filter(e => e.mode === 'ghost' && (() => { const n = dvResolveEntry(e); let f = false; if (n) n.traverse(o => { if (o === h.object) f = true; }); return f; })());
+    html += `<div class="dv-ctx-h">${dvEsc(lv[0].name)}${lv.length > 1 ? `<small>${lv.length - 1} nivel${lv.length > 2 ? 'es' : ''} de ensamble</small>` : ''}</div>
+      <button onclick="dvCtxAction('hide')">🚫 Ocultar${lv.length > 1 ? '…' : ''}</button>
+      <button onclick="dvCtxAction('ghost')">◐ Hacer traslúcido${lv.length > 1 ? '…' : ''}</button>`;
+    if (ghosted.length) html += `<button onclick="dvCtxUnghost()">↺ Quitar traslúcido</button>`;
+    DIMV.ctx.ghosted = ghosted.map(e => e.id);
+  } else if (h) {
+    html += `<div class="dv-ctx-h">Grúa / equipo</div><div class="dv-ctx-note">Se muestra u oculta con «Incluir grúas y equipos».</div>`;
+  }
+  if (v.hidden.length) html += `${html ? '<div class="dv-ctx-sep"></div>' : ''}<button onclick="dvShowAll()">↺ Mostrar todo en esta vista (${v.hidden.length})</button>`;
+  if (!html) { DIMV.ctx = null; return; }
+  dvCtxShow(html);
+}
+window.dvCtxAction = function (mode) {
+  const c = DIMV.ctx; if (!c || !c.levels) return;
+  if (c.levels.length === 1) { dvApplyOverride(c.levels[0], mode); dvCtxClose(); return; }
+  c.mode = mode; c.hl = true;
+  dvCtxShow(`<div class="dv-ctx-h">¿Qué deseas ${mode === 'hide' ? 'ocultar' : 'hacer traslúcido'}?</div>` +
+    c.levels.map((l, i) => `<button class="dv-ctx-lv" onmouseenter="dvCtxHl(${i})" onmouseleave="dvCtxHl(-1)" onclick="dvCtxPick(${i})">
+      <b>${dvEsc(l.kind)}</b><span>${dvEsc(l.name)}</span><small>${l.count} pieza${l.count === 1 ? '' : 's'}</small></button>`).join('') +
+    `<div class="dv-ctx-sep"></div><button onclick="dvCtxClose()">Cancelar</button>`);
+  dvCtxHl(0);
+};
+window.dvCtxHl = function (i) {
+  const c = DIMV.ctx; if (!c || !c.levels) return;
+  const n = i >= 0 ? c.levels[i].node : null;
+  if (DIMV.hlNode !== n) { DIMV.hlNode = n; DIMV.dirty = true; }
+};
+window.dvCtxPick = function (i) { const c = DIMV.ctx; if (!c || !c.levels) return; const l = c.levels[i], m = c.mode; dvCtxClose(); dvApplyOverride(l, m); };
+window.dvCtxUnghost = function () {
+  const c = DIMV.ctx, v = dvActive(); if (!c || !v) return;
+  dvPushUndo(); v.hidden = v.hidden.filter(e => !c.ghosted.includes(e.id)); dvCtxClose(); dvAfterHiddenChange();
+};
+document.addEventListener('pointerdown', e => { if (dvCtxIsOpen() && !e.target.closest('#dv-ctx')) dvCtxClose(); }, true);
 
 // ── abrir / cerrar ──────────────────────────────────────────────────────────
 function dvResize() {
@@ -8989,7 +9196,7 @@ window.openDimViews = function () {
 window.closeDimViews = function () {
   if (!DIMV.open) return;
   DIMV.open = false; window.__dimOpen = false; cancelAnimationFrame(DIMV.raf);
-  DIMV.pending = null; DIMV.down = null; DIMV.hover = null;
+  DIMV.pending = null; DIMV.down = null; DIMV.hover = null; DIMV.hlNode = null; dvCtxClose();
   document.getElementById('dv-modal').classList.remove('open');
   if (DIMV.edgeGroup && DIMV.edgeGroup.parent) scene.remove(DIMV.edgeGroup);
   renderer.clippingPlanes = [];
@@ -9058,7 +9265,7 @@ window.closeDimViews = function () {
     try { st.releasePointerCapture(e.pointerId); } catch (_) {}
     if (!d || !dvActive()) return;
     if (d.moved) { dvChanged(d.mode === 'item'); DIMV.hoverReq = true; return; }
-    if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
+    if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
     if (d.btn !== 0) return;
     if (DIMV.tool === 'nav') { if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
     dvToolClick(d.x, d.y);
@@ -9072,7 +9279,7 @@ window.closeDimViews = function () {
     if (el) dvEditText(dvFindItem(el.getAttribute('data-id')));
   });
   st.addEventListener('wheel', e => {
-    e.preventDefault();
+    e.preventDefault(); dvCtxClose();
     const v = dvActive(); if (!v) return;
     const [x, y] = xy(e), sc = dvScreen(v), p = sc.from(x, y);
     const nh = Math.min(20000, Math.max(0.02, v.halfH * Math.exp(e.deltaY * 0.0012)));
@@ -9088,6 +9295,7 @@ window.closeDimViews = function () {
     e.stopImmediatePropagation();
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) { if (e.key === 'Escape') e.target.blur(); return; }
     const k = e.key, lk = k.toLowerCase();
+    if (k === 'Escape' && dvCtxIsOpen()) { e.preventDefault(); dvCtxClose(); return; }
     if (k === 'Escape') { e.preventDefault(); if (DIMV.pending) DIMV.pending = null; else if (DIMV.selId) DIMV.selId = null; else if (DIMV.tool !== 'nav') dvSetTool('nav'); DIMV.ovDirty = true; dvUpdateStatus(); return; }
     if ((e.ctrlKey || e.metaKey) && lk === 'z') { e.preventDefault(); dvUndo(); return; }
     if ((e.ctrlKey || e.metaKey) && lk === 's') { e.preventDefault(); dvSaveJSON(); return; }
