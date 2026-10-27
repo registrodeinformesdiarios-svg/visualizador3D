@@ -1544,7 +1544,14 @@
   <div class="legend-row"><span class="key">←</span><span class="key">→</span><span class="legend-label">Rotar personaje</span></div>
   <div class="legend-row"><span class="key">Shift</span><span class="legend-label">Correr</span></div>
   <div class="legend-row"><span class="key">G</span><span class="legend-label">Panel de grúas</span></div>
-  <div class="legend-row" id="free-cam-hint" style="display:none"><span class="key">E/Q</span><span class="legend-label">Subir/bajar cámara libre</span></div>
+  <div id="free-cam-hint" style="display:none;flex-direction:column;gap:inherit;">
+    <div class="legend-row"><span class="key">Izq</span><span class="key">Medio</span><span class="legend-label">Orbitar (sobre el punto del cursor)</span></div>
+    <div class="legend-row"><span class="key">Der</span><span class="key">Ctrl+Medio</span><span class="legend-label">Desplazar</span></div>
+    <div class="legend-row"><span class="key">Rueda</span><span class="key">Shift+Medio</span><span class="legend-label">Zoom al cursor</span></div>
+    <div class="legend-row"><span class="key">2× clic</span><span class="legend-label">Centrar en el punto</span></div>
+    <div class="legend-row"><span class="key">F</span><span class="key">2× Medio</span><span class="legend-label">Encuadrar modelo</span></div>
+    <div class="legend-row"><span class="key">WASD</span><span class="key">E/Q</span><span class="legend-label">Volar · subir / bajar</span></div>
+  </div>
 </div>
 
 <div id="speed-badge"><div class="speed-dot"></div><span id="speed-label">Caminando</span></div>
@@ -3064,6 +3071,7 @@ window.addEventListener('keydown',e=>{
   if(e.code.startsWith('Arrow') && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) releaseSimCamera();
   if(e.code==='KeyR' && !cranePanelOpen){ charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
   if(e.code==='KeyM') toggleMeasure();
+  if(e.code==='KeyF' && state.camMode==='free' && !cranePanelOpen && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) fcFit();
   if(e.code==='KeyG') window.toggleCranePanel();
   // Crane keys (only when panel open)
   if(cranePanelOpen){
@@ -3073,24 +3081,191 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{ state.keys[e.code]=false; });
 
+// ── CÁMARA LIBRE: navegación estilo CAD (SolidWorks) ──────────────────────────
+// Órbita alrededor del punto bajo el cursor, desplazamiento que sigue al cursor,
+// zoom hacia el cursor (exponencial), doble clic = centrar, F / doble clic medio = encuadrar.
+// El estado sigue siendo {pos, yaw, pitch, orbitRadius}: compatible con animaciones guardadas.
+const _fcRay = new THREE.Raycaster();
+const fcMarker = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10),
+  new THREE.MeshBasicMaterial({ color:0xf6ad55, depthTest:false, transparent:true, opacity:0.85 }));
+fcMarker.renderOrder = 1000; fcMarker.visible = false; fcMarker.name = '__freecam_pivot__'; fcMarker.userData.__helper = true;
+scene.add(fcMarker);
+freeCam.tween = null;
+
+function fcEye() {
+  const r = freeCam.orbitRadius, sy = Math.sin(freeCam.yaw), cy = Math.cos(freeCam.yaw), sp = Math.sin(freeCam.pitch), cp = Math.cos(freeCam.pitch);
+  return new THREE.Vector3(freeCam.pos.x + r*sy*cp, freeCam.pos.y + r*sp, freeCam.pos.z + r*cy*cp);
+}
+function fcSetFromEye(eye, piv) {
+  const d = eye.clone().sub(piv), r = Math.max(1e-4, d.length());
+  freeCam.pos.copy(piv); freeCam.orbitRadius = r;
+  freeCam.yaw = Math.atan2(d.x, d.z);
+  freeCam.pitch = Math.asin(Math.max(-1, Math.min(1, d.y / r)));
+}
+function fcViewDir() { return freeCam.pos.clone().sub(fcEye()).normalize(); }
+function fcModelRadius() { return modelBox ? Math.max(1, modelBox.getBoundingSphere(new THREE.Sphere()).radius) : 50; }
+function fcRayAt(cx, cy) {
+  // la cámara puede ir un cuadro atrás (varios eventos de rueda por cuadro): sincronizarla con freeCam
+  if (state.camMode === 'free' && ridingCraneId === null && !simCamPose) { camera.position.copy(fcEye()); camera.lookAt(freeCam.pos); camera.updateMatrixWorld(); }
+  const r = canvas.getBoundingClientRect();
+  _fcRay.setFromCamera(new THREE.Vector2((cx - r.left) / r.width * 2 - 1, -(cy - r.top) / r.height * 2 + 1), camera);
+  return _fcRay;
+}
+// Punto visible del modelo bajo el cursor (ignora ocultos y totalmente transparentes)
+function fcHit(cx, cy) {
+  fcRayAt(cx, cy);
+  const model = scene.getObjectByName('__model__'); if (!model) return null;
+  for (const h of _fcRay.intersectObject(model, true)) {
+    let vis = true; for (let p = h.object; p; p = p.parent) if (!p.visible) { vis = false; break; }
+    if (!vis) continue;
+    const ms = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
+    if (ms.every(m => m && (m.visible === false || (m.transparent && m.opacity < 0.1)))) continue;
+    return h.point.clone();
+  }
+  return null;
+}
+function fcOrbit(dx, dy, O) {
+  freeCam.tween = null;
+  const eye = fcEye(), piv = freeCam.pos.clone(), Y = new THREE.Vector3(0, 1, 0), k = 0.006;
+  O = O || piv;
+  // arrastrar a la derecha gira el modelo a la derecha (la cámara rodea hacia la izquierda)
+  const qy = new THREE.Quaternion().setFromAxisAngle(Y, -dx * k);
+  eye.sub(O).applyQuaternion(qy).add(O); piv.sub(O).applyQuaternion(qy).add(O);
+  const right = new THREE.Vector3().crossVectors(piv.clone().sub(eye).normalize(), Y);
+  if (right.lengthSq() > 1e-8) {
+    right.normalize();
+    const qx = new THREE.Quaternion().setFromAxisAngle(right, -dy * k);
+    const e2 = eye.clone().sub(O).applyQuaternion(qx).add(O), p2 = piv.clone().sub(O).applyQuaternion(qx).add(O);
+    const d2 = e2.clone().sub(p2), pt = Math.asin(Math.max(-1, Math.min(1, d2.y / d2.length())));
+    if (Math.abs(pt) < 1.5) { eye.copy(e2); piv.copy(p2); }
+  }
+  fcSetFromEye(eye, piv);
+}
+// Desplazamiento en el plano de pantalla; con 'depth' el punto agarrado sigue exactamente al cursor
+function fcPan(dx, dy, depth) {
+  freeCam.tween = null;
+  const dir = fcViewDir(), right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+  const up = new THREE.Vector3().crossVectors(right, dir).normalize();
+  const wpp = 2 * (depth || freeCam.orbitRadius) * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / Math.max(1, canvas.clientHeight);
+  freeCam.pos.addScaledVector(right, -dx * wpp).addScaledVector(up, dy * wpp);
+}
+// Zoom con factor f (<1 acerca) hacia el punto bajo el cursor; sin cursor, hacia el pivote
+function fcZoom(f, cx, cy) {
+  freeCam.tween = null;
+  const eye = fcEye(), piv = freeCam.pos.clone(), dir = piv.clone().sub(eye).normalize();
+  const minR = 0.3, maxR = Math.max(500, fcModelRadius() * 8);
+  if (f < 1 && freeCam.orbitRadius * f < minR) {      // muy cerca: avanzar (atravesar) en vez de detenerse
+    const step = (1 - f) * Math.max(2, fcModelRadius() * 0.03);
+    eye.addScaledVector(dir, step); piv.addScaledVector(dir, step); fcSetFromEye(eye, piv); return;
+  }
+  if (freeCam.orbitRadius * f > maxR) f = maxR / freeCam.orbitRadius;
+  let P = null;
+  if (cx !== undefined) {
+    P = fcHit(cx, cy);
+    if (!P) { const rd = _fcRay.ray.direction; P = _fcRay.ray.origin.clone().addScaledVector(rd, freeCam.orbitRadius / Math.max(0.05, rd.dot(dir))); }
+  }
+  if (!P) P = piv.clone();
+  fcSetFromEye(P.clone().add(eye.sub(P).multiplyScalar(f)), P.clone().add(piv.sub(P).multiplyScalar(f)));
+}
+function fcTweenTo(pos, yaw, pitch, r, dur) {
+  let dy = (yaw - freeCam.yaw) % (2 * Math.PI); if (dy > Math.PI) dy -= 2 * Math.PI; if (dy < -Math.PI) dy += 2 * Math.PI;
+  freeCam.tween = { p0:freeCam.pos.clone(), p1:pos.clone(), y0:freeCam.yaw, y1:freeCam.yaw + dy, a0:freeCam.pitch, a1:pitch,
+                    r0:freeCam.orbitRadius, r1:r, t:0, dur:dur || 0.35 };
+}
+function fcUpdateTween(dt) {
+  const tw = freeCam.tween; if (!tw) return;
+  tw.t += dt; const a = Math.min(1, tw.t / tw.dur), e = a * a * (3 - 2 * a);
+  freeCam.pos.lerpVectors(tw.p0, tw.p1, e);
+  freeCam.yaw = tw.y0 + (tw.y1 - tw.y0) * e; freeCam.pitch = tw.a0 + (tw.a1 - tw.a0) * e;
+  freeCam.orbitRadius = tw.r0 + (tw.r1 - tw.r0) * e;
+  if (a >= 1) freeCam.tween = null;
+}
+// Doble clic: centra el punto en pantalla conservando la dirección de vista
+function fcCenterOn(P) {
+  const eye = fcEye(), dir = fcViewDir();
+  const depth = Math.max(0.5, P.clone().sub(eye).dot(dir));
+  fcTweenTo(P, freeCam.yaw, freeCam.pitch, depth);
+}
+// F / doble clic medio: encuadrar todo el modelo
+window.fcFit = function () {
+  if (!modelBox) return;
+  const sph = modelBox.getBoundingSphere(new THREE.Sphere());
+  const vf = THREE.MathUtils.degToRad(camera.fov) / 2, hf = Math.atan(Math.tan(vf) * camera.aspect);
+  fcTweenTo(sph.center, freeCam.yaw, freeCam.pitch, Math.max(2, sph.radius / Math.sin(Math.min(vf, hf)) * 1.05), 0.45);
+};
+function fcShowMarker(P) {
+  const p = P || freeCam.pos;
+  fcMarker.position.copy(p);
+  fcMarker.scale.setScalar(Math.max(0.02, camera.position.distanceTo(p) * 0.006));
+  fcMarker.visible = true;
+}
+// Vuelo con teclado en vista libre: ↑↓←→ / WASD, E/Q subir-bajar, Shift ×3
+function freeCamFly(dt, running) {
+  if (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  const k = state.keys, letters = !cranePanelOpen;
+  let f = 0, sd = 0, u = 0;
+  if (k.ArrowUp || (letters && k.KeyW)) f += 1;
+  if (k.ArrowDown || (letters && k.KeyS)) f -= 1;
+  if (k.ArrowRight || (letters && k.KeyD)) sd += 1;
+  if (k.ArrowLeft || (letters && k.KeyA)) sd -= 1;
+  if (letters && k.KeyE) u += 1;
+  if (letters && k.KeyQ) u -= 1;
+  if (state.joy.active) { if (Math.abs(state.joy.dx) > 0.1) sd += state.joy.dx; if (Math.abs(state.joy.dy) > 0.1) f -= state.joy.dy; }
+  if (!f && !sd && !u) return;
+  freeCam.tween = null;
+  const spd = (running ? 3 : 1) * Math.max(3, freeCam.orbitRadius * 0.8) * dt;
+  const fw = new THREE.Vector3(-Math.sin(freeCam.yaw), 0, -Math.cos(freeCam.yaw)), rt = new THREE.Vector3(Math.cos(freeCam.yaw), 0, -Math.sin(freeCam.yaw));
+  freeCam.pos.addScaledVector(fw, f * spd).addScaledVector(rt, sd * spd);
+  freeCam.pos.y += u * spd;
+}
+// Planos de recorte y niebla según la distancia (antes: far fijo 500 m y niebla 80–200 m)
+function fcAdjustClip(orbiting) {
+  let near = 0.01, far = 500, fn = 80, ff = 200;
+  if (orbiting) {
+    const R = fcModelRadius(), r = freeCam.orbitRadius;
+    far = Math.max(500, (r + R) * 3); near = Math.min(0.5, Math.max(0.01, r * 0.002));
+    fn = Math.max(80, r + R * 0.5); ff = Math.max(200, r + R * 3);
+  }
+  if (camera.far !== far || camera.near !== near) { camera.far = far; camera.near = near; camera.updateProjectionMatrix(); }
+  if (scene.fog) { scene.fog.near = fn; scene.fog.far = ff; }
+}
+
 // ── MOUSE DRAG ────────────────────────────────────────────────────────────────
-// Tracks left and right button independently
-const mouse = { ldown:false, rdown:false, x:0, y:0 };
+// Izquierdo / medio = orbitar · Derecho / Ctrl+medio = desplazar · Shift+medio = zoom
+const mouse = { ldown:false, rdown:false, mdown:false, x:0, y:0, orbitO:null, panDepth:null, lastMid:0 };
 
 canvas.addEventListener('mousedown', e => {
   if(state.measuring || cranePickMode) return;
   releaseSimCamera();
   if(e.button === 0) mouse.ldown = true;
+  if(e.button === 1) {
+    mouse.mdown = true; e.preventDefault();   // sin autodesplazamiento del navegador
+    const now = performance.now();
+    if (state.camMode === 'free' && now - mouse.lastMid < 350) fcFit();   // doble clic medio = encuadrar
+    mouse.lastMid = now;
+  }
   if(e.button === 2) mouse.rdown = true;
   mouse.x = e.clientX; mouse.y = e.clientY;
   canvas.classList.add('dragging');
   if(e.button === 2) e.preventDefault(); // suppress context menu start
+  if(state.camMode === 'free' && ridingCraneId === null && state.modelLoaded) {
+    // punto agarrado: centro de órbita y profundidad del desplazamiento
+    const hit = fcHit(e.clientX, e.clientY);
+    mouse.orbitO = hit;
+    mouse.panDepth = hit ? Math.max(0.1, hit.clone().sub(fcEye()).dot(fcViewDir())) : null;
+  }
+});
+canvas.addEventListener('dblclick', e => {
+  if(state.camMode !== 'free' || ridingCraneId !== null || state.measuring || cranePickMode) return;
+  const P = fcHit(e.clientX, e.clientY);
+  if (P) fcCenterOn(P);
 });
 canvas.addEventListener('contextmenu', e => { if(state.camMode==='free') e.preventDefault(); });
 window.addEventListener('mouseup', e => {
   if(e.button === 0) mouse.ldown = false;
+  if(e.button === 1) mouse.mdown = false;
   if(e.button === 2) mouse.rdown = false;
-  if(!mouse.ldown && !mouse.rdown) canvas.classList.remove('dragging');
+  if(!mouse.ldown && !mouse.rdown && !mouse.mdown) { canvas.classList.remove('dragging'); fcMarker.visible = false; }
 });
 window.addEventListener('mousemove', e => {
   if(!state.modelLoaded) return;
@@ -3098,21 +3273,12 @@ window.addEventListener('mousemove', e => {
   mouse.x = e.clientX; mouse.y = e.clientY;
   if(!dx && !dy) return;
 
-  if(state.camMode === 'free') {
-    // LEFT drag → orbit (yaw + pitch)
-    if(mouse.ldown) {
-      freeCam.yaw   += dx * 0.004;
-      freeCam.pitch  = Math.max(-1.5, Math.min(1.5, freeCam.pitch + dy * 0.004));
-    }
-    // RIGHT drag → pan (translate camera perpendicular to view)
-    if(mouse.rdown) {
-      const panSpd = freeCam.panSpeed;
-      const cy = Math.cos(freeCam.yaw), sy = Math.sin(freeCam.yaw);
-      const right = new THREE.Vector3(cy, 0, -sy);
-      const up    = new THREE.Vector3(0, 1, 0);
-      freeCam.pos.addScaledVector(right, -dx * panSpd);
-      freeCam.pos.addScaledVector(up,     dy * panSpd);
-    }
+  if(state.camMode === 'free' && ridingCraneId === null) {
+    const panning = mouse.rdown || (mouse.mdown && e.ctrlKey);
+    const zooming = !panning && mouse.mdown && e.shiftKey;
+    if(panning) fcPan(dx, dy, mouse.panDepth);
+    else if(zooming) fcZoom(Math.exp(dy * 0.006));
+    else if(mouse.ldown || mouse.mdown) { fcOrbit(dx, dy, mouse.orbitO); fcShowMarker(mouse.orbitO); }
   } else if(ridingCraneId !== null) {
     // Riding crane: left drag rotates the view around the crane (orbit style)
     if(mouse.ldown) {
@@ -3239,7 +3405,9 @@ canvas.addEventListener('touchmove',e=>{
   if(!twoFinger){
     // Single finger: orbit
     const dx=touch1.x-prev1x, dy=touch1.y-prev1y;
-    if(state.camMode==='free'||ridingCraneId!==null){
+    if(state.camMode==='free'&&ridingCraneId===null){
+      fcOrbit(dx,dy,null);
+    } else if(ridingCraneId!==null){
       freeCam.yaw+=dx*0.005;
       freeCam.pitch=Math.max(-1.5,Math.min(1.5,freeCam.pitch+dy*0.005));
     } else {
@@ -3251,11 +3419,9 @@ canvas.addEventListener('touchmove',e=>{
     // Two fingers: pan using midpoint delta
     const midDx=((touch1.x+touch2.x)-(prev1x+prev2x))/2;
     const midDy=((touch1.y+touch2.y)-(prev1y+prev2y))/2;
-    const cy=Math.cos(freeCam.yaw),sy=Math.sin(freeCam.yaw);
-    const right=new THREE.Vector3(cy,0,-sy);
-    const up=new THREE.Vector3(0,1,0);
-    freeCam.pos.addScaledVector(right,-midDx*freeCam.panSpeed);
-    freeCam.pos.addScaledVector(up,midDy*freeCam.panSpeed);
+    fcPan(midDx, midDy);
+    const d0=Math.hypot(prev1x-prev2x,prev1y-prev2y), d1=Math.hypot(touch1.x-touch2.x,touch1.y-touch2.y);
+    if(d0>10&&d1>10) fcZoom(d0/d1);   // pellizcar = zoom
   }
 },{passive:false});
 
@@ -3483,8 +3649,12 @@ window.toggleRideCrane=function(){
 canvas.addEventListener('wheel', e=>{
   if(simCamPose && state.camMode==='free') releaseSimCamera();
   if(state.camMode==='free' || ridingCraneId!==null){
-    freeCam.orbitRadius = Math.max(2, Math.min(200, freeCam.orbitRadius + e.deltaY*0.05));
     e.preventDefault();
+    let d = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+    d = Math.max(-300, Math.min(300, d));
+    const f = Math.exp(d * 0.0015);
+    if (ridingCraneId !== null && state.camMode !== 'free') freeCam.orbitRadius = Math.max(2, Math.min(200, freeCam.orbitRadius * f));
+    else fcZoom(f, e.clientX, e.clientY);
   }
 },{passive:false});
 
@@ -7729,14 +7899,16 @@ function animate(){
       }
     } else {
       // ── NORMAL CHARACTER MOVEMENT ──
+      const walk = state.camMode !== 'free';
+      if(!walk) freeCamFly(dt, running);
       let moving=false;
-      if(state.keys['ArrowLeft']){state.charRot+=2.2*dt;charGroup.rotation.y=state.charRot;}
-      if(state.keys['ArrowRight']){state.charRot-=2.2*dt;charGroup.rotation.y=state.charRot;}
+      if(walk&&state.keys['ArrowLeft']){state.charRot+=2.2*dt;charGroup.rotation.y=state.charRot;}
+      if(walk&&state.keys['ArrowRight']){state.charRot-=2.2*dt;charGroup.rotation.y=state.charRot;}
       const speed=running?12:5;
       const dir=new THREE.Vector3(Math.sin(state.charRot),0,Math.cos(state.charRot));
-      if(state.keys['ArrowUp']){charGroup.position.addScaledVector(dir,speed*dt);moving=true;}
-      if(state.keys['ArrowDown']){charGroup.position.addScaledVector(dir,-speed*.6*dt);moving=true;}
-      if(state.joy.active&&(Math.abs(state.joy.dx)>0.1||Math.abs(state.joy.dy)>0.1)){
+      if(walk&&state.keys['ArrowUp']){charGroup.position.addScaledVector(dir,speed*dt);moving=true;}
+      if(walk&&state.keys['ArrowDown']){charGroup.position.addScaledVector(dir,-speed*.6*dt);moving=true;}
+      if(walk&&state.joy.active&&(Math.abs(state.joy.dx)>0.1||Math.abs(state.joy.dy)>0.1)){
         state.charRot-=state.joy.dx*2.5*dt;charGroup.rotation.y=state.charRot;
         if(Math.abs(state.joy.dy)>0.1){charGroup.position.addScaledVector(dir,-state.joy.dy*speed*dt);moving=true;}
       }
@@ -7755,6 +7927,8 @@ function animate(){
     document.getElementById('speed-label').textContent=running?'Corriendo':'Caminando';
 
     // ── CAMERA MODES ──
+    if(state.camMode==='free' && !simCamPose) fcUpdateTween(dt);
+    fcAdjustClip(state.camMode==='free' || ridingCraneId!==null);
     const pos=charGroup.position;
 
     // Timeline (Bloque D) drives the camera: render its pose directly
@@ -7786,7 +7960,6 @@ function animate(){
         freeCam.pos.z + radius * cy * cp
       );
       camera.lookAt(freeCam.pos);
-      camera.rotation.order='YXZ';
     } else if(state.camMode==='third'){
       const dist=6,pitch=state.camPitch;
       camTarget.set(pos.x-Math.sin(state.charRot)*dist*Math.cos(pitch),pos.y+dist*Math.sin(pitch),pos.z-Math.cos(state.charRot)*dist*Math.cos(pitch));
@@ -8215,7 +8388,7 @@ function dvCanOrbit(v) { return v && (v.kind === 'iso' || v.kind === 'camera'); 
 
 // ── contenido del dibujo ────────────────────────────────────────────────────
 function dvExcluded(o) {
-  return o === gridHelper || o === charGroup || o === pickHighlight || o === DIMV.edgeGroup || o.isLight || o.isCamera
+  return o === gridHelper || o === charGroup || o === pickHighlight || o === DIMV.edgeGroup || o.isLight || o.isCamera || (o.userData && o.userData.__helper)
     || state.measureMarkers.includes(o) || o === state.measureLine;
 }
 function dvContentRoots(v) {
