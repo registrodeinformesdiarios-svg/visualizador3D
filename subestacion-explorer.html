@@ -1339,6 +1339,96 @@
   .shared-item button{flex-shrink:0;padding:3px 7px;border-radius:4px;border:1px solid rgba(79,195,247,.35);background:rgba(79,195,247,.08);color:var(--accent);font-family:var(--mono);font-size:9px;cursor:pointer;}
   .shared-item button.on{border-color:var(--accent2);color:var(--accent2);background:rgba(129,199,132,.12);}
 
+  /* ═══ PANTALLA DE CARGA PÚBLICA ═══ */
+  #pub-loader { position:fixed; inset:0; z-index:600; display:none; align-items:center; justify-content:center; background:radial-gradient(ellipse at center, #121821 0%, #07090c 75%); }
+  #pub-loader.open { display:flex; }
+  .pl-box { width:min(420px, 88vw); display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; }
+  .pl-logo { font-family:var(--mono); font-size:12px; letter-spacing:2px; color:var(--accent); font-weight:600; }
+  .pl-logo span { color:var(--accent2); }
+  .pl-title { font-family:var(--sans); font-size:20px; font-weight:600; color:var(--text); line-height:1.3; }
+  .pl-spin { width:54px; height:54px; border-radius:50%; border:4px solid rgba(79,195,247,.15); border-top-color:var(--accent); animation:plspin 0.9s linear infinite; margin:6px 0; }
+  #pub-loader.err .pl-spin { animation:none; border-color:rgba(239,83,80,.6); }
+  @keyframes plspin { to { transform:rotate(360deg); } }
+  .pl-stage { font-family:var(--sans); font-size:14px; color:var(--text); }
+  .pl-bar { width:100%; height:8px; border-radius:4px; background:rgba(255,255,255,.07); overflow:hidden; position:relative; }
+  #pl-fill { height:100%; width:0; background:linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:4px; transition:width .2s; }
+  .pl-bar.indet #pl-fill { width:35% !important; position:absolute; animation:plind 1.3s ease-in-out infinite; }
+  @keyframes plind { 0% { left:-35%; } 100% { left:100%; } }
+  .pl-detail { font-family:var(--mono); font-size:11px; color:var(--text2); min-height:14px; }
+  .pl-steps { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; margin-top:4px; }
+  .pl-step { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--text3); }
+  .pl-step i { width:9px; height:9px; border-radius:50%; border:1.5px solid currentColor; }
+  .pl-step.active { color:var(--accent); } .pl-step.active i { background:var(--accent); animation:plpulse 1s ease-in-out infinite; }
+  .pl-step.done { color:var(--accent2); } .pl-step.done i { background:var(--accent2); border-color:var(--accent2); }
+  @keyframes plpulse { 50% { opacity:.3; } }
+  .pl-err { display:none; flex-direction:column; gap:10px; font-family:var(--mono); font-size:11px; color:#ef9a9a; background:rgba(239,83,80,.08); border:1px solid rgba(239,83,80,.35); border-radius:8px; padding:12px; width:100%; }
+  #pub-loader.err .pl-err { display:flex; }
+  .pl-err button { align-self:center; background:var(--bg3); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:7px 16px; font-family:var(--mono); cursor:pointer; }
+  /* ═══ VISTA PÚBLICA SIMPLE ═══ */
+  body.pub-simple #hud-top, body.pub-simple #toolbar, body.pub-simple #controls-legend, body.pub-simple #info-panel, body.pub-simple #height-panel,
+  body.pub-simple #speed-badge, body.pub-simple #cam-toggle, body.pub-simple #minimap-wrap, body.pub-simple #joystick-wrap, body.pub-simple #crosshair,
+  body.pub-simple #crane-dpad-wrap, body.pub-simple #load-monitor, body.pub-simple #crane-panel, body.pub-simple #crane-status-bar, body.pub-simple #sim-timeline,
+  body.pub-simple #floor-config-panel, body.pub-simple #measure-panel, body.pub-simple #lift-pos-panel, body.pub-simple #crane-config-panel,
+  body.pub-simple #cloud-panel, body.pub-simple #record-panel, body.pub-simple #block-a-panel, body.pub-simple #block-c-panel, body.pub-simple #block-e-panel,
+  body.pub-simple #chip-editor, body.pub-simple #capsule-editor { display:none !important; }
+  #pub-panel { position:fixed; top:16px; left:16px; z-index:300; width:340px; max-height:calc(100vh - 32px); display:none; flex-direction:column;
+    background:rgba(9,12,17,.94); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.22); border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.45); overflow:hidden; font-family:var(--sans); }
+  #pub-panel.open { display:flex; }
+  .pp-head { padding:14px 16px 10px; border-bottom:1px solid var(--border); position:relative; cursor:default; }
+  .pp-grip { display:none; }
+  .pp-title { font-size:17px; font-weight:600; color:var(--text); line-height:1.25; padding-right:28px; }
+  .pp-sub { font-size:11.5px; color:var(--text2); margin-top:3px; }
+  .pp-min { position:absolute; top:12px; right:12px; width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; }
+  #pub-panel.collapsed .pp-body { display:none; }
+  #pub-panel.collapsed .pp-min { transform:rotate(180deg); }
+  .pp-body { overflow-y:auto; padding:12px 14px 14px; display:flex; flex-direction:column; gap:10px; }
+  .pp-player { display:flex; gap:12px; align-items:center; padding:10px; border-radius:12px; background:rgba(79,195,247,.06); border:1px solid rgba(79,195,247,.18); }
+  .pp-play { flex-shrink:0; min-width:118px; height:46px; border-radius:23px; border:none; cursor:pointer; font-family:var(--sans); font-size:15px; font-weight:600;
+    background:linear-gradient(135deg, #29b6f6, #66bb6a); color:#06121a; box-shadow:0 4px 14px rgba(41,182,246,.35); }
+  .pp-play.stop { background:linear-gradient(135deg, #ef5350, #ff7043); color:#fff; box-shadow:0 4px 14px rgba(239,83,80,.35); }
+  .pp-play:disabled { opacity:.35; cursor:default; box-shadow:none; }
+  .pp-now { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .pp-an { font-size:13px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pp-day { font-size:11px; color:var(--text2); min-height:14px; }
+  .pp-prog { height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
+  #pp-prog-fill { height:100%; width:0; background:var(--accent); transition:width .25s linear; }
+  .pp-sec { font-size:11px; font-weight:600; color:var(--text2); letter-spacing:.4px; text-transform:uppercase; margin-top:4px; }
+  .pp-list { display:flex; flex-direction:column; gap:6px; }
+  .pp-item { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:11px 12px; border-radius:10px; cursor:pointer;
+    background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:var(--sans); font-size:13.5px; }
+  .pp-item:hover, .pp-item:active { border-color:rgba(79,195,247,.5); background:rgba(79,195,247,.08); }
+  .pp-item b { font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pp-item small { color:var(--text3); font-size:11px; }
+  .pp-item.on { border-color:rgba(102,187,106,.6); }
+  .pp-item.loading { opacity:.6; } .pp-item.loading .pp-ico { animation:plpulse .8s infinite; }
+  .pp-ico { width:22px; text-align:center; font-size:15px; }
+  .pp-go { color:var(--accent); font-size:12px; font-weight:600; }
+  .pp-grp { display:flex; flex-direction:column; gap:5px; }
+  .pp-views { display:flex; flex-wrap:wrap; gap:5px; padding-left:34px; }
+  .pp-views button { padding:6px 10px; border-radius:14px; border:1px solid var(--border); background:transparent; color:var(--text2); font-size:11.5px; cursor:pointer; font-family:var(--sans); }
+  .pp-views button:hover { color:var(--accent); border-color:rgba(79,195,247,.5); }
+  .pp-help { display:flex; flex-wrap:wrap; gap:5px 12px; font-size:11.5px; color:var(--text2); }
+  .pp-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+  .pp-btn { flex:1; padding:10px; border-radius:10px; border:1px solid rgba(79,195,247,.4); background:rgba(79,195,247,.1); color:var(--accent); font-family:var(--sans); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .pp-btn.ghost { background:transparent; border-color:var(--border); color:var(--text2); font-weight:500; }
+  #pub-return { position:fixed; left:16px; bottom:16px; z-index:300; display:none; align-items:center; gap:6px; padding:10px 14px; border-radius:22px; border:1px solid rgba(79,195,247,.45);
+    background:rgba(9,12,17,.92); color:var(--accent); font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  @media (max-width: 720px) {
+    #pub-panel { top:auto; left:0; right:0; bottom:0; width:auto; max-height:56vh; border-radius:16px 16px 0 0; border-bottom:none; }
+    .pp-grip { display:block; width:40px; height:4px; border-radius:2px; background:rgba(255,255,255,.25); margin:0 auto 10px; }
+    .pp-head { cursor:pointer; }
+    .pp-play { min-width:104px; height:44px; font-size:14px; }
+    #pub-panel { max-height:46vh; }
+    body.pub-simple #sim-date-banner { max-width:94vw; top:8px; padding:6px 12px; }
+    body.pub-simple #sim-date-banner .sdb-date { white-space:nowrap; font-size:12px; }
+    body.pub-simple #sim-date-banner .sdb-label, body.pub-simple #sim-date-banner .sdb-time { font-size:11px; }
+  }
+  .pb-anims { display:flex; flex-direction:column; gap:4px; max-height:180px; overflow-y:auto; }
+  .pb-row { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:var(--text); padding:4px 6px; border-radius:5px; background:var(--bg3); }
+  .pb-row label:first-child { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; gap:6px; align-items:center; }
+  .pb-row small { color:var(--text3); font-size:8.5px; }
+  .pb-row input { accent-color:var(--accent); }
+  #share-modal .sh-box { max-height:90vh; overflow-y:auto; }
   /* ═══ VISTAS Y COTAS ═══ */
   #dv-modal { position:fixed; inset:0; z-index:400; background:rgba(4,6,9,.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; }
   #dv-modal.open { display:flex; }
@@ -1440,6 +1530,43 @@
   .dv-hm { width:16px; text-align:center; flex-shrink:0; font-size:10px; }
   .dv-hn { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dv-hk { color:var(--warn); font-size:8.5px; }
+  .dv-f2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:var(--mono); font-size:9px; color:var(--text2); }
+  .dv-f2 label { display:flex; flex-direction:column; gap:3px; }
+  .dv-chkrow { display:flex; flex-wrap:wrap; gap:4px 12px; }
+  .dv-cut { display:flex; flex-direction:column; gap:7px; padding:8px; border:1px solid rgba(246,173,85,.2); border-radius:6px; background:rgba(246,173,85,.03); }
+  .dv-secl { stroke:#c62828; stroke-width:1.6; stroke-dasharray:16 4 3 4; }
+  .dv-sect { stroke:#c62828; stroke-width:2.2; }
+  .dv-seca { fill:#c62828; }
+  .dv-sectx { font:700 10px 'IBM Plex Mono', monospace; fill:#c62828; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+  .dv-grp { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; color:var(--warn); letter-spacing:.4px; padding:7px 4px 3px; border-top:1px solid var(--border); margin-top:4px; }
+  .dv-grp:first-child { border-top:none; margin-top:0; }
+  .dv-grp span { color:var(--text3); }
+  .dv-scope { display:flex; flex-direction:column; gap:6px; padding:8px; border:1px solid rgba(79,195,247,.25); border-radius:6px; background:rgba(79,195,247,.04); }
+  .dv-ctx-ck { display:flex; align-items:center; gap:7px; font-size:10.5px; color:var(--text); padding:5px 9px; cursor:pointer; }
+  .dv-ctx-ck input { accent-color:var(--accent); }
+  #dv-ctx .dv-ctx-ok { color:var(--accent); font-weight:600; }
+  #dv-ctx button small { color:var(--text3); font-size:8.5px; margin-left:auto; }
+  #dv-head { position:relative; }
+  #dv-drive { position:absolute; top:44px; right:12px; z-index:20; width:320px; display:none; flex-direction:column; gap:7px; padding:10px; background:rgba(12,15,20,.98); border:1px solid rgba(79,195,247,.35); border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  #dv-drive.open { display:flex; }
+  .dv-dr-h { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; color:var(--accent); }
+  .dv-dr-list { display:flex; flex-direction:column; gap:3px; max-height:200px; overflow-y:auto; }
+  .dv-dr-row { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:9.5px; color:var(--text); padding:3px 4px; border-radius:4px; }
+  .dv-dr-row:hover { background:var(--bg3); }
+  .dv-dr-row small { color:var(--text3); font-size:8.5px; }
+  .ro-only { display:none; }
+  #dv-modal.ro .ro-only { display:inline-block; }
+  #dv-modal.ro .ed, #dv-modal.ro .dv-new, #dv-modal.ro #dv-props, #dv-modal.ro #dv-hidden, #dv-modal.ro #dv-side details { display:none !important; }
+  #dv-modal.ro #dv-tools > *:not([data-ro]) { display:none; }
+  #dv-modal.ro .dv-title::after { content:' · SOLO LECTURA'; color:var(--text3); font-weight:400; }
+  @media (max-width: 760px) {
+    #dv-modal.ro #dv-win { width:100vw; height:100dvh; border-radius:0; border:none; }
+    #dv-modal.ro #dv-body { flex-direction:column; }
+    #dv-modal.ro #dv-side { width:auto; max-height:26vh; border-right:none; border-bottom:1px solid var(--border); }
+    #dv-modal.ro #dv-head { height:auto; min-height:46px; flex-wrap:wrap; padding:6px 10px; }
+    #dv-modal.ro .dv-sub { flex-basis:100%; order:3; }
+    #dv-modal.ro .dv-title::after { content:''; }
+  }
   .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
   .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
 </style>
@@ -2005,13 +2132,16 @@
       <span class="dv-title">📐 VISTAS Y COTAS</span>
       <span id="dv-model" class="dv-sub"></span>
       <div class="dv-head-btns">
-        <button class="dv-btn" onclick="dvOpenJSON()" title="Recuperar vistas y cotas desde un JSON">📂 Abrir JSON</button>
-        <button class="dv-btn" onclick="dvSaveJSON()" title="Guardar todas las vistas y cotas (Ctrl+S)">💾 Guardar JSON</button>
+        <button class="dv-btn ed" onclick="dvDriveToggle()" title="Guardar o abrir los planos en Google Drive (proyecto BIM)">☁ Drive</button>
+        <button class="dv-btn ed" onclick="dvOpenJSON()" title="Recuperar vistas y cotas desde un JSON">📂 Abrir JSON</button>
+        <button class="dv-btn ed" onclick="dvSaveJSON()" title="Guardar todas las vistas y cotas (Ctrl+S)">💾 Guardar JSON</button>
         <button class="dv-btn pdf" onclick="dvExportPDF(false)" title="Lámina PDF de la vista activa">📄 PDF vista</button>
-        <button class="dv-btn pdf" onclick="dvExportPDF(true)" title="PDF con una lámina por vista">📚 PDF todas</button>
+        <button class="dv-btn pdf ed" onclick="dvExportPDF(true)" title="PDF con una lámina por vista">📚 PDF todas</button>
+        <button class="dv-btn pdf ro-only" onclick="dvExportPDF('group')" title="PDF con todos los planos de este grupo">📚 PDF del grupo</button>
         <button class="dv-x" onclick="closeDimViews()" title="Cerrar">✕</button>
       </div>
       <input type="file" id="dv-json-input" accept=".json,application/json" style="display:none" onchange="dvLoadJSONFile(this)">
+      <div id="dv-drive"></div>
     </div>
     <div id="dv-body">
       <div id="dv-side">
@@ -2070,7 +2200,7 @@
           <button class="dv-tb snap active" data-snap="edge" onclick="dvToggleSnap('edge')" title="Punto más cercano sobre la arista">⧖ Arista</button>
           <button class="dv-tb snap active" data-snap="face" onclick="dvToggleSnap('face')" title="Punto sobre la superficie">○ Superficie</button>
           <span class="dv-sep"></span>
-          <button class="dv-tb" onclick="dvFitActive()" title="Encuadrar (F)">⤢</button>
+          <button class="dv-tb" data-ro onclick="dvFitActive()" title="Encuadrar (F)">⤢ Encuadrar</button>
           <button class="dv-tb" onclick="dvUndo()" title="Deshacer (Ctrl+Z)">↶</button>
           <button class="dv-tb" onclick="dvDeleteSel()" title="Borrar cota seleccionada (Supr)">🗑</button>
         </div>
@@ -6144,7 +6274,13 @@ window.simPlayAll = function() {
   resetToInitialState();
   let idx = 0;
   const playNext = () => {
-    if (idx >= SIM.days.length) { _playAllMode = false; simPause(); return; }
+    if (idx >= SIM.days.length) {
+      if (SIM.loop && _playAllMode) {   // bucle: reinicia desde el primer día hasta que se pulse Detener
+        setTimeout(() => { if (!_playAllMode) return; resetToInitialState(); idx = 0; playNext(); }, 1500);
+        return;
+      }
+      _playAllMode = false; simPause(); return;
+    }
     SIM.activeDayId = SIM.days[idx].id;
     SIM.currentHour = 0;
     tlCollapsedRows.clear();
@@ -6519,7 +6655,7 @@ async function cloudListAnimations() {
   try {
     const r = await fetch(cloudScriptBase() + '?action=listAnimations&project=' + encodeURIComponent(CLOUD.project));
     const data = await r.json();
-    CLOUD.animations = data.files || data || [];
+    CLOUD.animations = (data.files || data || []).filter(f => !/\.(planos|publico)\.json$/i.test(f.name || ''));
     renderCloudAnimList();
   } catch(e) {
     list.innerHTML = '<div style="color:var(--danger);font-size:10px;padding:8px;">Error al listar animaciones.</div>';
@@ -8043,12 +8179,20 @@ function shareScriptUrl() {
   try { return localStorage.getItem('sim_share_script') || ''; } catch (e) { return ''; }
 }
 
-async function shareFetchFile(id) {
+async function shareFetchFile(id, onProgress) {
   const base = shareScriptUrl();
   if (!base) throw new Error('No hay servicio de modelos compartidos configurado');
   const r = await fetch(base + '?action=file&id=' + encodeURIComponent(id));
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
+  let text;
+  if (onProgress && r.body && r.body.getReader) {   // lectura por partes para mostrar avance real
+    const total = +r.headers.get('content-length') || 0, reader = r.body.getReader(), chunks = [];
+    let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress(got, total); }
+    const all = new Uint8Array(got); let o = 0; chunks.forEach(c => { all.set(c, o); o += c.length; });
+    text = new TextDecoder().decode(all);
+  } else text = await r.text();
+  let j; try { j = JSON.parse(text); } catch (e) { throw new Error('Respuesta inválida del servidor'); }
   if (j.error) throw new Error(j.error);
   return j;
 }
@@ -8059,16 +8203,25 @@ async function b64ToArrayBuffer(b64) {
   return r.arrayBuffer();
 }
 
-async function loadSharedModel(id, displayName) {
+async function loadSharedModel(id, displayName, expectedBytes) {
   const bar = document.getElementById('loading-bar');
   const barWrap = document.getElementById('loading-bar-wrap');
   const status = document.getElementById('hud-status');
   document.getElementById('load-error').style.display = 'none';
   barWrap.style.display = 'block'; bar.style.width = '10%';
   status.textContent = 'DESCARGANDO MODELO COMPARTIDO...';
-  const j = await shareFetchFile(id);
+  pubLoaderStep('model', 'active'); pubLoaderStage('Descargando modelo 3D…');
+  const est = expectedBytes ? Math.ceil(expectedBytes / 3) * 4 + 200 : 0;   // tamaño en base64
+  const t0 = performance.now();
+  const j = await shareFetchFile(id, (got, total) => {
+    const tot = total || est;
+    if (tot) bar.style.width = Math.min(55, 10 + 45 * got / tot) + '%';
+    pubLoaderProgress(got, tot, t0);
+  });
   if (!j.data) throw new Error('El archivo no es un modelo .glb');
   bar.style.width = '55%'; status.textContent = 'PROCESANDO MODELO...';
+  pubLoaderStage('Procesando geometría…'); pubLoaderProgress(null);
+  await new Promise(r => setTimeout(r, 30));
   const buf = await b64ToArrayBuffer(j.data);
   const name = displayName || (j.name || 'Modelo').replace(/\.(glb|gltf)$/i, '');
   await new Promise((res, rej) => gltfLoader.parse(buf, '', g => {
@@ -8076,8 +8229,9 @@ async function loadSharedModel(id, displayName) {
     onModelReady(g, name);
     res();
   }, err => rej(new Error(err && err.message ? err.message : String(err)))));
-  window._shareModel = { id, name };
+  window._shareModel = { id, name, size:j.size || expectedBytes || 0 };
   window._shareAnim = null;
+  pubLoaderStep('model', 'done');
 }
 
 async function loadSharedAnim(id, name) {
@@ -8088,31 +8242,344 @@ async function loadSharedAnim(id, name) {
 }
 
 // Arranque automático cuando la URL trae ?m=
-(async function bootFromLink() {
+// se difiere un ciclo para que el estado de la vista pública (PUB) y de planos (DIMV) ya existan
+setTimeout(async function bootFromLink() {
   const p = new URLSearchParams(location.search);
-  const m = p.get('m');
-  if (!m) return;
+  const pid = p.get('p'), m = p.get('m');
+  if (!pid && !m) return;
   if (!shareScriptUrl()) {
     showError('El enlace no indica el servicio de modelos (falta el parámetro s o SHARE_SCRIPT_URL).');
     return;
   }
+  const simple = p.get('ui') !== 'full';
+  pubLoaderShow(pid ? ['pub', 'model', 'planos', 'anim'] : (p.get('a') ? ['model', 'anim'] : ['model']));
   try {
-    await loadSharedModel(m, p.get('n'));
-    const a = p.get('a');
-    if (a) {
-      document.getElementById('hud-status').textContent = 'CARGANDO ANIMACIÓN...';
-      await loadSharedAnim(a);
-      if (!timelineOpen) toggleTimeline();
-      if (p.get('play') === '1') setTimeout(() => simPlayAll(), 600);
+    if (pid) {
+      pubLoaderStep('pub', 'active'); pubLoaderStage('Conectando con el servidor…');
+      const mf = await shareFetchFile(pid);
+      let man; try { man = JSON.parse(mf.text); } catch (e) { throw new Error('La publicación está dañada'); }
+      if (!man || man.format !== PUB_FORMAT || !man.model || !man.model.id) throw new Error('El enlace no corresponde a una publicación válida');
+      PUB.manifest = man; PUB.manifestId = pid;
+      pubLoaderTitle(man.title || man.model.name || 'Modelo');
+      pubLoaderStep('pub', 'done');
+      await loadSharedModel(man.model.id, man.title || man.model.name, man.model.size);
+      pubLoaderStep('planos', 'active'); pubLoaderStage('Preparando planos…');
+      if (man.planos && Array.isArray(man.planos.views)) {
+        DIMV.doc = dvNormalize(JSON.parse(JSON.stringify(man.planos))); DIMV.doc.model = dvModelName();
+        DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null;
+      }
+      pubLoaderStep('planos', 'done');
+      const def = man.autoplay && man.autoplay.id;
+      if (def) {
+        pubLoaderStep('anim', 'active'); pubLoaderStage('Cargando animación…');
+        await pubLoadAnim(def);
+      }
+      pubLoaderStep('anim', 'done');
+    } else {
+      const a = p.get('a');
+      PUB.manifest = { format:PUB_FORMAT, title:p.get('n') || '', model:{ id:m }, planos:null,
+                       animations:a ? [{ id:a, name:'Animación' }] : [], autoplay:{ id:p.get('play') === '1' ? a : null, loop:true } };
+      pubLoaderTitle(p.get('n') || 'Modelo compartido');
+      await loadSharedModel(m, p.get('n'));
+      if (a) { pubLoaderStep('anim', 'active'); pubLoaderStage('Cargando animación…'); await pubLoadAnim(a); pubLoaderStep('anim', 'done'); }
+      if (!simple && a && !timelineOpen) toggleTimeline();
     }
     document.getElementById('hud-status').textContent = 'EXPLORANDO';
+    pubLoaderStage('¡Listo!'); pubLoaderProgress(1, 1);
+    await new Promise(r => setTimeout(r, 350));
+    pubLoaderHide();
+    if (simple) pubEnterSimple(); else pubShowReturn(true);
+    const auto = PUB.manifest.autoplay;
+    if (auto && auto.id && PUB.current === auto.id) setTimeout(() => pubPlay(auto.loop !== false), 500);
   } catch (err) {
-    document.getElementById('load-zone').classList.remove('hidden');
+    pubLoaderError(err.message);
     showError('No se pudo abrir el enlace: ' + err.message);
     document.getElementById('loading-bar-wrap').style.display = 'none';
     document.getElementById('hud-status').textContent = 'ERROR';
   }
-})();
+}, 0);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VISTA PÚBLICA SIMPLE + PUBLICACIÓN
+// Publicación = archivo «<título>.publico.json» en la carpeta compartida (junto al .glb):
+//   { format, version, title, model:{id,name,size}, planos:<doc de Vistas y cotas>,
+//     animations:[{id,name}], autoplay:{id, loop}, published }
+// Enlace: …/subestacion-explorer.html?p=<id de la publicación>   (ui=full → interfaz completa)
+// ═══════════════════════════════════════════════════════════════════════════
+const PUB_FORMAT = 'substation-explorer-public';
+const PUB = { manifest:null, manifestId:null, current:null, playing:false, simple:false, timer:0, resume:false, loader:false };
+
+// ── pantalla de carga ──
+const PUB_STEPS = { pub:'Publicación', model:'Modelo 3D', planos:'Planos', anim:'Animación' };
+function pubLoaderShow(steps) {
+  PUB.loader = true; PUB.t0 = performance.now();
+  const el = document.getElementById('pub-loader');
+  document.getElementById('pl-steps').innerHTML = steps.map(k => `<div class="pl-step" data-k="${k}"><i></i>${PUB_STEPS[k]}</div>`).join('');
+  document.getElementById('pl-err').style.display = 'none';
+  el.classList.remove('err'); el.classList.add('open');
+  pubLoaderStage('Conectando…'); pubLoaderProgress(null);
+}
+function pubLoaderTitle(t) { const e = document.getElementById('pl-title'); if (e) e.textContent = t; }
+function pubLoaderStage(t) {
+  if (!PUB.loader) return;
+  document.getElementById('pl-stage').textContent = t;
+  PUB.stageT = performance.now(); PUB.bytes = false;
+  clearInterval(PUB.waitTimer);
+  PUB.waitTimer = setInterval(() => {   // mientras el servidor aún no envía datos, mostrar que sigue trabajando
+    if (!PUB.loader) { clearInterval(PUB.waitTimer); return; }
+    if (PUB.bytes) return;
+    const sec = Math.round((performance.now() - PUB.stageT) / 1000);
+    if (sec < 1) return;
+    document.getElementById('pl-detail').textContent = 'Esperando respuesta de Google Drive… ' + sec + ' s'
+      + (sec >= 8 ? ' · los modelos grandes pueden tardar hasta un minuto' : '');
+  }, 500);
+}
+function pubLoaderStep(k, st) {
+  if (!PUB.loader) return;
+  const e = document.querySelector(`#pl-steps .pl-step[data-k="${k}"]`); if (!e) return;
+  e.classList.remove('active', 'done'); e.classList.add(st);
+}
+function pubLoaderProgress(got, total, t0) {
+  if (!PUB.loader) return;
+  const fill = document.getElementById('pl-fill'), det = document.getElementById('pl-detail'), bar = fill.parentElement;
+  if (got === null || got === undefined) { bar.classList.add('indet'); det.textContent = ''; return; }
+  PUB.bytes = true;
+  const mb = x => (x / 1048576).toFixed(1);
+  if (total) { bar.classList.remove('indet'); fill.style.width = Math.min(100, 100 * got / total).toFixed(1) + '%'; }
+  else bar.classList.add('indet');
+  if (total === 1 && got === 1) { det.textContent = ''; return; }
+  const secs = t0 ? (performance.now() - t0) / 1000 : 0, rate = secs > 0.3 ? got / secs : 0;
+  det.textContent = mb(got) + ' MB' + (total ? ' de ' + mb(total) + ' MB' : '') + (rate ? ' · ' + mb(rate) + ' MB/s' : '')
+    + (rate && total && total > got ? ' · faltan ~' + Math.ceil((total - got) / rate) + ' s' : '');
+}
+function pubLoaderHide() { PUB.loader = false; clearInterval(PUB.waitTimer); document.getElementById('pub-loader').classList.remove('open'); }
+function pubLoaderError(msg) {
+  const el = document.getElementById('pub-loader'); el.classList.add('open', 'err');
+  document.getElementById('pl-stage').textContent = 'No se pudo abrir el modelo';
+  const e = document.getElementById('pl-err'); e.style.display = 'block'; e.querySelector('span').textContent = msg;
+  document.getElementById('pl-fill').parentElement.classList.remove('indet');
+  PUB.loader = false;
+}
+
+// ── animaciones ──
+async function pubLoadAnim(id) {
+  const a = (PUB.manifest.animations || []).find(x => x.id === id);
+  await loadSharedAnim(id, a ? a.name : '');
+  PUB.current = id;
+}
+function pubAnimName() {
+  const a = PUB.manifest && (PUB.manifest.animations || []).find(x => x.id === PUB.current);
+  return a ? a.name : (window._shareAnim ? window._shareAnim.name : '');
+}
+window.pubPlay = function (loop) {
+  if (!SIM.days.length) return;
+  if (SIM.playing) simPause();
+  SIM.loop = !!loop;
+  simPlayAll();
+  PUB.playing = true; pubUpdatePlayer();
+  clearInterval(PUB.timer); PUB.timer = setInterval(pubTick, 250);
+};
+window.pubStop = function () {
+  SIM.loop = false; PUB.playing = false;
+  simStop();
+  clearInterval(PUB.timer); pubUpdatePlayer();
+};
+window.pubPlayToggle = function () {
+  if (PUB.playing) pubStop();
+  else pubPlay(!PUB.manifest || !PUB.manifest.autoplay || PUB.manifest.autoplay.loop !== false);
+};
+window.pubPlayAnim = async function (i) {
+  const a = (PUB.manifest.animations || [])[i]; if (!a) return;
+  const btn = document.querySelector(`#pub-panel .pp-anim[data-i="${i}"]`);
+  if (PUB.current !== a.id) {
+    if (PUB.playing) pubStop();
+    if (btn) btn.classList.add('loading');
+    try { await pubLoadAnim(a.id); } catch (e) { alert('No se pudo cargar la animación: ' + e.message); if (btn) btn.classList.remove('loading'); return; }
+    if (btn) btn.classList.remove('loading');
+  }
+  pubPlay(!PUB.manifest.autoplay || PUB.manifest.autoplay.loop !== false);
+  pubRenderPanel();
+};
+function pubTick() {
+  if (PUB.playing && !SIM.playing && !_playAllMode) { PUB.playing = false; clearInterval(PUB.timer); }
+  pubUpdatePlayer();
+}
+function pubUpdatePlayer() {
+  const b = document.getElementById('pp-play'); if (!b) return;
+  const has = SIM.days.length > 0;
+  b.disabled = !has;
+  b.classList.toggle('stop', PUB.playing);
+  b.innerHTML = PUB.playing ? '■&nbsp; Detener' : '▶&nbsp; Reproducir';
+  document.getElementById('pp-anim-name').textContent = has ? (pubAnimName() || 'Animación') : 'Sin animación';
+  const d = activeDay(), idx = d ? SIM.days.indexOf(d) : -1;
+  document.getElementById('pp-day').textContent = PUB.playing && d
+    ? `Día ${idx + 1} de ${SIM.days.length}${d.date ? ' · ' + formatPrettyDate(d.date) : ''}${SIM.loop ? ' · 🔁' : ''}`
+    : (has ? `${SIM.days.length} día${SIM.days.length === 1 ? '' : 's'} de construcción` : '');
+  const frac = PUB.playing && idx >= 0 ? (idx + Math.min(1, SIM.currentHour / Math.max(1, dayDuration()))) / SIM.days.length : 0;
+  document.getElementById('pp-prog-fill').style.width = (frac * 100).toFixed(1) + '%';
+}
+
+// ── planos ──
+window.pubOpenPlanos = function (group, viewId) {
+  PUB.resume = PUB.playing;
+  if (PUB.playing) { SIM.loop = false; PUB.playing = false; clearInterval(PUB.timer); }
+  openDimViews({ readonly:true, group, viewId });
+};
+window.pubAfterPlanos = function () {
+  if (PUB.resume) { PUB.resume = false; setTimeout(() => pubPlay(!PUB.manifest.autoplay || PUB.manifest.autoplay.loop !== false), 200); }
+  pubUpdatePlayer();
+};
+
+// ── panel ──
+function pubRenderPanel() {
+  const el = document.getElementById('pub-panel'), man = PUB.manifest; if (!el || !man) return;
+  const anims = man.animations || [];
+  const groups = new Map();
+  if (DIMV.doc && DIMV.doc.views) DIMV.doc.views.forEach(v => { const g = v.group || ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(v); });
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const js = s => esc(JSON.stringify(s));
+  let h = `<div class="pp-head" onclick="pubToggleCollapse(event)">
+      <div class="pp-grip"></div>
+      <div class="pp-title">${esc(man.title || dvModelName())}</div>
+      <div class="pp-sub">Modelo 3D interactivo de la subestación</div>
+      <button class="pp-min" title="Minimizar">▾</button></div>
+    <div class="pp-body">
+    <div class="pp-player">
+      <button id="pp-play" class="pp-play" onclick="pubPlayToggle()">▶&nbsp; Reproducir</button>
+      <div class="pp-now"><div id="pp-anim-name" class="pp-an"></div><div id="pp-day" class="pp-day"></div>
+        <div class="pp-prog"><div id="pp-prog-fill"></div></div></div>
+    </div>`;
+  if (anims.length > 1 || (anims.length === 1 && PUB.current !== anims[0].id)) {
+    h += `<div class="pp-sec">🎞 Animaciones</div><div class="pp-list">` + anims.map((a, i) =>
+      `<button class="pp-item pp-anim${a.id === PUB.current ? ' on' : ''}" data-i="${i}" onclick="pubPlayAnim(${i})"><span class="pp-ico">▶</span><b>${esc(a.name)}</b>${man.autoplay && man.autoplay.id === a.id ? '<small>inicial</small>' : ''}</button>`).join('') + '</div>';
+  }
+  if (groups.size) {
+    h += `<div class="pp-sec">📐 Planos</div><div class="pp-list">`;
+    groups.forEach((vs, g) => {
+      h += `<div class="pp-grp"><button class="pp-item pp-grp-h" onclick='pubOpenPlanos(${js(g)})'><span class="pp-ico">📁</span><b>${esc(g || 'Planos generales')}</b><small>${vs.length} plano${vs.length === 1 ? '' : 's'}</small><span class="pp-go">Abrir ›</span></button>
+        <div class="pp-views">${vs.map(v => `<button onclick='pubOpenPlanos(${js(g)}, ${js(v.id)})'>${esc(v.name.replace(g + ' — ', ''))}</button>`).join('')}</div></div>`;
+    });
+    h += '</div>';
+  }
+  h += `<div class="pp-sec">🧭 Navegar el modelo</div>
+    <div class="pp-help"><span>🖱 Arrastrar: girar</span><span>Clic der. / 2 dedos: desplazar</span><span>Rueda / pellizco: zoom</span><span>Doble clic: centrar</span></div>
+    <div class="pp-actions"><button class="pp-btn" onclick="fcFit()">⤢ Ver todo el modelo</button>
+      <button class="pp-btn ghost" onclick="pubExitSimple()" title="Abrir la interfaz completa con todas las herramientas">🛠 Herramientas completas</button></div>
+    </div>`;
+  el.innerHTML = h;
+  pubUpdatePlayer();
+}
+window.pubToggleCollapse = function (e) {
+  if (e && e.target.closest('.pp-body')) return;
+  document.getElementById('pub-panel').classList.toggle('collapsed');
+};
+window.pubEnterSimple = function () {
+  PUB.simple = true;
+  if (typeof timelineOpen !== 'undefined' && timelineOpen) toggleTimeline();
+  document.body.classList.add('pub-simple');
+  pubShowReturn(false);
+  pubRenderPanel();
+  document.getElementById('pub-panel').classList.add('open');
+  if (state.camMode !== 'free') setCamMode('free');
+  if (!PUB.playing) setTimeout(() => fcFit(), 50);
+};
+window.pubExitSimple = function () {
+  PUB.simple = false;
+  document.body.classList.remove('pub-simple');
+  document.getElementById('pub-panel').classList.remove('open');
+  pubShowReturn(true);
+};
+function pubShowReturn(on) { const b = document.getElementById('pub-return'); if (b) b.style.display = on && PUB.manifest ? 'flex' : 'none'; }
+
+// ── publicar (editor) ──
+function pubLink(id) {
+  const q = new URLSearchParams(); q.set('p', id);
+  if (!SHARE_SCRIPT_URL) q.set('s', shareScriptUrl());
+  return location.origin + location.pathname + '?' + q.toString();
+}
+async function pubPost(body) {
+  const r = await fetch(shareScriptUrl(), { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error:'Respuesta inválida (¿actualizaste explorer-publico.gs a la versión 2?)' }));
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+function pubPrefsKey() { return 'sim_pub:' + (window._shareModel ? window._shareModel.id : ''); }
+window.openPublishDialog = async function () {
+  const body = document.getElementById('sh-body'), modal = document.getElementById('share-modal');
+  if (!window._shareModel) { openShareDialog(); return; }
+  modal.classList.add('open');
+  let prev = {}; try { prev = JSON.parse(localStorage.getItem(pubPrefsKey()) || '{}'); } catch (e) {}
+  let key = ''; try { key = localStorage.getItem('sim_publish_key') || ''; } catch (e) {}
+  const mn = dvModelName();
+  const doc = (DIMV.doc && DIMV.doc.model === mn) ? DIMV.doc : dvLoadLocal(mn);
+  const nViews = doc ? doc.views.length : 0, nGroups = doc ? new Set(doc.views.map(v => v.group || '')).size : 0;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  body.innerHTML = `<div class="sh-label">Título</div>
+    <input class="sh-link" id="pb-title" value="${esc(prev.title || window._shareModel.name)}">
+    <div class="sh-label">Planos</div>
+    ${nViews ? `<label class="sh-row"><input type="checkbox" id="pb-planos" checked> Incluir ${nViews} plano${nViews === 1 ? '' : 's'} en ${nGroups} grupo${nGroups === 1 ? '' : 's'}</label>`
+             : '<div class="sh-msg">Este modelo no tiene planos (📐 Vistas y cotas).</div>'}
+    <div class="sh-label">Animaciones (carpeta compartida)</div>
+    <div id="pb-anims" class="pb-anims"><div class="sh-msg">Cargando…</div></div>
+    ${pubHasTimeline() ? `<label class="sh-row"><input type="checkbox" id="pb-cur"${prev.uploadCurrent ? ' checked' : ''}> Subir la línea del tiempo actual como
+      <input class="sh-link" id="pb-cur-name" style="flex:1;" value="${esc(prev.curName || (window._shareModel.name + ' — construcción'))}"></label>` : ''}
+    <label class="sh-row"><input type="checkbox" id="pb-loop"${prev.loop === false ? '' : ' checked'}> Reproducir la animación inicial en bucle al abrir</label>
+    <div class="sh-label">Clave de publicación</div>
+    <input class="sh-link" id="pb-key" type="password" value="${esc(key)}" placeholder="PUBLISH_KEY de explorer-publico.gs">
+    <button class="cp-btn save" id="pb-go" onclick="pubPublish()">🌐 Publicar</button>
+    <div id="pb-status" class="sh-msg" style="display:none;"></div>
+    <button class="cp-btn" onclick="openShareDialog()">‹ Volver</button>`;
+  try {
+    const r = await fetch(shareScriptUrl() + '?action=list'), j = await r.json();
+    if (j.error) throw new Error(j.error);
+    const anims = (j.files || []).filter(f => /\.json$/i.test(f.name) && !/\.(planos|publico)\.json$/i.test(f.name));
+    PUB.pubAnims = anims;
+    const sel = new Set(prev.anims || []), def = prev.def !== undefined ? prev.def : (anims[0] ? anims[0].id : '');
+    const rows = anims.map(f => `<div class="pb-row"><label><input type="checkbox" class="pb-a" value="${f.id}"${sel.has(f.id) ? ' checked' : ''}> ${esc(f.name.replace(/\.json$/i, ''))}</label>
+        <small>${esc(f.path || '')}</small><label title="Animación inicial"><input type="radio" name="pb-def" value="${f.id}"${def === f.id ? ' checked' : ''}> inicial</label></div>`).join('');
+    document.getElementById('pb-anims').innerHTML = (pubHasTimeline() ? `<div class="pb-row"><label>⏱ Línea del tiempo actual</label><small>se sube al publicar</small><label><input type="radio" name="pb-def" value="__cur"${def === '__cur' ? ' checked' : ''}> inicial</label></div>` : '')
+      + (rows || '<div class="sh-msg">No hay animaciones .json en la carpeta compartida.</div>')
+      + '<div class="pb-row"><label><input type="radio" name="pb-def" value=""' + (def === '' ? ' checked' : '') + '> Sin reproducción automática</label></div>';
+  } catch (e) { document.getElementById('pb-anims').innerHTML = '<div class="sh-msg warn">No se pudo listar la carpeta: ' + esc(e.message) + '</div>'; }
+};
+function pubHasTimeline() { return SIM.days.some(d => d.chips && d.chips.length); }
+function pubStatus(msg, warn) { const e = document.getElementById('pb-status'); if (!e) return; e.style.display = 'block'; e.classList.toggle('warn', !!warn); e.innerHTML = msg; }
+window.pubPublish = async function () {
+  const key = document.getElementById('pb-key').value.trim();
+  if (!key) { pubStatus('Escribe la clave de publicación.', true); return; }
+  try { localStorage.setItem('sim_publish_key', key); } catch (e) {}
+  const title = (document.getElementById('pb-title').value || window._shareModel.name).trim();
+  const go = document.getElementById('pb-go'); go.disabled = true;
+  try {
+    const anims = [], picked = [...document.querySelectorAll('.pb-a:checked')].map(i => i.value);
+    let def = (document.querySelector('input[name="pb-def"]:checked') || {}).value || '';
+    const cur = document.getElementById('pb-cur'), curName = document.getElementById('pb-cur-name');
+    if (def === '__cur' && cur) cur.checked = true;
+    if (cur && cur.checked && pubHasTimeline()) {
+      pubStatus('Subiendo la línea del tiempo actual…');
+      const nm = (curName.value || title + ' — construcción').trim();
+      const r = await pubPost({ action:'publish', key, nearId:window._shareModel.id, name:nm + '.json', content:JSON.stringify(buildMasterPayload()) });
+      anims.push({ id:r.id, name:nm });
+      if (def === '__cur') def = r.id;
+    } else if (def === '__cur') def = '';
+    (PUB.pubAnims || []).forEach(f => { if (picked.includes(f.id) || f.id === def) if (!anims.some(a => a.id === f.id)) anims.push({ id:f.id, name:f.name.replace(/\.json$/i, '') }); });
+    const mn = dvModelName(), doc = (DIMV.doc && DIMV.doc.model === mn) ? DIMV.doc : dvLoadLocal(mn), incl = document.getElementById('pb-planos');
+    const man = { format:PUB_FORMAT, version:1, title,
+      model:{ id:window._shareModel.id, name:window._shareModel.name, size:window._shareModel.size || 0 },
+      planos:(incl && incl.checked && doc) ? doc : null,
+      animations:anims, autoplay:{ id:def || null, loop:document.getElementById('pb-loop').checked },
+      published:new Date().toISOString() };
+    pubStatus('Publicando…');
+    const r = await pubPost({ action:'publish', key, nearId:window._shareModel.id, name:title + '.publico.json', content:JSON.stringify(man) });
+    try { localStorage.setItem(pubPrefsKey(), JSON.stringify({ title, anims:anims.map(a => a.id), def, loop:man.autoplay.loop, uploadCurrent:!!(cur && cur.checked), curName:curName ? curName.value : '' })); } catch (e) {}
+    const link = pubLink(r.id);
+    pubStatus(`${r.updated ? 'Publicación actualizada' : 'Publicado'} ✓ — el enlace no cambia al volver a publicar con el mismo título.
+      <input class="sh-link" readonly value="${link}" onclick="this.select()" style="margin-top:6px;">
+      <div style="display:flex;gap:6px;margin-top:6px;"><button class="cp-btn save" style="flex:1;" onclick="navigator.clipboard.writeText('${link}');this.textContent='✓ Copiado'">📋 Copiar enlace</button>
+      <button class="cp-btn" onclick="window.open('${link}','_blank')">Probar ↗</button></div>`);
+  } catch (e) { pubStatus('Error: ' + e.message, true); }
+  go.disabled = false;
+};
 
 // Un modelo recibido desde el visor BIM (postMessage) no es compartible por enlace
 window.addEventListener('message', ev => {
@@ -8158,7 +8625,10 @@ window.openShareDialog = function () {
     +   '<button class="cp-btn save" style="flex:1;" onclick="shareCopyLink(this)">📋 Copiar enlace</button>'
     +   '<button class="cp-btn" onclick="window.open(document.getElementById(\'sh-link\').value,\'_blank\')">Probar ↗</button>'
     + '</div>'
-    + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">Cualquier persona con el enlace verá el modelo; no necesita cuenta de Google ni acceso a la carpeta.</div>';
+    + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">Cualquier persona con el enlace verá el modelo; no necesita cuenta de Google ni acceso a la carpeta.</div>'
+    + '<div class="sh-label" style="margin-top:6px;">Publicación con vista simple</div>'
+    + '<div class="sh-msg">Paquete público con planos, animaciones y reproducción automática en bucle. Se abre con una vista sencilla para el constructor.</div>'
+    + '<button class="cp-btn save" onclick="openPublishDialog()">🌐 Publicar / actualizar…</button>';
   modal.classList.add('open');
   shareUpdateLink();
 };
@@ -8208,6 +8678,25 @@ window.shareRefreshList = async function () {
     if (!files.length) { list.innerHTML = '<div style="color:var(--text3);font-size:10px;padding:8px;text-align:center;">La carpeta está vacía.</div>'; return; }
     list.innerHTML = '';
     files.forEach(f => {
+      if (/\.publico\.json$/i.test(f.name) || /\.planos\.json$/i.test(f.name)) {
+        const isPub = /\.publico\.json$/i.test(f.name);
+        const row = document.createElement('div'); row.className = 'shared-item';
+        row.innerHTML = '<span>' + (isPub ? '🌐' : '📐') + '</span><div style="flex:1;min-width:0;"><div class="si-name"></div><div class="si-meta"></div></div>';
+        row.querySelector('.si-name').textContent = f.name.replace(/\.(publico|planos)\.json$/i, '');
+        row.querySelector('.si-meta').textContent = [isPub ? 'Publicación' : 'Planos', f.path, f.modified].filter(Boolean).join(' · ');
+        const b = document.createElement('button');
+        if (isPub) {
+          b.textContent = 'Abrir ↗'; b.onclick = () => window.open(pubLink(f.id), '_blank');
+          const lb = document.createElement('button'); lb.textContent = '🔗'; lb.title = 'Copiar enlace público';
+          lb.onclick = () => navigator.clipboard.writeText(pubLink(f.id)).then(() => { lb.textContent = '✓'; setTimeout(() => lb.textContent = '🔗', 1500); });
+          row.appendChild(b); row.appendChild(lb);
+        } else {
+          b.textContent = 'Cargar';
+          b.onclick = async () => { b.textContent = '…'; try { const j = await shareFetchFile(f.id); if (dvApplyDoc(JSON.parse(j.text))) b.textContent = '✓'; } catch (e) { alert('Error: ' + e.message); b.textContent = 'Cargar'; } };
+          row.appendChild(b);
+        }
+        list.appendChild(row); return;
+      }
       const isModel = f.kind === 'model';
       const isOpen = isModel
         ? (window._shareModel && window._shareModel.id === f.id)
@@ -8308,6 +8797,137 @@ function dvSeeThrough(m) {
   return ms.length > 0 && ms.every(x => x && (x.visible === false || (x.transparent && x.opacity < 0.95)));
 }
 
+// ── CORTE: plano configurable + relleno con rayado ──────────────────────────
+// section = { on, dir:'view'|'horiz'|'ns'|'ew'|'custom', az, el, depth, flip, fill, hatch, color, mark }
+//   Plano: base·p = depth (base = normal según 'dir'). Se conserva base·p ≥ depth (o ≤ si flip).
+function dvSecDefaults() { return { on:false, dir:'view', az:0, el:0, depth:0, flip:false, fill:true, hatch:true, color:'gray', mark:true }; }
+const DV_SEC_DIRS = { view:'Perpendicular a la vista', horiz:'Horizontal (planta)', ns:'Vertical ⟂ Norte–Sur', ew:'Vertical ⟂ Este–Oeste', custom:'Personalizada (rumbo / inclinación)' };
+function dvSecBase(v) {
+  const s = v.section;
+  switch (s.dir) {
+    case 'horiz': return new THREE.Vector3(0, -1, 0);
+    case 'ns': return dvNorth();
+    case 'ew': return dvEast();
+    case 'custom': {
+      const az = (+s.az || 0) * Math.PI / 180, el = (+s.el || 0) * Math.PI / 180;
+      return dvNorth().multiplyScalar(Math.cos(az) * Math.cos(el)).add(dvEast().multiplyScalar(Math.sin(az) * Math.cos(el)))
+        .add(new THREE.Vector3(0, Math.sin(el), 0)).normalize();
+    }
+    default: return dvV3(v.dir).normalize();
+  }
+}
+function dvSecPlane(v) {
+  if (!v || !v.section.on) return null;
+  const b = dvSecBase(v), f = v.section.flip ? -1 : 1;
+  return { n:b.clone().multiplyScalar(f), c:f * v.section.depth, base:b };
+}
+function dvSecRange(v) {
+  const b = dvSecBase(v); let a = Infinity, z = -Infinity;
+  dvBoxCorners(DIMV.box).forEach(p => { const t = p.dot(b); a = Math.min(a, t); z = Math.max(z, t); });
+  return [a, z];
+}
+function dvSecPosDisp(v) { const s = v.section; return s.dir === 'horiz' ? -s.depth : s.dir === 'view' ? s.depth - dvSecRange(v)[0] : s.depth; }
+function dvSecPosFromDisp(v, x) { const s = v.section; return s.dir === 'horiz' ? -x : s.dir === 'view' ? x + dvSecRange(v)[0] : x; }
+function dvSecPosName(v) { return { horiz:'Altura Y', view:'Profundidad', ns:'Coord. Norte', ew:'Coord. Este', custom:'Distancia' }[v.section.dir] || 'Posición'; }
+function dvSecSideText(v) {
+  const f = v.section.flip;
+  switch (v.section.dir) {
+    case 'horiz': return f ? 'Se conserva lo que está ENCIMA del plano' : 'Se conserva lo que está DEBAJO del plano';
+    case 'ns':    return f ? 'Se conserva el lado SUR del plano' : 'Se conserva el lado NORTE del plano';
+    case 'ew':    return f ? 'Se conserva el lado OESTE del plano' : 'Se conserva el lado ESTE del plano';
+    case 'custom':return f ? 'Se conserva el lado contrario a la normal' : 'Se conserva el lado hacia donde apunta la normal';
+    default:      return f ? 'Se conserva lo que está ENTRE la cámara y el plano' : 'Se conserva lo que está DETRÁS del plano';
+  }
+}
+function dvSectionLabel(v) {
+  const s = v.section, d = dvSecPosDisp(v).toFixed(2);
+  const lab = { horiz:'Corte horizontal Y = ' + d + ' m', ns:'Corte vertical N-S, N = ' + d + ' m', ew:'Corte vertical E-O, E = ' + d + ' m',
+                custom:'Corte rumbo ' + (+s.az || 0) + '°, incl. ' + (+s.el || 0) + '°, d = ' + d + ' m' }[s.dir] || ('Corte a ' + d + ' m de profundidad');
+  return lab + (s.flip ? ' (lado invertido)' : '');
+}
+// Relleno de la cara cortada: método de stencil (caras traseras +1, delanteras −1) y un plano
+// que pinta donde el contador ≠ 0. Rayado a 45° en unidades de papel/pantalla.
+const dvStBack = new THREE.MeshBasicMaterial({ side:THREE.BackSide, colorWrite:false, depthWrite:false, depthTest:false, stencilWrite:true,
+  stencilFunc:THREE.AlwaysStencilFunc, stencilFail:THREE.IncrementWrapStencilOp, stencilZFail:THREE.IncrementWrapStencilOp, stencilZPass:THREE.IncrementWrapStencilOp });
+const dvStFront = new THREE.MeshBasicMaterial({ side:THREE.FrontSide, colorWrite:false, depthWrite:false, depthTest:false, stencilWrite:true,
+  stencilFunc:THREE.AlwaysStencilFunc, stencilFail:THREE.DecrementWrapStencilOp, stencilZFail:THREE.DecrementWrapStencilOp, stencilZPass:THREE.DecrementWrapStencilOp });
+const dvStClear = new THREE.ShaderMaterial({ vertexShader:'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'void main(){gl_FragColor=vec4(0.0);}', side:THREE.DoubleSide, colorWrite:false, depthWrite:false, depthTest:false, stencilWrite:true,
+  stencilRef:0, stencilFunc:THREE.AlwaysStencilFunc, stencilFail:THREE.ReplaceStencilOp, stencilZFail:THREE.ReplaceStencilOp, stencilZPass:THREE.ReplaceStencilOp });
+const dvCapMats = new Map();
+function dvCapMat(hex) {
+  let m = dvCapMats.get(hex);
+  if (!m) {
+    m = new THREE.ShaderMaterial({
+      uniforms:{ uFill:{ value:new THREE.Vector3(((hex >> 16) & 255) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255) },
+                 uLine:{ value:new THREE.Vector3(0.16, 0.17, 0.19) }, uSpacing:{ value:8 }, uWidth:{ value:1 }, uHatch:{ value:1 }, uFillOn:{ value:1 } },
+      vertexShader:'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:`uniform vec3 uFill; uniform vec3 uLine; uniform float uSpacing; uniform float uWidth; uniform float uHatch; uniform float uFillOn;
+        void main(){ float d = mod(gl_FragCoord.x + gl_FragCoord.y, uSpacing); bool ln = uHatch > 0.5 && d < uWidth;
+          if (!ln && uFillOn < 0.5) discard; gl_FragColor = vec4(ln ? uLine : uFill, 1.0); }`,
+      side:THREE.DoubleSide, depthTest:true, depthWrite:true, stencilWrite:true, stencilRef:0,
+      stencilFunc:THREE.NotEqualStencilFunc, stencilFail:THREE.ReplaceStencilOp, stencilZFail:THREE.ReplaceStencilOp, stencilZPass:THREE.ReplaceStencilOp });
+    dvCapMats.set(hex, m);
+  }
+  return m;
+}
+const dvCapScene = new THREE.Scene(), dvCapQuad = new THREE.PlaneGeometry(1, 1), dvCapPool = [];
+function dvHasStencil() { try { return !!renderer.getContext().getContextAttributes().stencil; } catch (e) { return false; } }
+function dvRenderCaps(v, SP, cam, pxPerMm, origMat) {
+  const s = v.section; if (!(s.fill || s.hatch) || !dvHasStencil()) return;
+  const n = SP.n, c = SP.c, sph = DIMV.box.getBoundingSphere(new THREE.Sphere());
+  const ctr = sph.center.clone().addScaledVector(n, c - n.dot(sph.center));
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n), size = sph.radius * 4 + 10;
+  let k = 0;
+  const get = () => { let o = dvCapPool[k++]; if (!o) { o = new THREE.Mesh(); o.matrixAutoUpdate = false; o.frustumCulled = false; dvCapPool.push(o); } dvCapScene.add(o); return o; };
+  dvCapScene.clear();
+  DIMV.visMeshes.forEach(m => {
+    if (m.isInstancedMesh || DIMV.ghostSet.has(m)) return;
+    const mc = dvMeshCache(m); if (Math.abs(n.dot(mc.center) - c) > mc.radius) return;   // no toca el plano
+    let hex = 0xd9d9d9;
+    if (s.color === 'object') {
+      const om = origMat.get(m) || m.material, mt = Array.isArray(om) ? om[0] : om;
+      if (mt && mt.color) { const h = parseInt(mt.color.getHexString(), 16), L = x => Math.round(x + (255 - x) * 0.35);
+        hex = (L((h >> 16) & 255) << 16) | (L((h >> 8) & 255) << 8) | L(h & 255); }
+    }
+    const cm = dvCapMat(hex);
+    cm.uniforms.uSpacing.value = Math.max(4, Math.round(2.0 * pxPerMm)); cm.uniforms.uWidth.value = Math.max(1, Math.round(0.18 * pxPerMm));   // px enteros: sin batido
+    cm.uniforms.uHatch.value = s.hatch ? 1 : 0; cm.uniforms.uFillOn.value = s.fill ? 1 : 0;
+    const base = k;
+    const b = get(); b.geometry = m.geometry; b.material = dvStBack;  b.matrix.copy(m.matrixWorld); b.renderOrder = base;
+    const f = get(); f.geometry = m.geometry; f.material = dvStFront; f.matrix.copy(m.matrixWorld); f.renderOrder = base + 1;
+    const cp = get(); cp.geometry = dvCapQuad; cp.material = cm; cp.renderOrder = base + 2;
+    cp.matrix.compose(ctr, q, new THREE.Vector3(size, size, 1));
+    const cl = get(); cl.geometry = dvCapQuad; cl.material = dvStClear; cl.renderOrder = base + 3; cl.matrix.copy(cp.matrix);
+  });
+  if (!k) return;
+  dvCapScene.children.forEach(o => { o.matrixWorldNeedsUpdate = true; });
+  const ac = renderer.autoClear; renderer.autoClear = false;
+  renderer.render(dvCapScene, cam);
+  renderer.autoClear = ac;
+  dvCapScene.clear();
+}
+// Línea de corte (cuando el plano contiene la dirección de la vista): trazo y flechas hacia el lado conservado
+function dvSectionGeom(v, B, S) {
+  const SP = dvSecPlane(v); if (!SP || v.section.mark === false) return null;
+  const n = SP.n; if (Math.abs(n.dot(B.dir)) > 0.25) return null;
+  const nx = n.dot(B.r), ny = n.dot(B.u), L = Math.hypot(nx, ny); if (L < 1e-6) return null;
+  const k0 = (SP.c - n.dot(B.c)) / (L * L), P0 = [nx * k0, ny * k0], t = [-ny / L, nx / L], w = [nx / L, ny / L];
+  let a = Infinity, z = -Infinity;
+  dvBoxCorners(DIMV.box).forEach(p => { const q = dvTo2(B, p), tt = (q[0] - P0[0]) * t[0] + (q[1] - P0[1]) * t[1]; a = Math.min(a, tt); z = Math.max(z, tt); });
+  const m = S.arrow * 3; a -= m; z += m;
+  const E1 = [P0[0] + t[0] * a, P0[1] + t[1] * a], E2 = [P0[0] + t[0] * z, P0[1] + t[1] * z], al = S.arrow * 3.2;
+  const g = { lines:[[E1[0], E1[1], E2[0], E2[1]]], ticks:[], tris:[], texts:[] };
+  [E1, E2].forEach((E, i) => {
+    const T = [E[0] + w[0] * al, E[1] + w[1] * al];
+    g.ticks.push([E[0], E[1], T[0], T[1]]);
+    g.tris.push(dvArrowTri(T, [-w[0], -w[1]], S));
+    const dirT = i ? t : [-t[0], -t[1]];
+    g.texts.push({ x:E[0] + dirT[0] * S.txt * 0.6, y:E[1] + dirT[1] * S.txt * 0.6, str:'CORTE', dir:[1, 0], anchor:i ? 'start' : 'end' });
+  });
+  return g;
+}
+
 // ── utilidades ──────────────────────────────────────────────────────────────
 const dvV3  = a => new THREE.Vector3(a[0], a[1], a[2]);
 const dvArr = v => [+v.x.toFixed(5), +v.y.toFixed(5), +v.z.toFixed(5)];
@@ -8338,11 +8958,14 @@ function dvNormalize(d) {
     v.halfH = +v.halfH > 0 ? +v.halfH : 10;
     v.style = DV_STYLE_LABEL[v.style] ? v.style : 'tech';
     v.equip = v.equip !== false;
-    v.section = Object.assign({ on:false, depth:0 }, v.section || {});
+    v.section = Object.assign(dvSecDefaults(), v.section || {});
     v.scale = v.scale || 'auto';
     v.items = Array.isArray(v.items) ? v.items.filter(i => i && i.type && i.a) : [];
     v.hidden = Array.isArray(v.hidden) ? v.hidden.filter(e => e && Array.isArray(e.path) && (e.mode === 'hide' || e.mode === 'ghost')) : [];
     v.hidden.forEach(e => { e.id = e.id || dvId(); });
+    v.scope = Array.isArray(v.scope) ? v.scope.filter(e => e && Array.isArray(e.path)) : [];
+    v.scope.forEach(e => { e.id = e.id || dvId(); });
+    v.group = typeof v.group === 'string' ? v.group : '';
     v.items.forEach(i => { i.id = i.id || dvId(); });
   });
   return d;
@@ -8394,6 +9017,7 @@ function dvExcluded(o) {
 function dvContentRoots(v) {
   const model = scene.getObjectByName('__model__'), roots = [];
   if (model) roots.push(model);
+  if (v && v.scope && v.scope.length) return roots;      // plano de detalle: solo el modelo
   if (v && v.equip) scene.children.forEach(c => { if (c !== model && !dvExcluded(c)) roots.push(c); });
   return roots;
 }
@@ -8404,6 +9028,18 @@ function dvCollect() {
   const v = dvActive(), ms = [];
   dvContentRoots(v).forEach(r => r.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position) ms.push(o); }));
   DIMV.meshes = ms; DIMV.meshSet = new Set(ms);
+  // Alcance: plano de un elemento/ensamble (o varios agrupados); el resto se oculta en el dibujo
+  DIMV.scopeHide = [];
+  if (v && v.scope && v.scope.length) {
+    const inS = new Set();
+    v.scope.forEach(e => { const n = dvResolveEntry(e); if (n) n.traverse(o => { if (o.isMesh) inS.add(o); }); });
+    if (inS.size) {
+      const keep = ms.filter(m => inS.has(m));
+      DIMV.scopeHide = ms.filter(m => !inS.has(m));
+      ms.length = 0; keep.forEach(m => ms.push(m));
+      DIMV.meshSet = new Set(ms);
+    }
+  }
   const hid = new Set(), ghU = new Set(); DIMV.ovr = [];
   if (v) v.hidden.forEach(e => {
     const n = dvResolveEntry(e); if (!n) return;
@@ -8487,7 +9123,7 @@ function dvSetupCam(cam, v, aspect, halfH) {
   cam.updateProjectionMatrix(); cam.updateMatrixWorld();
   return B;
 }
-function dvRenderTo(v, cam, w, h, halfH) {
+function dvRenderTo(v, cam, w, h, halfH, pxPerMm) {
   if (renderer.getPixelRatio() !== 1) renderer.setPixelRatio(1);
   const sz = renderer.getSize(new THREE.Vector2());
   if (sz.x !== w || sz.y !== h) renderer.setSize(w, h, false);
@@ -8497,6 +9133,7 @@ function dvRenderTo(v, cam, w, h, halfH) {
   scene.children.forEach(c => { if (c === DIMV.edgeGroup || c.isLight) return; if (!roots.has(c) && c.visible) { c.visible = false; hidden.push(c); } });
   // objetos ocultos en esta vista (el resaltado de la lista los muestra momentáneamente)
   (DIMV.ovr || []).forEach(({ e, n }) => { if (e.mode === 'hide' && n.visible && n !== DIMV.hlNode) { n.visible = false; hidden.push(n); } });
+  (DIMV.scopeHide || []).forEach(m => { if (m.visible) { m.visible = false; hidden.push(m); } });
   const hlSet = new Set(); if (DIMV.hlNode) DIMV.hlNode.traverse(o => { if (o.isMesh) hlSet.add(o); });
   const bg = scene.background, fog = scene.fog, fn = fog ? fog.near : 0, ff = fog ? fog.far : 0;
   scene.background = dvBg; if (fog) { fog.near = 1e7; fog.far = 2e7; }
@@ -8521,12 +9158,14 @@ function dvRenderTo(v, cam, w, h, halfH) {
   });
   hlSet.forEach(m => { swapped.push([m, m.material]); m.material = dvHlMat; });
   offs.forEach(mt => { mt.polygonOffset = true; mt.polygonOffsetFactor = 1; mt.polygonOffsetUnits = 1; });
-  renderer.clippingPlanes = v.section.on ? [new THREE.Plane(B.dir.clone(), -v.section.depth)] : [];
+  const SP = dvSecPlane(v);
+  renderer.clippingPlanes = SP ? [new THREE.Plane(SP.n.clone(), -SP.c)] : [];
   // dibujo sin sombras (el mapa de sombras del explorador se ve pixelado en vistas ortográficas)
   const rs = DIMV.visMeshes.map(m => m.receiveShadow); DIMV.visMeshes.forEach(m => { m.receiveShadow = false; });
   const smAuto = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
 
   renderer.render(scene, cam);
+  if (SP) dvRenderCaps(v, SP, cam, pxPerMm || DIMV.dpr * 96 / 25.4, new Map(swapped));
 
   renderer.shadowMap.autoUpdate = smAuto; renderer.shadowMap.needsUpdate = true;
   DIMV.visMeshes.forEach((m, i) => { m.receiveShadow = rs[i]; });
@@ -8541,7 +9180,7 @@ function dvRender() {
   const ctx = DIMV.ctx2d, v = dvActive();
   const w = Math.max(2, Math.round(DIMV.W * DIMV.dpr)), h = Math.max(2, Math.round(DIMV.H * DIMV.dpr));
   if (!v) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); return; }
-  dvRenderTo(v, DIMV.cam, w, h, v.halfH);
+  dvRenderTo(v, DIMV.cam, w, h, v.halfH, DIMV.dpr * 96 / 25.4);
   ctx.drawImage(renderer.domElement, 0, 0, w, h, 0, 0, w, h);
 }
 function dvLoop() {
@@ -8577,7 +9216,7 @@ function dvSegs(mesh, c) {
 function dvSnap(px, py) {
   const v = dvActive(), sc = dvScreen(v), B = sc.B, dir = B.dir, r = B.r, u = B.u;
   const [cx, cy] = sc.from(px, py), tol = DV_SNAP_PX * sc.wpp;
-  const cut = v.section.on ? v.section.depth : -Infinity;
+  const SP = dvSecPlane(v), sn = SP ? SP.n : null, sc0 = SP ? SP.c : 0;
   let hit = null;
   if (DIMV.visMeshes.length) {
     dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH);
@@ -8585,7 +9224,7 @@ function dvSnap(px, py) {
     const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false);
     let ghostHit = null;
     for (const h of hs) {
-      if (h.point.dot(dir) < cut - 1e-4) continue;
+      if (sn && h.point.dot(sn) < sc0 - 1e-4) continue;
       if (!DIMV.ghostSet.has(h.object)) { hit = h; break; }   // los traslúcidos no tapan
       if (!ghostHit) ghostHit = h;
     }
@@ -8599,16 +9238,19 @@ function dvSnap(px, py) {
     const c = dvMeshCache(mesh);
     const sx = c.center.dot(r) - cr, sy = c.center.dot(u) - cu;
     if (Math.hypot(sx - cx, sy - cy) > c.radius + tol) continue;
-    if (c.center.dot(dir) + c.radius < cut) continue;
+    if (sn && c.center.dot(sn) + c.radius < sc0) continue;
     const sg = dvSegs(mesh, c); if (!sg) continue;
     for (let i = 0; i < sg.length; i += 6) {
       let x1 = sg[i], y1 = sg[i+1], z1 = sg[i+2], x2 = sg[i+3], y2 = sg[i+4], z2 = sg[i+5];
-      let d1 = x1*dir.x + y1*dir.y + z1*dir.z, d2 = x2*dir.x + y2*dir.y + z2*dir.z;
-      if (d1 < cut && d2 < cut) continue;
-      if (d1 < cut || d2 < cut) {
-        const t = (cut - d1) / (d2 - d1), ix = x1 + (x2-x1)*t, iy = y1 + (y2-y1)*t, iz = z1 + (z2-z1)*t;
-        if (d1 < cut) { x1 = ix; y1 = iy; z1 = iz; d1 = cut; } else { x2 = ix; y2 = iy; z2 = iz; d2 = cut; }
+      if (sn) {   // recortar la arista con el plano: el punto de corte queda como extremo ajustable
+        const s1 = x1*sn.x + y1*sn.y + z1*sn.z, s2 = x2*sn.x + y2*sn.y + z2*sn.z;
+        if (s1 < sc0 && s2 < sc0) continue;
+        if (s1 < sc0 || s2 < sc0) {
+          const t = (sc0 - s1) / (s2 - s1), ix = x1 + (x2-x1)*t, iy = y1 + (y2-y1)*t, iz = z1 + (z2-z1)*t;
+          if (s1 < sc0) { x1 = ix; y1 = iy; z1 = iz; } else { x2 = ix; y2 = iy; z2 = iz; }
+        }
       }
+      const d1 = x1*dir.x + y1*dir.y + z1*dir.z, d2 = x2*dir.x + y2*dir.y + z2*dir.z;
       const ax = x1*r.x + y1*r.y + z1*r.z - cr, ay = x1*u.x + y1*u.y + z1*u.z - cu;
       const bx = x2*r.x + y2*r.y + z2*r.z - cr, by = x2*u.x + y2*u.y + z2*u.z - cu;
       if ((ax < cx - tol && bx < cx - tol) || (ax > cx + tol && bx > cx + tol) || (ay < cy - tol && by < cy - tol) || (ay > cy + tol && by > cy + tol)) continue;
@@ -8640,6 +9282,7 @@ function dvSnap(px, py) {
 }
 function dvStepNeedsSnap() {
   const t = DIMV.tool, s = DIMV.pending ? DIMV.pending.step : 0;
+  if (t === 'secpick') return true;
   if (t === 'nav') return false;
   if (t === 'linear' || t === 'aligned' || t === 'edges') return s < 2;
   return s < 1;
@@ -8776,6 +9419,11 @@ function dvEditText(it) {
 }
 function dvToolClick(x, y) {
   const v = dvActive(), sc = dvScreen(v), t = DIMV.tool, P = DIMV.pending, step = P ? P.step : 0;
+  if (t === 'secpick') {
+    const sp = dvSnap(x, y); v.section.depth = dvSecBase(v).dot(sp.p);
+    dvSetTool('nav'); dvRefreshProps(); DIMV.dirty = true; DIMV.hoverReq = true; dvChanged(false);
+    dvFlash('Plano de corte ubicado en el punto (' + dvSectionLabel(v) + ')'); return;
+  }
   const snap = dvStepNeedsSnap() ? dvSnap(x, y) : null, cur = sc.from(x, y);
   if (t === 'linear' || t === 'aligned') {
     if (step === 0) DIMV.pending = { type:t, step:1, a:snap.p };
@@ -8858,11 +9506,19 @@ function dvDrawOverlay() {
   if (!v) { svg.innerHTML = ''; return; }
   const sc = dvScreen(v), S = dvSizes(sc.k, false), st = DIMV.doc.settings;
   let h = '';
-  if (st.showFrame) {
+  if (st.showFrame && !DIMV.readonly) {
     const L = dvLayout(st.page), Sc = dvPrintScale(v, DIMV.W / DIMV.H, L.area);
     const fw = L.area.w * Sc / 1000 / sc.wpp, fh = L.area.h * Sc / 1000 / sc.wpp, fx = DIMV.W/2 - fw/2, fy = DIMV.H/2 - fh/2;
     h += `<rect class="dv-frame" x="${dvF1(fx)}" y="${dvF1(fy)}" width="${dvF1(fw)}" height="${dvF1(fh)}"/>`;
     h += `<text class="dv-frame-t" x="${dvF1(Math.max(6, fx + 6))}" y="${dvF1(Math.max(14, fy + 14))}">${st.page} · 1:${Sc}${v.scale === 'auto' ? ' (auto)' : ''}</text>`;
+  }
+  const sg = dvSectionGeom(v, sc.B, S);
+  if (sg) {
+    const P = (x, y) => sc.to(x, y).map(dvF1);
+    sg.lines.forEach(l => { const a = P(l[0], l[1]), b = P(l[2], l[3]); h += `<line class="dv-secl" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; });
+    sg.ticks.forEach(l => { const a = P(l[0], l[1]), b = P(l[2], l[3]); h += `<line class="dv-sect" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; });
+    sg.tris.forEach(tr => { h += `<polygon class="dv-seca" points="${tr.map(q => P(q[0], q[1]).join(',')).join(' ')}"/>`; });
+    sg.texts.forEach(tx => { const q = P(tx.x, tx.y); h += `<text class="dv-sectx" x="${q[0]}" y="${q[1]}" text-anchor="${tx.anchor}">${tx.str}</text>`; });
   }
   v.items.forEach(it => { h += dvItemSVG(it, sc, S, it.id === DIMV.selId ? 'sel' : ''); });
   const P = DIMV.pending;
@@ -8889,13 +9545,15 @@ const DV_HINTS = {
   edges:['Entre aristas: clic sobre la primera arista', 'Clic sobre la segunda arista (paralela)', 'Ubica la línea de cota'],
   level:['Nivel: clic en el punto a nivelar', 'Ubica la etiqueta del nivel'],
   note:['Nota: clic en el punto a señalar', 'Ubica el texto de la nota'],
+  secpick:['Corte: clic en el punto por donde debe pasar el plano'],
 };
 function dvFlash(msg) { DIMV.flashMsg = msg; DIMV.flashT = performance.now() + 3500; dvUpdateStatus(); }
 function dvUpdateStatus() {
   const el = document.getElementById('dv-st-hint'); if (!el) return;
   if (DIMV.flashT) { el.innerHTML = '<span class="dv-warn">⚠ ' + dvEsc(DIMV.flashMsg) + '</span>'; return; }
   let s;
-  if (!dvActive()) s = 'Crea una vista con «＋ Nueva vista…» para empezar.';
+  if (DIMV.readonly) s = 'Arrastrar: desplazar · Rueda o pellizco: zoom · F: encuadrar · Esc: cerrar';
+  else if (!dvActive()) s = 'Crea una vista con «＋ Nueva vista…» para empezar.';
   else if (DIMV.tool === 'nav' && DIMV.selId) {
     const it = dvFindItem(DIMV.selId), v = dvActive();
     s = it ? `Seleccionado: <b>${{ linear:'Lineal ' + (it.axis === 'v' ? 'vertical' : 'horizontal'), aligned:it.edges ? 'Entre aristas' : 'Alineada', level:'Nivel', note:'Nota' }[it.type]}</b> ${dvEsc(dvLabel(it, dvBasis(v)))} · Arrastrar: mover · Doble clic: editar texto · Supr: borrar` : DV_HINTS.nav[0];
@@ -8921,7 +9579,7 @@ window.dvToggleSnap = function (k) {
   document.querySelector(`#dv-tools [data-snap="${k}"]`)?.classList.toggle('active', DIMV.snaps[k]);
   DIMV.hoverReq = true;
 };
-function dvSaveLocal() { try { if (DIMV.doc) localStorage.setItem('sim_dimviews:' + DIMV.doc.model, JSON.stringify(DIMV.doc)); } catch (e) {} }
+function dvSaveLocal() { if (DIMV.readonly) return; try { if (DIMV.doc) localStorage.setItem('sim_dimviews:' + DIMV.doc.model, JSON.stringify(DIMV.doc)); } catch (e) {} }
 function dvLoadLocal(model) { try { const s = localStorage.getItem('sim_dimviews:' + model); return s ? dvNormalize(JSON.parse(s)) : null; } catch (e) { return null; } }
 function dvChanged(items) {
   DIMV.ovDirty = true;
@@ -8929,36 +9587,45 @@ function dvChanged(items) {
   dvUpdateStatus();
   clearTimeout(DIMV.saveTimer); DIMV.saveTimer = setTimeout(dvSaveLocal, 700);
 }
+function dvGroups() {   // Map grupo → vistas, en orden de aparición ('' = generales)
+  const g = new Map();
+  DIMV.doc.views.forEach(v => { const k = v.group || ''; if (!g.has(k)) g.set(k, []); g.get(k).push(v); });
+  return g;
+}
 function dvRefreshList() {
   const el = document.getElementById('dv-list'); if (!el) return;
-  if (!DIMV.doc.views.length) { el.innerHTML = '<div class="dv-empty-list">Sin vistas todavía.</div>'; return; }
-  el.innerHTML = DIMV.doc.views.map(v => `<div class="dv-row${v.id === DIMV.activeId ? ' active' : ''}" onclick="dvSelectView('${v.id}')">
+  const ro = DIMV.readonly;
+  const views = ro && DIMV.roGroup !== null ? DIMV.doc.views.filter(v => (v.group || '') === DIMV.roGroup) : DIMV.doc.views;
+  if (!views.length) { el.innerHTML = '<div class="dv-empty-list">Sin vistas todavía.</div>'; return; }
+  const row = v => `<div class="dv-row${v.id === DIMV.activeId ? ' active' : ''}" onclick="dvSelectView('${v.id}')">
       <span class="dv-row-k">${dvEsc((DV_KIND_LABEL[v.kind] || '').slice(0, 1))}</span>
-      <span class="dv-row-n" title="${dvEsc(v.name)}">${dvEsc(v.name)}</span>
-      <span class="dv-row-c" title="Cotas">${v.items.length}</span>
+      <span class="dv-row-n" title="${dvEsc(v.name)}">${v.scope && v.scope.length ? '🎯 ' : ''}${dvEsc(v.name)}</span>
+      ${ro ? '' : `<span class="dv-row-c" title="Cotas">${v.items.length}</span>
       <button class="dv-ib" title="Duplicar" onclick="event.stopPropagation();dvDupView('${v.id}')">⧉</button>
-      <button class="dv-ib" title="Eliminar" onclick="event.stopPropagation();dvDelView('${v.id}')">✕</button></div>`).join('');
-}
-function dvSectionLabel(v) {
-  const rg = dvDepthRange(v);
-  if (v.kind === 'plan') return 'Altura de corte  Y = ' + (-v.section.depth).toFixed(2) + ' m';
-  return 'Profundidad de corte  ' + (v.section.depth - rg[0]).toFixed(2) + ' m';
+      <button class="dv-ib" title="Eliminar" onclick="event.stopPropagation();dvDelView('${v.id}')">✕</button>`}</div>`;
+  const g = new Map(); views.forEach(v => { const k = v.group || ''; if (!g.has(k)) g.set(k, []); g.get(k).push(v); });
+  let h = '';
+  g.forEach((vs, k) => {
+    if (g.size > 1 || k) h += `<div class="dv-grp">${k ? '📁 ' + dvEsc(k) : 'Planos generales'}<span>${vs.length}</span></div>`;
+    h += vs.map(row).join('');
+  });
+  el.innerHTML = h;
 }
 function dvRefreshProps() {
   const el = document.getElementById('dv-props'), v = dvActive();
   if (!v) { el.innerHTML = ''; el.style.display = 'none'; return; }
   el.style.display = '';
-  const rg = dvDepthRange(v), sl = rg[1] > rg[0] ? Math.round((v.section.depth - rg[0]) / (rg[1] - rg[0]) * 1000) : 500;
   const L = dvLayout(DIMV.doc.settings.page), Sc = dvPrintScale(v, (DIMV.W / DIMV.H) || 1.6, L.area);
   el.innerHTML = `<div class="dv-sec-t">Vista activa · ${dvEsc(DV_KIND_LABEL[v.kind] || '')}</div>
     <label class="dv-f"><span>Nombre</span><input class="dv-in" value="${dvEsc(v.name)}" onchange="dvSetProp('name',this.value)"></label>
+    <label class="dv-f"><span>Grupo</span><input class="dv-in" list="dv-groups-dl" value="${dvEsc(v.group || '')}" placeholder="(planos generales)" onchange="dvSetProp('group',this.value)" title="Agrupa planos de un mismo elemento; así aparecen en la vista pública"></label>
+    <datalist id="dv-groups-dl">${[...dvGroups().keys()].filter(Boolean).map(g => `<option value="${dvEsc(g)}">`).join('')}</datalist>
+    ${dvScopePanel(v)}
     <label class="dv-f"><span>Estilo</span><select class="dv-in" onchange="dvSetProp('style',this.value)">
       ${Object.keys(DV_STYLE_LABEL).map(k => `<option value="${k}"${v.style === k ? ' selected' : ''}>${DV_STYLE_LABEL[k]}</option>`).join('')}</select></label>
-    <label class="dv-chk"><input type="checkbox"${v.equip ? ' checked' : ''} onchange="dvSetProp('equip',this.checked)"> Incluir grúas y equipos</label>
+    ${v.scope && v.scope.length ? '' : `<label class="dv-chk"><input type="checkbox"${v.equip ? ' checked' : ''} onchange="dvSetProp('equip',this.checked)"> Incluir grúas y equipos</label>`}
     <label class="dv-chk"><input type="checkbox"${v.section.on ? ' checked' : ''} onchange="dvSetProp('sectionOn',this.checked)"> Corte / sección</label>
-    <div class="dv-cut"${v.section.on ? '' : ' style="display:none"'}>
-      <input type="range" min="0" max="1000" value="${sl}" oninput="dvSetProp('sectionPos',this.value)">
-      <div class="dv-cut-l" id="dv-cut-l">${dvSectionLabel(v)}</div></div>
+    ${v.section.on ? dvSectionPanel(v) : ''}
     <label class="dv-f"><span>Escala PDF</span><select class="dv-in" onchange="dvSetProp('scale',this.value)">
       <option value="auto"${v.scale === 'auto' ? ' selected' : ''}>Automática</option>
       ${[10,20,25,50,75,100,125,150,200,250,300,400,500,750,1000,1500,2000,2500,5000].map(s => `<option value="${s}"${+v.scale === s ? ' selected' : ''}>1:${s}</option>`).join('')}</select></label>
@@ -8967,6 +9634,109 @@ function dvRefreshProps() {
       ${dvCanOrbit(v) ? '<button class="dv-btn sm" onclick="dvFromCamera()" title="Tomar la dirección de la cámara del explorador">🎥 Desde cámara</button>' : ''}</div>`;
   dvRefreshHidden();
 }
+function dvScopePanel(v) {
+  if (!v.scope || !v.scope.length) return '';
+  return `<div class="dv-scope"><div class="dv-sec-t">🎯 Alcance · ${v.scope.length} elemento${v.scope.length === 1 ? '' : 's'}</div>
+    <div class="dv-hlist">${v.scope.map(e => { const ok = !!dvResolveEntry(e);
+      return `<div class="dv-hrow${ok ? '' : ' missing'}" onmouseenter="dvHlScope('${e.id}')" onmouseleave="dvHlScope(null)" title="${dvEsc(e.kind + ': ' + e.label + ' · ' + e.count + ' pieza(s)')}">
+        <span class="dv-hm">🎯</span><span class="dv-hn"><span class="dv-hk">${dvEsc(e.kind)}</span> ${dvEsc(e.label)}</span>
+        <button class="dv-ib" title="Quitar del alcance" onclick="dvScopeRemove('${e.id}')">✕</button></div>`; }).join('')}</div>
+    <div class="dv-btnrow">${v.group ? '<button class="dv-btn sm" onclick="dvScopeToGroup()" title="Copiar este alcance a todos los planos del grupo">⇉ Aplicar al grupo</button>' : ''}
+      <button class="dv-btn sm" onclick="dvScopeClear()" title="Volver a mostrar todo el modelo">Modelo completo</button></div>
+    <div class="dv-note">Para agrupar otro ensamble: clic derecho sobre él en una vista del modelo completo → «Agregar a planos de…».</div></div>`;
+}
+window.dvHlScope = function (id) {
+  const v = dvActive(), e = id && v ? v.scope.find(x => x.id === id) : null, n = e ? dvResolveEntry(e) : null;
+  if (DIMV.hlNode !== n) { DIMV.hlNode = n; DIMV.dirty = true; }
+};
+window.dvScopeRemove = function (id) {
+  const v = dvActive(); if (!v) return;
+  v.scope = v.scope.filter(e => e.id !== id); DIMV.hlNode = null;
+  dvCollect(); if (!v.items.length) dvFit(v); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshUI(); dvChanged(true);
+};
+window.dvScopeClear = function () {
+  const v = dvActive(); if (!v) return;
+  v.scope = []; v.equip = true; DIMV.hlNode = null; dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshUI(); dvChanged(true);
+};
+window.dvScopeToGroup = function () {
+  const v = dvActive(); if (!v || !v.group) return;
+  const cur = v.id, sc = JSON.stringify(v.scope);
+  DIMV.doc.views.filter(x => x.group === v.group && x !== v).forEach(x => {
+    x.scope = JSON.parse(sc); x.equip = false; DIMV.activeId = x.id; dvCollect(); dvFit(x);
+  });
+  DIMV.activeId = cur; dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+  dvFlash(`Alcance aplicado a los planos de «${v.group}»`);
+};
+function dvScopeEntry(level) {
+  const path = dvNodePath(level.node); if (!path) return null;
+  return { id:dvId(), path, name:level.node.name || '', label:level.name, kind:level.kind, count:level.count };
+}
+function dvCreateScopedViews(level, kinds) {
+  const entry = dvScopeEntry(level); if (!entry || !kinds.length) return;
+  let first = null;
+  kinds.forEach(kind => {
+    const k = dvKindDir(kind);
+    const v = { id:dvId(), name:dvUniqueName(level.name + ' — ' + DV_KIND_LABEL[kind]), kind, dir:k.dir, up:k.up, center:[0,0,0], halfH:10,
+                style:kind === 'iso' ? 'color-edges' : 'tech', equip:false, section:dvSecDefaults(), scale:'auto', items:[], hidden:[],
+                scope:[Object.assign({}, entry, { id:dvId() })], group:level.name };
+    DIMV.doc.views.push(v); DIMV.activeId = v.id; dvCollect(); dvFit(v);
+    const rg = dvSecRange(v); v.section.depth = (rg[0] + rg[1]) / 2;
+    if (!first) first = v;
+  });
+  DIMV.activeId = first.id; DIMV.selId = null; dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+  dvFlash(`Creados ${kinds.length} plano${kinds.length === 1 ? '' : 's'} de «${level.name}»`);
+}
+function dvAddScopeTo(level, target) {
+  const entry = dvScopeEntry(level); if (!entry) return;
+  const key = entry.path.join('/'), cur = DIMV.activeId;
+  const views = target === null ? [dvActive()] : DIMV.doc.views.filter(v => v.group === target && v.scope.length);
+  views.forEach(v => {
+    if (!v.scope.some(e => e.path.join('/') === key)) v.scope.push(Object.assign({}, entry, { id:dvId() }));
+    v.equip = false; DIMV.activeId = v.id; dvCollect(); dvFit(v);
+  });
+  DIMV.activeId = cur; dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
+  dvFlash(`«${level.name}» agregado a ${views.length} plano${views.length === 1 ? '' : 's'}`);
+}
+function dvSecSlider(v) { const rg = dvSecRange(v); return rg[1] > rg[0] ? Math.round((v.section.depth - rg[0]) / (rg[1] - rg[0]) * 1000) : 500; }
+function dvSectionPanel(v) {
+  const s = v.section, st = dvHasStencil();
+  return `<div class="dv-cut">
+    <label class="dv-f"><span>Dirección</span><select class="dv-in" onchange="dvSetSec('dir',this.value)">
+      ${Object.keys(DV_SEC_DIRS).map(k => `<option value="${k}"${s.dir === k ? ' selected' : ''}>${DV_SEC_DIRS[k]}</option>`).join('')}</select></label>
+    ${s.dir === 'custom' ? `<div class="dv-f2">
+      <label>Rumbo° <input class="dv-in" type="number" step="5" value="${+s.az || 0}" onchange="dvSetSec('az',this.value)" title="Dirección horizontal de la normal: 0 = Norte, 90 = Este"></label>
+      <label>Inclin.° <input class="dv-in" type="number" step="5" min="-90" max="90" value="${+s.el || 0}" onchange="dvSetSec('el',this.value)" title="0 = plano vertical · 90 = plano horizontal"></label></div>` : ''}
+    <input type="range" min="0" max="1000" value="${dvSecSlider(v)}" oninput="dvSetSec('slider',this.value)">
+    <label class="dv-f"><span>${dvSecPosName(v)} (m)</span><input class="dv-in" id="dv-sec-pos" type="number" step="0.01" value="${dvSecPosDisp(v).toFixed(3)}" onchange="dvSetSec('pos',this.value)"></label>
+    <div class="dv-btnrow"><button class="dv-btn sm" onclick="dvSetSec('flip')" title="Cambiar el lado del plano que permanece visible">⇄ Invertir lado</button>
+      <button class="dv-btn sm" onclick="dvSetTool('secpick')" title="Clic en el modelo para que el plano pase por ese punto">📍 Por un punto</button></div>
+    <div class="dv-cut-l" id="dv-cut-l">${dvSecSideText(v)}</div>
+    <div class="dv-chkrow"><label class="dv-chk"><input type="checkbox"${s.fill ? ' checked' : ''} onchange="dvSetSec('fill',this.checked)"> Relleno</label>
+      <label class="dv-chk"><input type="checkbox"${s.hatch ? ' checked' : ''} onchange="dvSetSec('hatch',this.checked)"> Rayado</label>
+      <label class="dv-chk"><input type="checkbox"${s.mark !== false ? ' checked' : ''} onchange="dvSetSec('mark',this.checked)" title="Mostrar la línea de corte cuando el plano es visto de canto"> Línea</label></div>
+    <label class="dv-f"><span>Color relleno</span><select class="dv-in" onchange="dvSetSec('color',this.value)">
+      <option value="gray"${s.color !== 'object' ? ' selected' : ''}>Gris</option><option value="object"${s.color === 'object' ? ' selected' : ''}>Color del objeto</option></select></label>
+    ${st ? '' : '<div class="dv-note dv-warn">Este navegador no ofrece búfer de stencil: el relleno de corte no está disponible.</div>'}
+    <div class="dv-note">El relleno requiere sólidos cerrados; superficies abiertas pueden quedar sin rellenar.</div>
+  </div>`;
+}
+window.dvSetSec = function (k, val) {
+  const v = dvActive(); if (!v) return; const s = v.section;
+  if (k === 'dir' || k === 'az' || k === 'el') {
+    // mantener el plano pasando por el mismo punto (el más cercano al centro del modelo)
+    const old = dvSecBase(v), ctr = DIMV.box.getCenter(new THREE.Vector3()), p0 = ctr.addScaledVector(old, s.depth - old.dot(ctr));
+    if (k === 'dir') s.dir = val; else s[k] = Math.max(k === 'el' ? -90 : -3600, Math.min(k === 'el' ? 90 : 3600, parseFloat(val) || 0));
+    const rg = dvSecRange(v); s.depth = Math.max(rg[0], Math.min(rg[1], dvSecBase(v).dot(p0)));
+    dvRefreshProps();
+  } else if (k === 'slider') {
+    const rg = dvSecRange(v); s.depth = rg[0] + (rg[1] - rg[0]) * (+val / 1000);
+    const pe = document.getElementById('dv-sec-pos'); if (pe) pe.value = dvSecPosDisp(v).toFixed(3);
+  } else if (k === 'pos') { const x = parseFloat(val); if (isNaN(x)) return; s.depth = dvSecPosFromDisp(v, x); dvRefreshProps(); }
+  else if (k === 'flip') { s.flip = !s.flip; dvRefreshProps(); }
+  else if (k === 'fill' || k === 'hatch' || k === 'mark') s[k] = !!val;
+  else if (k === 'color') s.color = val;
+  DIMV.dirty = true; DIMV.hoverReq = true; DIMV.ovDirty = true; dvChanged(false);
+};
 function dvRefreshSettings() {
   const st = DIMV.doc.settings, set = (id, val) => { const e = document.getElementById(id); if (e) { if (e.type === 'checkbox') e.checked = !!val; else e.value = val; } };
   set('dvs-page', st.page); set('dvs-unit', st.unit); set('dvs-dec', st.decimals); set('dvs-showunit', st.showUnit);
@@ -8983,12 +9753,17 @@ window.dvSetProp = function (k, val) {
   if (k === 'name') { v.name = String(val).trim() || v.name; dvRefreshList(); }
   else if (k === 'style') { v.style = val; DIMV.dirty = true; }
   else if (k === 'equip') { v.equip = !!val; dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; }
-  else if (k === 'sectionOn') { v.section.on = !!val; dvRefreshProps(); DIMV.dirty = true; DIMV.hoverReq = true; }
+  else if (k === 'sectionOn') {
+    v.section.on = !!val;
+    if (v.section.on) { const rg = dvSecRange(v); if (!(v.section.depth >= rg[0] && v.section.depth <= rg[1])) v.section.depth = (rg[0] + rg[1]) / 2; }
+    dvRefreshProps(); DIMV.dirty = true; DIMV.hoverReq = true;
+  }
   else if (k === 'sectionPos') {
-    const rg = dvDepthRange(v); v.section.depth = rg[0] + (rg[1] - rg[0]) * (+val / 1000);
+    const rg = dvSecRange(v); v.section.depth = rg[0] + (rg[1] - rg[0]) * (+val / 1000);
     const l = document.getElementById('dv-cut-l'); if (l) l.textContent = dvSectionLabel(v);
     DIMV.dirty = true; DIMV.hoverReq = true;
   }
+  else if (k === 'group') { v.group = String(val || '').trim(); dvRefreshList(); dvRefreshProps(); }
   else if (k === 'scale') { v.scale = val === 'auto' ? 'auto' : +val; dvRefreshProps(); }
   dvChanged(false);
 };
@@ -9014,13 +9789,15 @@ window.dvFromCamera = function () {
 function dvUniqueName(base) { const names = new Set(DIMV.doc.views.map(v => v.name)); if (!names.has(base)) return base; let i = 2; while (names.has(base + ' ' + i)) i++; return base + ' ' + i; }
 window.dvNewView = function (kind) {
   if (!kind) return;
-  const k = dvKindDir(kind);
-  const v = { id:dvId(), name:dvUniqueName(DV_KIND_LABEL[kind]), kind, dir:k.dir, up:k.up, center:[0,0,0], halfH:10,
-              style:(kind === 'iso' || kind === 'camera') ? 'color-edges' : 'tech', equip:true, section:{ on:false, depth:0 }, scale:'auto', items:[], hidden:[] };
+  const k = dvKindDir(kind), act = dvActive(), inh = !!(act && act.scope && act.scope.length);
+  const v = { id:dvId(), name:dvUniqueName((inh ? (act.group || 'Detalle') + ' — ' : '') + DV_KIND_LABEL[kind]), kind, dir:k.dir, up:k.up, center:[0,0,0], halfH:10,
+              style:(kind === 'iso' || kind === 'camera') ? 'color-edges' : 'tech', equip:!inh, section:dvSecDefaults(), scale:'auto', items:[], hidden:[],
+              scope:inh ? JSON.parse(JSON.stringify(act.scope)) : [], group:inh ? act.group : '' };
   DIMV.doc.views.push(v); DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
   dvCollect();
   if (kind === 'camera') dvFromCamera(); else dvFit(v);
-  const rg = dvDepthRange(v); v.section.depth = (rg[0] + rg[1]) / 2;
+  if (inh) dvFlash(`Vista agregada al grupo «${v.group || 'Detalle'}» con el mismo alcance`);
+  const rg = dvSecRange(v); v.section.depth = (rg[0] + rg[1]) / 2;
   DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
 };
 window.dvSelectView = function (id) {
@@ -9057,14 +9834,87 @@ window.dvLoadJSONFile = async function (input) {
   const f = input.files[0]; input.value = ''; if (!f) return;
   let d;
   try { d = JSON.parse(await f.text()); } catch (e) { alert('El archivo no es un JSON válido.'); return; }
-  if (!d || d.format !== DV_FORMAT || !Array.isArray(d.views)) { alert('Este JSON no es un archivo de «Vistas y cotas».'); return; }
+  dvApplyDoc(d);
+};
+function dvApplyDoc(d) {
+  if (!d || d.format !== DV_FORMAT || !Array.isArray(d.views)) { alert('Este JSON no es un archivo de «Vistas y cotas».'); return false; }
   if (d.model && d.model !== dvModelName() && !confirm(`El archivo se creó para el modelo «${d.model}» y el cargado es «${dvModelName()}».\n¿Abrirlo de todos modos?`)) return;
   DIMV.doc = dvNormalize(d); DIMV.doc.model = dvModelName();
   DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null;
   DIMV.undo = []; DIMV.selId = null; DIMV.pending = null;
-  dvCollect(); DIMV.dirty = true; dvRefreshUI(); dvChanged(true);
-  dvFlash(`Cargadas ${DIMV.doc.views.length} vistas`);
+  if (DIMV.open) { dvCollect(); DIMV.dirty = true; dvRefreshUI(); }
+  dvChanged(true);
+  if (DIMV.open) dvFlash(`Cargadas ${DIMV.doc.views.length} vistas`);
+  return true;
+}
+// ☁ Drive del proyecto BIM (mismo Apps Script privado de las animaciones): archivos *.planos.json
+window.dvDriveToggle = function () {
+  const el = document.getElementById('dv-drive');
+  if (el.classList.toggle('open')) dvDriveRender();
 };
+async function dvDriveRender() {
+  const el = document.getElementById('dv-drive'); loadCloudCfg();
+  if (!cloudConfigured()) {
+    el.innerHTML = '<div class="dv-dr-h">☁ Planos en Drive <button class="dv-ib" onclick="dvDriveToggle()">✕</button></div><div class="dv-note">No hay Apps Script configurado. Configúralo en ⏱ → ☁ Drive (el mismo de las animaciones).</div>';
+    return;
+  }
+  const def = (DIMV.doc.settings.title.proyecto || dvModelName()).replace(/[\\/:*?"<>|]+/g, '_') + '.planos.json';
+  el.innerHTML = `<div class="dv-dr-h">☁ Planos en Drive <button class="dv-ib" onclick="dvDriveToggle()">✕</button></div>
+    <label class="dv-f"><span>Proyecto</span><select class="dv-in" id="dv-dr-proj" onchange="dvDriveSetProject(this.value)"><option>Cargando…</option></select></label>
+    <label class="dv-f"><span>Archivo</span><input class="dv-in" id="dv-dr-name" value="${dvEsc(def)}"></label>
+    <button class="dv-btn" onclick="dvDriveSave()">💾 Guardar planos en Drive</button>
+    <div class="dv-sec-t" style="margin-top:4px;">Planos guardados</div>
+    <div id="dv-dr-list" class="dv-dr-list"><div class="dv-note">—</div></div>
+    <div id="dv-dr-st" class="dv-note"></div>`;
+  try {
+    const r = await fetch(cloudScriptBase() + '?action=listProjects'), data = await r.json();
+    const sel = document.getElementById('dv-dr-proj'); if (!sel) return;
+    sel.innerHTML = '<option value="">- Selecciona proyecto -</option>' + (data.projects || data || []).map(p =>
+      `<option value="${dvEsc(p.name)}"${p.name === CLOUD.project ? ' selected' : ''}>${dvEsc(p.name)}</option>`).join('');
+    if (CLOUD.project) dvDriveList();
+  } catch (e) { dvDriveStatus('No se pudo conectar al Apps Script: ' + e.message, true); }
+}
+window.dvDriveSetProject = function (name) { CLOUD.project = name || null; try { if (name) localStorage.setItem('sim_cloud_project', name); } catch (e) {} dvDriveList(); };
+function dvDriveStatus(msg, err) { const e = document.getElementById('dv-dr-st'); if (e) { e.textContent = msg; e.style.color = err ? 'var(--danger)' : 'var(--accent2)'; } }
+async function dvDriveList() {
+  const el = document.getElementById('dv-dr-list'); if (!el) return;
+  if (!CLOUD.project) { el.innerHTML = '<div class="dv-note">Selecciona un proyecto.</div>'; return; }
+  el.innerHTML = '<div class="dv-note">Cargando…</div>';
+  try {
+    const r = await fetch(cloudScriptBase() + '?action=listAnimations&project=' + encodeURIComponent(CLOUD.project)), data = await r.json();
+    const files = (data.files || data || []).filter(f => /\.planos\.json$/i.test(f.name || ''));
+    el.innerHTML = files.length ? '' : '<div class="dv-note">Sin planos guardados en este proyecto.</div>';
+    files.forEach(f => {
+      const row = document.createElement('div'); row.className = 'dv-dr-row';
+      row.innerHTML = `<span>📐</span><span class="dv-hn"></span><small>${dvEsc(f.modified || '')}</small><button class="dv-btn sm">Abrir</button>`;
+      row.querySelector('.dv-hn').textContent = f.name.replace(/\.planos\.json$/i, '');
+      row.querySelector('button').onclick = () => dvDriveLoad(f.id, f.name);
+      el.appendChild(row);
+    });
+  } catch (e) { el.innerHTML = '<div class="dv-note" style="color:var(--danger)">Error al listar: ' + dvEsc(e.message) + '</div>'; }
+}
+window.dvDriveSave = async function () {
+  if (!CLOUD.project) { dvDriveStatus('Selecciona un proyecto.', true); return; }
+  let name = (document.getElementById('dv-dr-name').value || '').trim(); if (!name) return;
+  if (!/\.planos\.json$/i.test(name)) name = name.replace(/\.json$/i, '') + '.planos.json';
+  dvDriveStatus('Guardando…');
+  try {
+    const d = DIMV.doc; d.saved = new Date().toISOString(); d.model = dvModelName();
+    const r = await fetch(cloudScriptBase(), { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body:JSON.stringify({ action:'saveAnimation', project:CLOUD.project, name, content:JSON.stringify(d) }) });
+    const data = await r.json().catch(() => ({})); if (data.error) throw new Error(data.error);
+    dvDriveStatus('Guardado en Drive: ' + name); dvDriveList();
+  } catch (e) { dvDriveStatus('Error al guardar: ' + e.message, true); }
+};
+async function dvDriveLoad(id, name) {
+  dvDriveStatus('Descargando ' + name + '…');
+  try {
+    const r = await fetch(cloudScriptBase() + '?action=download&id=' + encodeURIComponent(id)), j = await r.json();
+    if (j.error) throw new Error(j.error);
+    const text = j.text !== undefined ? j.text : decodeURIComponent(escape(atob(j.data)));
+    if (dvApplyDoc(JSON.parse(text))) { dvDriveStatus('Planos cargados: ' + name); document.getElementById('dv-drive').classList.remove('open'); }
+  } catch (e) { dvDriveStatus('Error al abrir: ' + e.message, true); }
+}
 
 // ── PDF ─────────────────────────────────────────────────────────────────────
 function dvLoadJsPDF() {
@@ -9086,7 +9936,7 @@ function dvPdfPage(doc, v, idx, total, aspect) {
   const prevActive = DIMV.activeId; DIMV.activeId = v.id; dvCollect(); dvFlushEdges();
   const dpi = Math.min(150, 4096 / (A.w / 25.4), 4096 / (A.h / 25.4));   // ~0.17 mm por línea de arista
   const wpx = Math.round(A.w / 25.4 * dpi), hpx = Math.round(A.h / 25.4 * dpi);
-  dvRenderTo(v, new THREE.OrthographicCamera(), wpx, hpx, A.h / 2 / k);
+  dvRenderTo(v, new THREE.OrthographicCamera(), wpx, hpx, A.h / 2 / k, wpx / A.w);
   const png = v.style === 'tech';
   const img = renderer.domElement.toDataURL(png ? 'image/png' : 'image/jpeg', 0.92);
   DIMV.activeId = prevActive;
@@ -9116,6 +9966,18 @@ function dvPdfPage(doc, v, idx, total, aspect) {
       doc.text(str, sx, sy, { angle:Math.atan2(t.dir[1], t.dir[0]) * 180 / Math.PI });
     });
   });
+  const sgp = dvSectionGeom(v, B, Sz);
+  if (sgp) {
+    doc.setDrawColor(198, 40, 40); doc.setFillColor(198, 40, 40); doc.setTextColor(198, 40, 40);
+    doc.setLineWidth(0.35); doc.setLineDashPattern([6, 1.5, 1, 1.5], 0);
+    sgp.lines.forEach(l => { const a = to(l[0], l[1]), b = to(l[2], l[3]); doc.line(a[0], a[1], b[0], b[1]); });
+    doc.setLineDashPattern([], 0); doc.setLineWidth(0.5);
+    sgp.ticks.forEach(l => { const a = to(l[0], l[1]), b = to(l[2], l[3]); doc.line(a[0], a[1], b[0], b[1]); });
+    sgp.tris.forEach(t => { const p = t.map(q => to(q[0], q[1])); doc.triangle(p[0][0], p[0][1], p[1][0], p[1][1], p[2][0], p[2][1], 'F'); });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    sgp.texts.forEach(t => { const p = to(t.x, t.y); doc.text(t.str, p[0], p[1], { align:t.anchor === 'end' ? 'right' : 'left' }); });
+    doc.setFont('helvetica', 'normal');
+  }
   doc.restoreGraphicsState();
 
   // 3) escala gráfica y norte
@@ -9170,7 +10032,8 @@ function dvPdfPage(doc, v, idx, total, aspect) {
   });
 }
 window.dvExportPDF = async function (all) {
-  const views = all ? DIMV.doc.views.slice() : [dvActive()].filter(Boolean);
+  const views = all === 'group' ? DIMV.doc.views.filter(v => DIMV.roGroup === null || (v.group || '') === DIMV.roGroup)
+              : all ? DIMV.doc.views.slice() : [dvActive()].filter(Boolean);
   if (!views.length) { alert('No hay vistas para exportar.'); return; }
   dvCtxClose(); DIMV.hlNode = null;
   const el = document.getElementById('dv-st-hint'); if (el) el.innerHTML = '<span class="dv-busy">Generando PDF…</span>';
@@ -9225,9 +10088,9 @@ function dvLevels(mesh) {
 }
 function dvPick(px, py) {
   const v = dvActive(); if (!v || !DIMV.visMeshes.length) return null;
-  const B = dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH), cut = v.section.on ? v.section.depth : -Infinity;
+  dvSetupCam(DIMV.cam, v, DIMV.W / DIMV.H, v.halfH); const SP = dvSecPlane(v);
   DIMV.ray.setFromCamera(new THREE.Vector2(px / DIMV.W * 2 - 1, -py / DIMV.H * 2 + 1), DIMV.cam);
-  const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false).filter(h => h.point.dot(B.dir) >= cut - 1e-4);
+  const hs = DIMV.ray.intersectObjects(DIMV.visMeshes, false).filter(h => !SP || h.point.dot(SP.n) >= SP.c - 1e-4);
   return hs.find(h => !DIMV.ghostSet.has(h.object)) || hs[0] || null;   // prioriza lo opaco detrás de lo traslúcido
 }
 function dvAfterHiddenChange() {
@@ -9308,6 +10171,8 @@ function dvCtxOpen(cx, cy, x, y) {
       <button onclick="dvCtxAction('ghost')">◐ Hacer traslúcido${lv.length > 1 ? '…' : ''}</button>`;
     if (ghosted.length) html += `<button onclick="dvCtxUnghost()">↺ Quitar traslúcido</button>`;
     DIMV.ctx.ghosted = ghosted.map(e => e.id);
+    html += `<div class="dv-ctx-sep"></div><button onclick="dvCtxAction('plan')">📐 Crear planos de${lv.length > 1 ? '…' : ' esta pieza'}</button>`;
+    if (DIMV.doc.views.some(x => x.scope && x.scope.length)) html += `<button onclick="dvCtxAction('add')">➕ Agregar a planos de…</button>`;
   } else if (h) {
     html += `<div class="dv-ctx-h">Grúa / equipo</div><div class="dv-ctx-note">Se muestra u oculta con «Incluir grúas y equipos».</div>`;
   }
@@ -9317,9 +10182,10 @@ function dvCtxOpen(cx, cy, x, y) {
 }
 window.dvCtxAction = function (mode) {
   const c = DIMV.ctx; if (!c || !c.levels) return;
-  if (c.levels.length === 1) { dvApplyOverride(c.levels[0], mode); dvCtxClose(); return; }
-  c.mode = mode; c.hl = true;
-  dvCtxShow(`<div class="dv-ctx-h">¿Qué deseas ${mode === 'hide' ? 'ocultar' : 'hacer traslúcido'}?</div>` +
+  c.mode = mode;
+  if (c.levels.length === 1) { dvCtxPick(0); return; }
+  c.hl = true;
+  dvCtxShow(`<div class="dv-ctx-h">${{ hide:'¿Qué deseas ocultar?', ghost:'¿Qué deseas hacer traslúcido?', plan:'¿De qué elemento crear planos?', add:'¿Qué elemento agregar?' }[mode]}</div>` +
     c.levels.map((l, i) => `<button class="dv-ctx-lv" onmouseenter="dvCtxHl(${i})" onmouseleave="dvCtxHl(-1)" onclick="dvCtxPick(${i})">
       <b>${dvEsc(l.kind)}</b><span>${dvEsc(l.name)}</span><small>${l.count} pieza${l.count === 1 ? '' : 's'}</small></button>`).join('') +
     `<div class="dv-ctx-sep"></div><button onclick="dvCtxClose()">Cancelar</button>`);
@@ -9330,12 +10196,54 @@ window.dvCtxHl = function (i) {
   const n = i >= 0 ? c.levels[i].node : null;
   if (DIMV.hlNode !== n) { DIMV.hlNode = n; DIMV.dirty = true; }
 };
-window.dvCtxPick = function (i) { const c = DIMV.ctx; if (!c || !c.levels) return; const l = c.levels[i], m = c.mode; dvCtxClose(); dvApplyOverride(l, m); };
+window.dvCtxPick = function (i) {
+  const c = DIMV.ctx; if (!c || !c.levels) return; const l = c.levels[i], m = c.mode;
+  if (m === 'plan' || m === 'add') {
+    c.level = l; c.hl = true; if (DIMV.hlNode !== l.node) { DIMV.hlNode = l.node; DIMV.dirty = true; }
+    const head = `<div class="dv-ctx-h">${m === 'plan' ? 'Planos de' : 'Agregar'} «${dvEsc(l.name)}»<small>${dvEsc(l.kind)} · ${l.count} pieza${l.count === 1 ? '' : 's'}</small></div>`;
+    if (m === 'plan') {
+      const opts = [['plan','Planta',1],['south','Alzado Sur',1],['east','Alzado Este',1],['north','Alzado Norte',0],['west','Alzado Oeste',0],['iso','Isométrica',1]];
+      dvCtxShow(head + opts.map(([k, lab, on]) => `<label class="dv-ctx-ck"><input type="checkbox" value="${k}"${on ? ' checked' : ''}> ${lab}</label>`).join('')
+        + `<div class="dv-ctx-sep"></div><button class="dv-ctx-ok" onclick="dvCtxCreatePlans()">📐 Crear planos</button><button onclick="dvCtxClose()">Cancelar</button>`);
+    } else {
+      const groups = [...dvGroups().entries()].filter(([g, vs]) => g && vs.some(x => x.scope.length));
+      c.groups = groups.map(([g]) => g);
+      const act = dvActive(), actOpt = act && act.scope.length && !act.group;
+      dvCtxShow(head + (groups.length || actOpt ? '' : '<div class="dv-ctx-note">No hay planos de elementos todavía. Usa «Crear planos de…».</div>')
+        + groups.map(([g, vs], j) => `<button onclick="dvCtxAddTo(${j})">📁 ${dvEsc(g)} <small>${vs.length} plano${vs.length === 1 ? '' : 's'}</small></button>`).join('')
+        + (actOpt ? `<button onclick="dvCtxAddTo(-1)">🎯 Solo la vista activa</button>` : '')
+        + `<div class="dv-ctx-sep"></div><button onclick="dvCtxClose()">Cancelar</button>`);
+    }
+    return;
+  }
+  dvCtxClose(); dvApplyOverride(l, m);
+};
+window.dvCtxCreatePlans = function () {
+  const c = DIMV.ctx; if (!c || !c.level) return;
+  const kinds = [...document.querySelectorAll('#dv-ctx .dv-ctx-ck input:checked')].map(i => i.value);
+  const l = c.level; dvCtxClose();
+  if (!kinds.length) { dvFlash('Elige al menos una vista'); return; }
+  dvCreateScopedViews(l, kinds);
+};
+window.dvCtxAddTo = function (j) {
+  const c = DIMV.ctx; if (!c || !c.level) return;
+  const l = c.level, target = j < 0 ? null : c.groups[j]; dvCtxClose(); dvAddScopeTo(l, target);
+};
 window.dvCtxUnghost = function () {
   const c = DIMV.ctx, v = dvActive(); if (!c || !v) return;
   dvPushUndo(); v.hidden = v.hidden.filter(e => !c.ghosted.includes(e.id)); dvCtxClose(); dvAfterHiddenChange();
 };
 document.addEventListener('pointerdown', e => { if (dvCtxIsOpen() && !e.target.closest('#dv-ctx')) dvCtxClose(); }, true);
+
+// zoom con factor f (>1 aleja) manteniendo fijo el punto (x, y) de la pantalla
+function dvZoomAt(x, y, f) {
+  const v = dvActive(); if (!v) return;
+  const sc = dvScreen(v), p = sc.from(x, y);
+  const nh = Math.min(20000, Math.max(0.02, v.halfH * f));
+  const s = 1 - (2 * nh / DIMV.H) / sc.wpp;
+  v.center = dvArr(dvV3(v.center).addScaledVector(sc.B.r, p[0] * s).addScaledVector(sc.B.u, p[1] * s));
+  v.halfH = nh; DIMV.dirty = true; DIMV.hoverReq = true;
+}
 
 // ── abrir / cerrar ──────────────────────────────────────────────────────────
 function dvResize() {
@@ -9346,14 +10254,23 @@ function dvResize() {
   DIMV.dirty = true;
   if (dvActive()) dvRefreshProps();
 }
-window.openDimViews = function () {
+window.openDimViews = function (opts) {
+  opts = opts || {};
   if (!state.modelLoaded) { alert('Carga primero un modelo.'); return; }
+  DIMV.readonly = !!opts.readonly; DIMV.roGroup = opts.readonly && opts.group !== undefined ? opts.group : null;
+  document.getElementById('dv-modal').classList.toggle('ro', DIMV.readonly);
+  if (DIMV.readonly) {
+    if (!DIMV.doc || !DIMV.doc.views.length) { alert('Esta publicación no tiene planos.'); return; }
+    const pool = DIMV.roGroup !== null ? DIMV.doc.views.filter(v => (v.group || '') === DIMV.roGroup) : DIMV.doc.views;
+    DIMV.activeId = (opts.viewId && pool.some(v => v.id === opts.viewId)) ? opts.viewId : (pool[0] || DIMV.doc.views[0]).id;
+    DIMV.tool = 'nav'; DIMV.selId = null; DIMV.pending = null;
+  }
   if (REC.recording || REC.finishing) { alert('Termina la grabación antes de abrir Vistas y cotas.'); return; }
   if (SIM.playing) simPause();
   if (state.measuring) toggleMeasure();
   Object.keys(state.keys).forEach(k => { state.keys[k] = false; });
   const mn = dvModelName();
-  if (!DIMV.doc || DIMV.doc.model !== mn) {
+  if (!DIMV.readonly && (!DIMV.doc || DIMV.doc.model !== mn)) {
     DIMV.doc = dvLoadLocal(mn) || dvNewDoc(); DIMV.doc.model = mn;
     DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null; DIMV.undo = []; DIMV.selId = null;
   }
@@ -9363,6 +10280,7 @@ window.openDimViews = function () {
   document.getElementById('dv-modal').classList.add('open');
   canvas.style.visibility = 'hidden';
   dvResize(); dvCollect(); dvRefreshUI(); dvSetTool(DIMV.tool);
+  if (DIMV.readonly) document.getElementById('dv-model').textContent = (DIMV.roGroup ? DIMV.roGroup + ' · ' : '') + dvModelName();
   DIMV.dirty = true;
   cancelAnimationFrame(DIMV.raf); dvLoop();
 };
@@ -9377,6 +10295,8 @@ window.closeDimViews = function () {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   window.dispatchEvent(new Event('resize'));
   clearTimeout(DIMV.saveTimer); dvSaveLocal();
+  document.getElementById('dv-drive')?.classList.remove('open');
+  if (DIMV.readonly && typeof window.pubAfterPlanos === 'function') window.pubAfterPlanos();
 };
 
 // ── eventos ─────────────────────────────────────────────────────────────────
@@ -9390,7 +10310,11 @@ window.closeDimViews = function () {
     const [x, y] = xy(e), el = e.target.closest ? e.target.closest('[data-id]') : null;
     const itemId = el && !el.classList.contains('pv') ? el.getAttribute('data-id') : null;
     DIMV.down = { x, y, lx:x, ly:y, btn:e.button, moved:false, shift:e.shiftKey, itemId, mode:null };
-    if (e.button === 0 && DIMV.tool === 'nav' && itemId) {
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      DIMV.pts = DIMV.pts || new Map(); DIMV.pts.set(e.pointerId, [x, y]);
+      if (DIMV.pts.size === 2) { DIMV.down = null; DIMV.pinch = dvPinchState(); try { st.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); return; }
+    }
+    if (e.button === 0 && DIMV.tool === 'nav' && itemId && !DIMV.readonly) {
       const it = dvFindItem(itemId);
       if (it) { DIMV.selId = itemId; DIMV.down.mode = 'item'; DIMV.down.orig = (it.type === 'linear' || it.type === 'aligned') ? (it.offset || 0) : (it.off || [0, 0]).slice(); }
       DIMV.ovDirty = true; dvUpdateStatus();
@@ -9400,6 +10324,18 @@ window.closeDimViews = function () {
   });
   st.addEventListener('pointermove', e => {
     const [x, y] = xy(e); DIMV.cursor = [x, y];
+    if (DIMV.pts && DIMV.pts.has(e.pointerId)) {
+      DIMV.pts.set(e.pointerId, [x, y]);
+      if (DIMV.pts.size === 2 && DIMV.pinch) {   // pellizcar = zoom, arrastrar con dos dedos = desplazar
+        const nw = dvPinchState(), p0 = DIMV.pinch, v = dvActive();
+        if (v && p0.d > 10 && nw.d > 10) {
+          const sc = dvScreen(v);
+          v.center = dvArr(dvV3(v.center).addScaledVector(sc.B.r, -(nw.mx - p0.mx) * sc.wpp).addScaledVector(sc.B.u, (nw.my - p0.my) * sc.wpp));
+          dvZoomAt(nw.mx, nw.my, p0.d / nw.d);
+        }
+        DIMV.pinch = nw; return;
+      }
+    }
     const d = DIMV.down, v = dvActive();
     if (d && v) {
       if (!d.moved && Math.hypot(x - d.x, y - d.y) > 4) {
@@ -9434,19 +10370,21 @@ window.closeDimViews = function () {
     DIMV.hoverReq = true; DIMV.ovDirty = true;
   });
   const up = e => {
+    if (DIMV.pts && DIMV.pts.has(e.pointerId)) { DIMV.pts.delete(e.pointerId); if (DIMV.pinch) { if (!DIMV.pts.size) DIMV.pinch = null; DIMV.down = null; dvChanged(false); return; } }
     const d = DIMV.down; DIMV.down = null; st.classList.remove('panning');
     try { st.releasePointerCapture(e.pointerId); } catch (_) {}
     if (!d || !dvActive()) return;
     if (d.moved) { dvChanged(d.mode === 'item'); DIMV.hoverReq = true; return; }
-    if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
+    if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else if (!DIMV.readonly) dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
     if (d.btn !== 0) return;
     if (DIMV.tool === 'nav') { if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
     dvToolClick(d.x, d.y);
   };
   st.addEventListener('pointerup', up);
-  st.addEventListener('pointercancel', () => { DIMV.down = null; st.classList.remove('panning'); });
+  st.addEventListener('pointercancel', e => { DIMV.down = null; st.classList.remove('panning'); if (DIMV.pts) DIMV.pts.delete(e.pointerId); DIMV.pinch = null; });
   st.addEventListener('pointerleave', () => { if (!DIMV.down) { DIMV.cursor = null; DIMV.hover = null; DIMV.ovDirty = true; dvUpdateCoords(); } });
   st.addEventListener('dblclick', e => {
+    if (DIMV.readonly) return;
     if (DIMV.tool !== 'nav') return;
     const el = e.target.closest ? e.target.closest('[data-id]') : null;
     if (el) dvEditText(dvFindItem(el.getAttribute('data-id')));
@@ -9454,20 +10392,22 @@ window.closeDimViews = function () {
   st.addEventListener('wheel', e => {
     e.preventDefault(); dvCtxClose();
     const v = dvActive(); if (!v) return;
-    const [x, y] = xy(e), sc = dvScreen(v), p = sc.from(x, y);
-    const nh = Math.min(20000, Math.max(0.02, v.halfH * Math.exp(e.deltaY * 0.0012)));
-    const s = 1 - (2 * nh / DIMV.H) / sc.wpp;
-    v.center = dvArr(dvV3(v.center).addScaledVector(sc.B.r, p[0] * s).addScaledVector(sc.B.u, p[1] * s));
-    v.halfH = nh; DIMV.dirty = true; DIMV.hoverReq = true;
+    const [x, y] = xy(e);
+    dvZoomAt(x, y, Math.exp(e.deltaY * 0.0012));
     clearTimeout(DIMV._zt); DIMV._zt = setTimeout(() => { dvRefreshProps(); dvChanged(false); }, 250);
   }, { passive:false });
 
+  function dvPinchState() {
+    const [a, b] = [...DIMV.pts.values()];
+    return { d:Math.hypot(a[0] - b[0], a[1] - b[1]), mx:(a[0] + b[0]) / 2, my:(a[1] + b[1]) / 2 };
+  }
   // teclado: mientras la ventana está abierta, el explorador no recibe teclas
   window.addEventListener('keydown', e => {
     if (!DIMV.open) return;
     e.stopImmediatePropagation();
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) { if (e.key === 'Escape') e.target.blur(); return; }
     const k = e.key, lk = k.toLowerCase();
+    if (DIMV.readonly) { if (k === 'Escape') { e.preventDefault(); closeDimViews(); } else if (lk === 'f') dvFitActive(); return; }
     if (k === 'Escape' && dvCtxIsOpen()) { e.preventDefault(); dvCtxClose(); return; }
     if (k === 'Escape') { e.preventDefault(); if (DIMV.pending) DIMV.pending = null; else if (DIMV.selId) DIMV.selId = null; else if (DIMV.tool !== 'nav') dvSetTool('nav'); DIMV.ovDirty = true; dvUpdateStatus(); return; }
     if ((e.ctrlKey || e.metaKey) && lk === 'z') { e.preventDefault(); dvUndo(); return; }
@@ -9908,6 +10848,20 @@ animate();
 </div>
 <!-- End simulation timeline -->
 
+<div id="pub-loader">
+  <div class="pl-box">
+    <div class="pl-logo">SUBSTATION<span>·EXPLORER</span></div>
+    <div class="pl-title" id="pl-title">Abriendo modelo…</div>
+    <div class="pl-spin"></div>
+    <div class="pl-stage" id="pl-stage">Conectando…</div>
+    <div class="pl-bar indet"><div id="pl-fill"></div></div>
+    <div class="pl-detail" id="pl-detail"></div>
+    <div class="pl-steps" id="pl-steps"></div>
+    <div class="pl-err" id="pl-err"><span></span><button onclick="location.reload()">↻ Reintentar</button></div>
+  </div>
+</div>
+<div id="pub-panel"></div>
+<button id="pub-return" onclick="pubEnterSimple()" title="Volver a la vista simple">📋 Vista simple</button>
 <div id="share-modal" onclick="if(event.target===this)closeShareDialog()">
   <div class="sh-box">
     <div class="sh-title">🔗 COMPARTIR MODELO<button class="bap-close" onclick="closeShareDialog()">✕</button></div>
