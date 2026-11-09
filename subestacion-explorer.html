@@ -1392,6 +1392,7 @@
   .pp-day { font-size:11px; color:var(--text2); min-height:14px; }
   .pp-prog { height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
   #pp-prog-fill { height:100%; width:0; background:var(--accent); transition:width .25s linear; }
+  .pp-follow { display:none; width:100%; padding:9px; border-radius:10px; border:1px dashed rgba(79,195,247,.5); background:rgba(79,195,247,.06); color:var(--accent); font-family:var(--sans); font-size:12.5px; font-weight:600; cursor:pointer; }
   .pp-sec { font-size:11px; font-weight:600; color:var(--text2); letter-spacing:.4px; text-transform:uppercase; margin-top:4px; }
   .pp-list { display:flex; flex-direction:column; gap:6px; }
   .pp-item { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:11px 12px; border-radius:10px; cursor:pointer;
@@ -3198,7 +3199,7 @@ window.addCrane=addCrane;
 window.addEventListener('keydown',e=>{
   // Explorer controls
   state.keys[e.code]=true;
-  if(e.code.startsWith('Arrow') && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) releaseSimCamera();
+  if(e.code.startsWith('Arrow') && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) userTakesCamera();
   if(e.code==='KeyR' && !cranePanelOpen){ charGroup.position.set(0,state.modelFloor+state.floorOffset,0); state.charRot=0; charGroup.rotation.y=0; }
   if(e.code==='KeyM') toggleMeasure();
   if(e.code==='KeyF' && state.camMode==='free' && !cranePanelOpen && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) fcFit();
@@ -3366,7 +3367,7 @@ const mouse = { ldown:false, rdown:false, mdown:false, x:0, y:0, orbitO:null, pa
 
 canvas.addEventListener('mousedown', e => {
   if(state.measuring || cranePickMode) return;
-  releaseSimCamera();
+  userTakesCamera();
   if(e.button === 0) mouse.ldown = true;
   if(e.button === 1) {
     mouse.mdown = true; e.preventDefault();   // sin autodesplazamiento del navegador
@@ -3494,7 +3495,7 @@ window.setFloorOffset=function(val){ applyFloor(parseFloat(val)); };
 const joystickBase=document.getElementById('joystick-base');
 const joystickKnob=document.getElementById('joystick-knob');
 const JR=33;
-joystickBase.addEventListener('touchstart',e=>{ e.preventDefault(); releaseSimCamera(); const t=e.changedTouches[0]; const r=joystickBase.getBoundingClientRect(); state.joy.active=true; state.joy.id=t.identifier; state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2; joystickKnob.classList.add('active'); },{passive:false});
+joystickBase.addEventListener('touchstart',e=>{ e.preventDefault(); userTakesCamera(); const t=e.changedTouches[0]; const r=joystickBase.getBoundingClientRect(); state.joy.active=true; state.joy.id=t.identifier; state.joy.startX=r.left+r.width/2; state.joy.startY=r.top+r.height/2; joystickKnob.classList.add('active'); },{passive:false});
 joystickBase.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches){ if(t.identifier!==state.joy.id)continue; let dx=t.clientX-state.joy.startX,dy=t.clientY-state.joy.startY; const d=Math.sqrt(dx*dx+dy*dy); if(d>JR){dx=dx/d*JR;dy=dy/d*JR;} state.joy.dx=dx/JR; state.joy.dy=dy/JR; joystickKnob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }},{passive:false});
 function resetJoy(){ state.joy.active=false; state.joy.dx=0; state.joy.dy=0; joystickKnob.style.transform='translate(-50%,-50%)'; joystickKnob.classList.remove('active'); }
 joystickBase.addEventListener('touchend',e=>{ for(const t of e.changedTouches)if(t.identifier===state.joy.id)resetJoy(); });
@@ -3505,16 +3506,43 @@ joystickBase.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches
 // 2 fingers → pan in free mode
 const touch1={id:null,x:0,y:0};
 const touch2={id:null,x:0,y:0};
+// Gesto táctil en vista libre: 'orbit' (1 dedo) · 'pinch' (2 dedos) · 'lock' (queda 1 dedo tras pellizcar: no gira)
+const fcTouch={ mode:null, O:null, ox:0, oy:0, vx:0, vy:0, moved:0, lastT:0, tapT:0, tapX:0, tapY:0 };
+const FC_TOUCH_K = 0.65;   // sensibilidad táctil relativa al ratón
+function fcTouchFree(){ return state.camMode==='free' && ridingCraneId===null; }
+function fcTouchCount(){ return (touch1.id!==null?1:0)+(touch2.id!==null?1:0); }
+// Aplica la órbita pendiente con suavizado exponencial (y la inercia al soltar)
+function fcApplyTouch(dt){
+  if(Math.abs(fcTouch.ox)+Math.abs(fcTouch.oy) < 0.02){
+    fcTouch.ox=fcTouch.oy=0;
+    if(!fcTouchCount() && !mouse.ldown && !mouse.mdown && fcMarker.visible && fcTouch.mode===null) fcMarker.visible=false;
+    return;
+  }
+  const a=1-Math.exp(-dt*20);
+  fcOrbit(fcTouch.ox*a, fcTouch.oy*a, fcTouch.O);
+  fcTouch.ox*=(1-a); fcTouch.oy*=(1-a);
+  fcShowMarker(fcTouch.O);
+}
 
 canvas.addEventListener('touchstart',e=>{
   e.preventDefault();
-  releaseSimCamera();
+  userTakesCamera();
   for(const t of e.changedTouches){
     const r=joystickBase.getBoundingClientRect();
     const inJoy=t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
     if(inJoy)continue;
     if(touch1.id===null){touch1.id=t.identifier;touch1.x=t.clientX;touch1.y=t.clientY;}
     else if(touch2.id===null){touch2.id=t.identifier;touch2.x=t.clientX;touch2.y=t.clientY;}
+  }
+  if(!fcTouchFree() || !state.modelLoaded) return;
+  const n=fcTouchCount();
+  if(n===1 && fcTouch.mode!=='lock'){
+    const t=touch1.id!==null?touch1:touch2;
+    fcTouch.mode='orbit'; fcTouch.ox=fcTouch.oy=fcTouch.vx=fcTouch.vy=0; fcTouch.moved=0;
+    fcTouch.O=fcHit(t.x,t.y);              // gira alrededor del punto tocado (como el ratón)
+    fcTouch.startX=t.x; fcTouch.startY=t.y;
+  } else if(n>=2){
+    fcTouch.mode='pinch'; fcTouch.ox=fcTouch.oy=fcTouch.vx=fcTouch.vy=0; fcMarker.visible=false;
   }
 },{passive:false});
 
@@ -3533,10 +3561,16 @@ canvas.addEventListener('touchmove',e=>{
   }
 
   if(!twoFinger){
-    // Single finger: orbit
-    const dx=touch1.x-prev1x, dy=touch1.y-prev1y;
-    if(state.camMode==='free'&&ridingCraneId===null){
-      fcOrbit(dx,dy,null);
+    // Single finger: orbit (el dedo activo puede ser touch1 o touch2)
+    const a1=touch1.id!==null;
+    const dx=a1?touch1.x-prev1x:touch2.x-prev2x, dy=a1?touch1.y-prev1y:touch2.y-prev2y;
+    if(fcTouchFree()){
+      if(fcTouch.mode==='orbit'){
+        const now=performance.now(), dtm=Math.max(8,now-(fcTouch.lastT||now-16)); fcTouch.lastT=now;
+        fcTouch.ox+=dx*FC_TOUCH_K; fcTouch.oy+=dy*FC_TOUCH_K;
+        fcTouch.vx=dx*FC_TOUCH_K*16/dtm; fcTouch.vy=dy*FC_TOUCH_K*16/dtm;   // px por cuadro, para la inercia
+        fcTouch.moved+=Math.abs(dx)+Math.abs(dy);
+      }
     } else if(ridingCraneId!==null){
       freeCam.yaw+=dx*0.005;
       freeCam.pitch=Math.max(-1.5,Math.min(1.5,freeCam.pitch+dy*0.005));
@@ -3556,8 +3590,27 @@ canvas.addEventListener('touchmove',e=>{
 },{passive:false});
 
 function resetCanvasTouch(id){if(touch1.id===id)touch1.id=null;if(touch2.id===id)touch2.id=null;}
-canvas.addEventListener('touchend',e=>{for(const t of e.changedTouches)resetCanvasTouch(t.identifier);});
-canvas.addEventListener('touchcancel',e=>{for(const t of e.changedTouches)resetCanvasTouch(t.identifier);});
+function fcTouchEnd(e){
+  for(const t of e.changedTouches)resetCanvasTouch(t.identifier);
+  if(!fcTouchFree()) return;
+  const n=fcTouchCount();
+  if(n===1 && fcTouch.mode==='pinch'){ fcTouch.mode='lock'; return; }   // el último dedo del pellizco no gira
+  if(n>0) return;
+  if(fcTouch.mode==='orbit'){
+    if(fcTouch.moved<8){
+      // toque corto: doble toque = centrar en el punto
+      const now=performance.now(), t=e.changedTouches[0];
+      if(now-fcTouch.tapT<320 && Math.hypot(t.clientX-fcTouch.tapX,t.clientY-fcTouch.tapY)<30){
+        const P=fcHit(t.clientX,t.clientY); if(P) fcCenterOn(P); fcTouch.tapT=0;
+      } else { fcTouch.tapT=now; fcTouch.tapX=t.clientX; fcTouch.tapY=t.clientY; }
+    } else if(performance.now()-fcTouch.lastT<80){
+      fcTouch.ox+=fcTouch.vx*5; fcTouch.oy+=fcTouch.vy*5;   // inercia suave al soltar
+    }
+  }
+  fcTouch.mode=null;
+}
+canvas.addEventListener('touchend',fcTouchEnd);
+canvas.addEventListener('touchcancel',fcTouchEnd);
 
 // ── MEASURE ───────────────────────────────────────────────────────────────────
 const markerGeo=new THREE.SphereGeometry(0.08,10,10);
@@ -3777,7 +3830,7 @@ window.toggleRideCrane=function(){
 
 // Mouse wheel → zoom (change orbit radius) in free cam
 canvas.addEventListener('wheel', e=>{
-  if(simCamPose && state.camMode==='free') releaseSimCamera();
+  if(simCamPose) userTakesCamera();
   if(state.camMode==='free' || ridingCraneId!==null){
     e.preventDefault();
     let d = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
@@ -6129,6 +6182,17 @@ function applyCameraSnapshot(snap, fromSnap, t) {
 }
 
 // Hand the camera back to the user exactly where the timeline left it.
+// Entrada del usuario (ratón, dedos, teclado, rueda) durante la reproducción: la línea del tiempo
+// deja de mover la cámara (SIM.userCam) para no "pelear" con el usuario. Se reanuda con
+// simFollowCamera() o al iniciar una reproducción nueva.
+function userTakesCamera() {
+  const pose = simCamPose ? { eye:simCamPose.eye.clone(), look:simCamPose.look.clone() } : null;
+  if (SIM.playing && !SIM.userCam) { SIM.userCam = true; if (typeof pubUpdatePlayer === 'function') pubUpdatePlayer(); }
+  releaseSimCamera();
+  // en la vista pública siempre se navega en modo libre (sin personaje)
+  if (pose && typeof PUB !== 'undefined' && PUB.simple && state.camMode !== 'free') { setCamModeUI('free'); syncFreeCamFromView(pose.eye, pose.look); }
+}
+window.simFollowCamera = function () { SIM.userCam = false; if (typeof pubUpdatePlayer === 'function') pubUpdatePlayer(); };
 function releaseSimCamera() {
   if (!simCamPose) return;
   const pose = simCamPose;
@@ -6212,6 +6276,7 @@ function formatPrettyDate(iso) {
 
 window.simPlay = function() {
   if (SIM.playing) { simPause(); return; }
+  SIM.userCam = false;
   if (!activeDay()) return;
   _playAllMode = false;
   startDayPlayback(null, true);   // single day: reset scene first
@@ -6266,6 +6331,7 @@ function startDayPlayback(onDayEnd, resetFirst) {
 // ── PLAY ALL DAYS continuously ───────────────────────────────────────────────
 window.simPlayAll = function() {
   if (SIM.playing) { simPause(); return; }
+  SIM.userCam = false;
   if (!SIM.days.length) return;
   _playAllMode = true;
   // sort days by date so they run in calendar order
@@ -6394,7 +6460,7 @@ function applySimFrame(hour) {
   // ── Block D: camera — interpolate between the surrounding camera keyframes ──
   const camChips = SIM.chips.filter(c => rowBlock(c.rowId)==='D' && c.blockData?.cam)
     .sort((a,b) => a.startH - b.startH);
-  if (camChips.length) {
+  if (camChips.length && !SIM.userCam) {
     // find the active/previous and next camera keyframes
     let prev = null, next = null;
     for (const c of camChips) {
@@ -8063,7 +8129,7 @@ function animate(){
     document.getElementById('speed-label').textContent=running?'Corriendo':'Caminando';
 
     // ── CAMERA MODES ──
-    if(state.camMode==='free' && !simCamPose) fcUpdateTween(dt);
+    if(state.camMode==='free' && !simCamPose) { fcUpdateTween(dt); fcApplyTouch(dt); }
     fcAdjustClip(state.camMode==='free' || ridingCraneId!==null);
     const pos=charGroup.position;
 
@@ -8415,6 +8481,8 @@ function pubUpdatePlayer() {
   document.getElementById('pp-day').textContent = PUB.playing && d
     ? `Día ${idx + 1} de ${SIM.days.length}${d.date ? ' · ' + formatPrettyDate(d.date) : ''}${SIM.loop ? ' · 🔁' : ''}`
     : (has ? `${SIM.days.length} día${SIM.days.length === 1 ? '' : 's'} de construcción` : '');
+  const fl = document.getElementById('pp-follow');
+  if (fl) fl.style.display = PUB.playing && SIM.userCam && SIM.chips.some(c => rowBlock(c.rowId) === 'D' && c.blockData && c.blockData.cam) ? 'block' : 'none';
   const frac = PUB.playing && idx >= 0 ? (idx + Math.min(1, SIM.currentHour / Math.max(1, dayDuration()))) / SIM.days.length : 0;
   document.getElementById('pp-prog-fill').style.width = (frac * 100).toFixed(1) + '%';
 }
@@ -8448,7 +8516,8 @@ function pubRenderPanel() {
       <button id="pp-play" class="pp-play" onclick="pubPlayToggle()">▶&nbsp; Reproducir</button>
       <div class="pp-now"><div id="pp-anim-name" class="pp-an"></div><div id="pp-day" class="pp-day"></div>
         <div class="pp-prog"><div id="pp-prog-fill"></div></div></div>
-    </div>`;
+    </div>
+    <button id="pp-follow" class="pp-follow" onclick="simFollowCamera()">🎥 Volver a la cámara de la animación</button>`;
   if (anims.length > 1 || (anims.length === 1 && PUB.current !== anims[0].id)) {
     h += `<div class="pp-sec">🎞 Animaciones</div><div class="pp-list">` + anims.map((a, i) =>
       `<button class="pp-item pp-anim${a.id === PUB.current ? ' on' : ''}" data-i="${i}" onclick="pubPlayAnim(${i})"><span class="pp-ico">▶</span><b>${esc(a.name)}</b>${man.autoplay && man.autoplay.id === a.id ? '<small>inicial</small>' : ''}</button>`).join('') + '</div>';
