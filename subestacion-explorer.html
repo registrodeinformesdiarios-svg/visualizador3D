@@ -1568,6 +1568,21 @@
     #dv-modal.ro .dv-sub { flex-basis:100%; order:3; }
     #dv-modal.ro .dv-title::after { content:''; }
   }
+  #dv-loupe { position:absolute; z-index:4; width:132px; height:132px; border-radius:50%; border:3px solid #e65100; box-shadow:0 6px 20px rgba(0,0,0,.35); display:none; pointer-events:none; background:#fff; }
+  .dv-finger { fill:rgba(230,81,0,.10); stroke:rgba(230,81,0,.45); stroke-width:1.5; }
+  .dv-tether { stroke:#e65100; stroke-width:1.2; stroke-dasharray:3 3; opacity:.7; }
+  .dv-ret { stroke:#e65100; stroke-width:2; fill:none; }
+  .dv-ret-dot { fill:#e65100; }
+  .dv-cable-l { fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+  .dv-cable-halo { fill:none; stroke:#ffcc80; stroke-width:9; stroke-linecap:round; stroke-linejoin:round; opacity:.85; }
+  .dv-cable-hit { fill:none; stroke:#000; stroke-opacity:0; stroke-width:14; pointer-events:stroke; cursor:pointer; }
+  #dv-stage.drawing .dv-cable-hit { pointer-events:none; }
+  .dv-cable-end { stroke:#fff; stroke-width:1.2; }
+  .dv-stroke { fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; opacity:.9; }
+  .dv-swatch { width:12px; height:12px; border-radius:3px; flex-shrink:0; border:1px solid rgba(255,255,255,.25); }
+  .dv-hrow.on { background:rgba(79,195,247,.12); }
+  .dv-color { padding:1px 3px; height:26px; }
+  #dv-modal.ro #dv-cables { display:none !important; }
   .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
   .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
 </style>
@@ -2162,6 +2177,7 @@
         </div>
         <div class="dv-sec" id="dv-props"></div>
         <div class="dv-sec" id="dv-hidden"></div>
+        <div class="dv-sec" id="dv-cables"></div>
         <details class="dv-sec">
           <summary class="dv-sec-t">Lámina y cajetín</summary>
           <label class="dv-f"><span>Tamaño</span><select class="dv-in" id="dvs-page" onchange="dvSetSetting('page',this.value)">
@@ -2194,6 +2210,8 @@
           <button class="dv-tb" data-tool="edges" onclick="dvSetTool('edges')" title="Distancia entre dos aristas paralelas (E)">∥ Entre aristas</button>
           <button class="dv-tb" data-tool="level" onclick="dvSetTool('level')" title="Nivel / elevación (N)">▽ Nivel</button>
           <button class="dv-tb" data-tool="note" onclick="dvSetTool('note')" title="Nota con flecha (T)">✎ Nota</button>
+          <button class="dv-tb" data-tool="cable" onclick="dvSetTool('cable')" title="Cable a mano alzada (C): se dibuja sobre el plano del punto inicial y se ve en 3D y en las demás vistas">〰 Cable</button>
+          <button class="dv-tb" id="dv-touch-btn" onclick="dvToggleTouchAssist()" title="Ayuda táctil: punto de precisión sobre el dedo, con lupa" style="display:none">☝ Lupa</button>
           <span class="dv-sep"></span>
           <span class="dv-lbl">Ajuste</span>
           <button class="dv-tb snap active" data-snap="end" onclick="dvToggleSnap('end')" title="Extremos de arista">▫ Extremo</button>
@@ -2208,6 +2226,7 @@
         <div id="dv-stage">
           <canvas id="dv-canvas"></canvas>
           <svg id="dv-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          <canvas id="dv-loupe"></canvas>
           <div id="dv-ctx" oncontextmenu="event.preventDefault()" onpointerdown="event.stopPropagation()" onwheel="event.stopPropagation()"></div>
           <div id="dv-empty"><div>Crea una vista con <b>＋ Nueva vista…</b><br>Planta, alzados, isométrica o desde la cámara actual.</div></div>
         </div>
@@ -3711,6 +3730,7 @@ function onModelReady(gltf,name){
   document.getElementById('load-zone').classList.add('hidden');
   document.getElementById('loading-bar-wrap').style.display='none';
   document.getElementById('loading-bar').style.width='0%';
+  if (typeof dvOnModelReady === 'function') dvOnModelReady();   // planos guardados: cables en 3D
 }
 
 // ── FILE LOAD ────────────────────────────────────────────────────────────────
@@ -8333,6 +8353,7 @@ setTimeout(async function bootFromLink() {
       if (man.planos && Array.isArray(man.planos.views)) {
         DIMV.doc = dvNormalize(JSON.parse(JSON.stringify(man.planos))); DIMV.doc.model = dvModelName();
         DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null;
+        dvSyncCables3D();
       }
       pubLoaderStep('planos', 'done');
       const def = man.autoplay && man.autoplay.id;
@@ -9011,7 +9032,7 @@ function dvDefaultSettings() {
   return { unit:'m', decimals:2, showUnit:false, refLevel:0, northDeg:0, page:'A3', edgeAngle:30, showFrame:true,
     title:{ empresa:'', proyecto:dvModelName().replace(/\.(glb|gltf)$/i, ''), elaboro:'', reviso:'', notas:'' } };
 }
-function dvNewDoc() { return { format:DV_FORMAT, version:1, model:dvModelName(), saved:null, settings:dvDefaultSettings(), views:[] }; }
+function dvNewDoc() { return { format:DV_FORMAT, version:1, model:dvModelName(), saved:null, settings:dvDefaultSettings(), views:[], cables:[] }; }
 
 // Completa campos faltantes (JSON de versiones anteriores o editados a mano)
 function dvNormalize(d) {
@@ -9020,6 +9041,8 @@ function dvNormalize(d) {
   d.settings = Object.assign({}, def, d.settings || {});
   d.settings.title = Object.assign({}, def.title, (d.settings && d.settings.title) || {});
   d.views = Array.isArray(d.views) ? d.views : [];
+  d.cables = Array.isArray(d.cables) ? d.cables.filter(c => c && Array.isArray(c.pts) && c.pts.length >= 2) : [];
+  d.cables.forEach((c, i) => { c.id = c.id || dvId(); c.name = c.name || ('Cable ' + (i + 1)); c.color = c.color || DV_CABLE_COLORS[i % DV_CABLE_COLORS.length]; c.dia = +c.dia > 0 ? +c.dia : 40; });
   d.views.forEach(v => {
     v.id = v.id || dvId(); v.name = v.name || 'Vista';
     v.kind = v.kind || 'camera';
@@ -9035,6 +9058,7 @@ function dvNormalize(d) {
     v.scope = Array.isArray(v.scope) ? v.scope.filter(e => e && Array.isArray(e.path)) : [];
     v.scope.forEach(e => { e.id = e.id || dvId(); });
     v.group = typeof v.group === 'string' ? v.group : '';
+    v.showCables = v.showCables !== false;
     v.items.forEach(i => { i.id = i.id || dvId(); });
   });
   return d;
@@ -9259,6 +9283,7 @@ function dvLoop() {
   if (DIMV.dirty) { DIMV.dirty = false; DIMV.ovDirty = true; dvRender(); }
   if (DIMV.hoverReq) { DIMV.hoverReq = false; dvUpdateHover(); }
   if (DIMV.ovDirty) { DIMV.ovDirty = false; dvDrawOverlay(); }
+  if (DIMV.assist) dvLoupeDraw();
   if (DIMV.flashT && performance.now() > DIMV.flashT) { DIMV.flashT = 0; dvUpdateStatus(); }
 }
 
@@ -9340,6 +9365,12 @@ function dvSnap(px, py) {
       if (S.edge && better(bG, dd, dT)) bG = { d:dd, p:[x1 + (x2-x1)*t, y1 + (y2-y1)*t, z1 + (z2-z1)*t], seg, depth:dT };
     }
   }
+  if (S.end && v.showCables !== false && DIMV.doc.cables) DIMV.doc.cables.forEach(cb => {
+    [0, cb.pts.length - 1].forEach(i => {
+      const q = dvV3(cb.pts[i]), q2 = dvTo2(B, q), dd = Math.hypot(q2[0] - cx, q2[1] - cy);
+      if (dd <= tol && better(bE, dd, q.dot(dir))) bE = { d:dd, p:cb.pts[i].slice(), seg:cb.pts[i].concat(cb.pts[i ? i - 1 : 1]), depth:q.dot(dir) };
+    });
+  });
   let best = null, kind = null;
   if (bE && (!bM || bE.d <= bM.d)) { best = bE; kind = 'end'; }
   else if (bM) { best = bM; kind = 'mid'; }
@@ -9351,7 +9382,7 @@ function dvSnap(px, py) {
 }
 function dvStepNeedsSnap() {
   const t = DIMV.tool, s = DIMV.pending ? DIMV.pending.step : 0;
-  if (t === 'secpick') return true;
+  if (t === 'secpick' || t === 'cable') return true;
   if (t === 'nav') return false;
   if (t === 'linear' || t === 'aligned' || t === 'edges') return s < 2;
   return s < 1;
@@ -9464,19 +9495,21 @@ function dvFootOnEdge(a, segA, seg, B) {
 }
 function dvPushUndo() {
   const v = dvActive(); if (!v) return;
-  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items), hidden:JSON.stringify(v.hidden || []) });
+  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items), hidden:JSON.stringify(v.hidden || []), cables:JSON.stringify(DIMV.doc.cables || []) });
   if (DIMV.undo.length > 100) DIMV.undo.shift();
 }
 window.dvUndo = function () {
   const s = DIMV.undo.pop(); if (!s) { dvFlash('Nada que deshacer'); return; }
   const v = DIMV.doc.views.find(x => x.id === s.id); if (!v) return;
   v.items = JSON.parse(s.items); if (s.hidden) v.hidden = JSON.parse(s.hidden);
+  if (s.cables) { DIMV.doc.cables = JSON.parse(s.cables); DIMV.selCable = null; dvSyncCables3D(); dvRefreshCables(); }
   DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
   dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshHidden(); dvChanged(true);
 };
 function dvCommit(it) { dvPushUndo(); dvActive().items.push(it); DIMV.selId = it.id; dvChanged(true); }
 window.dvDeleteSel = function () {
-  const v = dvActive(); if (!v || !DIMV.selId) { dvFlash('Selecciona una cota con 🖐 Navegar'); return; }
+  if (DIMV.selCable) { dvDeleteCable(DIMV.selCable); return; }
+  const v = dvActive(); if (!v || !DIMV.selId) { dvFlash('Selecciona una cota o un cable con 🖐 Navegar'); return; }
   dvPushUndo(); v.items = v.items.filter(i => i.id !== DIMV.selId); DIMV.selId = null; dvChanged(true);
 };
 function dvEditText(it) {
@@ -9589,6 +9622,7 @@ function dvDrawOverlay() {
     sg.tris.forEach(tr => { h += `<polygon class="dv-seca" points="${tr.map(q => P(q[0], q[1]).join(',')).join(' ')}"/>`; });
     sg.texts.forEach(tx => { const q = P(tx.x, tx.y); h += `<text class="dv-sectx" x="${q[0]}" y="${q[1]}" text-anchor="${tx.anchor}">${tx.str}</text>`; });
   }
+  if (v.showCables !== false) h += dvCablesSVG(sc);
   v.items.forEach(it => { h += dvItemSVG(it, sc, S, it.id === DIMV.selId ? 'sel' : ''); });
   const P = DIMV.pending;
   if (P) {
@@ -9602,7 +9636,16 @@ function dvDrawOverlay() {
     }
     const pv = dvPreviewItem(sc); if (pv) h += dvItemSVG(pv, sc, S, 'pv');
   }
+  if (DIMV.stroke && DIMV.stroke.pts.length > 1)
+    h += `<polyline class="dv-stroke" stroke="${DIMV.stroke.color}" points="${DIMV.stroke.pts.map(q => dvF1(q[0]) + ',' + dvF1(q[1])).join(' ')}"/>`;
   if (DIMV.hover && dvStepNeedsSnap()) h += dvSnapSVG(DIMV.hover, sc);
+  if (DIMV.assist && DIMV.cursor) {   // dedo + punto de precisión
+    const a = DIMV.assist, c = DIMV.cursor.map(dvF1);
+    h += `<circle class="dv-finger" cx="${dvF1(a.fx)}" cy="${dvF1(a.fy)}" r="24"/>
+      <line class="dv-tether" x1="${dvF1(a.fx)}" y1="${dvF1(a.fy - 24)}" x2="${c[0]}" y2="${c[1] + 9}"/>
+      <path class="dv-ret" d="M${c[0] - 16} ${c[1]}H${c[0] - 5}M${c[0] + 5} ${c[1]}H${c[0] + 16}M${c[0]} ${c[1] - 16}V${c[1] - 5}M${c[0]} ${c[1] + 5}V${c[1] + 16}"/>
+      <circle class="dv-ret-dot" cx="${c[0]}" cy="${c[1]}" r="2.2"/>`;
+  }
   svg.innerHTML = h;
 }
 
@@ -9615,6 +9658,7 @@ const DV_HINTS = {
   level:['Nivel: clic en el punto a nivelar', 'Ubica la etiqueta del nivel'],
   note:['Nota: clic en el punto a señalar', 'Ubica el texto de la nota'],
   secpick:['Corte: clic en el punto por donde debe pasar el plano'],
+  cable:['Cable: arrastra para dibujar a mano alzada sobre el plano del punto inicial. Empieza en un borne (ajuste) o en el extremo de otro cable para continuarlo; termina sobre otro cable para unirlos'],
 };
 function dvFlash(msg) { DIMV.flashMsg = msg; DIMV.flashT = performance.now() + 3500; dvUpdateStatus(); }
 function dvUpdateStatus() {
@@ -9627,6 +9671,9 @@ function dvUpdateStatus() {
     const it = dvFindItem(DIMV.selId), v = dvActive();
     s = it ? `Seleccionado: <b>${{ linear:'Lineal ' + (it.axis === 'v' ? 'vertical' : 'horizontal'), aligned:it.edges ? 'Entre aristas' : 'Alineada', level:'Nivel', note:'Nota' }[it.type]}</b> ${dvEsc(dvLabel(it, dvBasis(v)))} · Arrastrar: mover · Doble clic: editar texto · Supr: borrar` : DV_HINTS.nav[0];
   } else { const arr = DV_HINTS[DIMV.tool]; s = arr[Math.min(arr.length - 1, DIMV.pending ? DIMV.pending.step : 0)] + (DIMV.tool !== 'nav' ? ' · Esc: cancelar · clic der.: cancelar' : ''); }
+  if (!DIMV.readonly && DIMV.tool !== 'nav' && dvTouchDevice()) s += DIMV.penMode
+    ? ' · <b>✏ Lápiz:</b> dibuja y ubica con el lápiz; el dedo desplaza'
+    : DIMV.touchAssist ? ' · <b>☝ Mantén el dedo:</b> el punto naranja aparece sobre el dedo; suelta para fijarlo (fuera del plano = cancelar)' : '';
   if (DIMV.edgeQueue.length) s += ` · <span class="dv-busy">Calculando aristas ${DIMV.edgeTotal - DIMV.edgeQueue.length}/${DIMV.edgeTotal}…</span>`;
   el.innerHTML = s;
 }
@@ -9814,7 +9861,9 @@ function dvRefreshSettings() {
   document.getElementById('dv-model').textContent = DIMV.doc.model;
 }
 function dvRefreshUI() {
-  dvRefreshList(); dvRefreshProps(); dvRefreshHidden(); dvRefreshSettings(); dvUpdateStatus();
+  dvRefreshList(); dvRefreshProps(); dvRefreshHidden(); dvRefreshCables(); dvRefreshSettings(); dvUpdateStatus();
+  const tb = document.getElementById('dv-touch-btn');
+  if (tb) { tb.style.display = dvTouchDevice() && !DIMV.readonly ? '' : 'none'; tb.classList.toggle('active', !!DIMV.touchAssist); }
   document.getElementById('dv-empty').style.display = dvActive() ? 'none' : 'flex';
 }
 window.dvSetProp = function (k, val) {
@@ -9832,6 +9881,7 @@ window.dvSetProp = function (k, val) {
     const l = document.getElementById('dv-cut-l'); if (l) l.textContent = dvSectionLabel(v);
     DIMV.dirty = true; DIMV.hoverReq = true;
   }
+  else if (k === 'showCables') { v.showCables = !!val; DIMV.hoverReq = true; }
   else if (k === 'group') { v.group = String(val || '').trim(); dvRefreshList(); dvRefreshProps(); }
   else if (k === 'scale') { v.scale = val === 'auto' ? 'auto' : +val; dvRefreshProps(); }
   dvChanged(false);
@@ -9843,6 +9893,7 @@ window.dvSetSetting = function (k, val) {
   else if (k === 'refLevel' || k === 'northDeg') st[k] = parseFloat(val) || 0;
   else if (k === 'edgeAngle') { const a = Math.max(1, Math.min(89, parseFloat(val) || 30)); if (a !== st.edgeAngle) { st.edgeAngle = a; dvResetEdges(); } }
   else if (k === 'showUnit' || k === 'showFrame') st[k] = !!val;
+  else if (k === 'cables3d') { st.cables3d = !!val; dvSyncCables3D(); }
   else st[k] = val;
   if (k === 'page') dvRefreshProps();
   dvChanged(false); DIMV.ovDirty = true;
@@ -9912,6 +9963,7 @@ function dvApplyDoc(d) {
   DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null;
   DIMV.undo = []; DIMV.selId = null; DIMV.pending = null;
   if (DIMV.open) { dvCollect(); DIMV.dirty = true; dvRefreshUI(); }
+  dvSyncCables3D();
   dvChanged(true);
   if (DIMV.open) dvFlash(`Cargadas ${DIMV.doc.views.length} vistas`);
   return true;
@@ -10034,6 +10086,12 @@ function dvPdfPage(doc, v, idx, total, aspect) {
       doc.setFillColor(20, 45, 110);
       doc.text(str, sx, sy, { angle:Math.atan2(t.dir[1], t.dir[0]) * 180 / Math.PI });
     });
+  });
+  if (v.showCables !== false) (DIMV.doc.cables || []).forEach(cb => {
+    const hx = parseInt(String(cb.color).replace('#', ''), 16) || 0xe65100;
+    doc.setDrawColor((hx >> 16) & 255, (hx >> 8) & 255, hx & 255); doc.setLineWidth(0.45);
+    let prev = null;
+    cb.pts.forEach(q => { const p2 = to(...dvTo2(B, dvV3(q))); if (prev) doc.line(prev[0], prev[1], p2[0], p2[1]); prev = p2; });
   });
   const sgp = dvSectionGeom(v, B, Sz);
   if (sgp) {
@@ -10304,6 +10362,210 @@ window.dvCtxUnghost = function () {
 };
 document.addEventListener('pointerdown', e => { if (dvCtxIsOpen() && !e.target.closest('#dv-ctx')) dvCtxClose(); }, true);
 
+// ═══ AYUDA TÁCTIL (punto de precisión + lupa) ═══
+const DV_ASSIST_OFF = 72;   // px por encima del dedo
+function dvTouchDevice() { return (navigator.maxTouchPoints || 0) > 0 || (window.matchMedia && matchMedia('(pointer: coarse)').matches); }
+window.dvToggleTouchAssist = function () {
+  DIMV.touchAssist = !DIMV.touchAssist;
+  document.getElementById('dv-touch-btn').classList.toggle('active', DIMV.touchAssist);
+  try { localStorage.setItem('sim_dv_touch', DIMV.touchAssist ? '1' : '0'); } catch (e) {}
+  dvFlash(DIMV.touchAssist ? 'Ayuda táctil activada: mantén el dedo y el punto aparece sobre él' : 'Ayuda táctil desactivada');
+};
+function dvLoupeHide() { const L = document.getElementById('dv-loupe'); if (L) L.style.display = 'none'; }
+function dvLoupeDraw() {
+  const L = document.getElementById('dv-loupe'), a = DIMV.assist, v = dvActive();
+  if (!L || !a || !DIMV.cursor || !v) { dvLoupeHide(); return; }
+  const S = 132, Z = 2.5, dpr = DIMV.dpr, [cx, cy] = DIMV.cursor;
+  if (L.width !== Math.round(S * dpr)) { L.width = L.height = Math.round(S * dpr); }
+  let lx = cx - S / 2, ly = cy - S - 28;
+  if (ly < 4) { ly = Math.max(4, Math.min(DIMV.H - S - 4, cy - S / 2)); lx = cx + 44; if (lx + S > DIMV.W - 4) lx = cx - 44 - S; }
+  lx = Math.max(4, Math.min(DIMV.W - S - 4, lx));
+  L.style.left = lx + 'px'; L.style.top = ly + 'px'; L.style.display = 'block';
+  const g = L.getContext('2d'), sw = S / Z;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, L.width, L.height);
+  g.drawImage(DIMV.cv, (cx - sw / 2) * dpr, (cy - sw / 2) * dpr, sw * dpr, sw * dpr, 0, 0, S * dpr, S * dpr);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const toL = (px, py) => [S / 2 + (px - cx) * Z, S / 2 + (py - cy) * Z], sc = dvScreen(v);
+  if (v.showCables !== false) (DIMV.doc.cables || []).forEach(cb => {
+    g.strokeStyle = cb.color; g.lineWidth = 3; g.beginPath();
+    cb.pts.forEach((q, i) => { const p = toL(...sc.to(...dvTo2(sc.B, dvV3(q)))); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.stroke();
+  });
+  if (DIMV.stroke && DIMV.stroke.pts.length > 1) {
+    g.strokeStyle = DIMV.stroke.color; g.lineWidth = 3; g.beginPath();
+    DIMV.stroke.pts.forEach((q, i) => { const p = toL(q[0], q[1]); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.stroke();
+  }
+  const h = DIMV.hover;
+  if (h && dvStepNeedsSnap() && h.kind !== 'free') {
+    const p = toL(...sc.to(...dvTo2(sc.B, h.p)));
+    g.strokeStyle = '#00a152'; g.lineWidth = 2.2;
+    if (h.kind === 'end') g.strokeRect(p[0] - 7, p[1] - 7, 14, 14);
+    else if (h.kind === 'mid') { g.beginPath(); g.moveTo(p[0], p[1] - 8); g.lineTo(p[0] + 8, p[1] + 6); g.lineTo(p[0] - 8, p[1] + 6); g.closePath(); g.stroke(); }
+    else { g.beginPath(); g.arc(p[0], p[1], 6, 0, Math.PI * 2); g.stroke(); }
+    g.font = '600 10px IBM Plex Mono, monospace'; g.fillStyle = '#00a152';
+    g.fillText({ end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie' }[h.kind] || '', 8, S - 10);
+  }
+  g.strokeStyle = '#e65100'; g.lineWidth = 1.4; g.beginPath();
+  [[-18, -5], [5, 18]].forEach(([a0, a1]) => { g.moveTo(S / 2 + a0, S / 2); g.lineTo(S / 2 + a1, S / 2); g.moveTo(S / 2, S / 2 + a0); g.lineTo(S / 2, S / 2 + a1); });
+  g.stroke();
+}
+
+// ═══ CABLES A MANO ALZADA ═══
+// Se dibujan sobre el plano ⟂ a la vista que pasa por el punto inicial; se guardan en 3D
+// (doc.cables), así aparecen en todas las vistas, en el PDF y en el modelo 3D (tubo).
+const DV_CABLE_COLORS = ['#e65100', '#1565c0', '#2e7d32', '#6a1b9a', '#c62828', '#00838f', '#f9a825'];
+const dvCableMats = new Map();
+function dvCableEndAt(x, y, sc, isEnd) {
+  const v = dvActive(); if (!v || v.showCables === false) return null;
+  const tol = (DIMV.assist ? 22 : 16) + (isEnd ? 6 : 0);   // al terminar el trazo se atrae con más fuerza (unir cables)
+  let best = null;
+  (DIMV.doc.cables || []).forEach(cb => [0, cb.pts.length - 1].forEach(i => {
+    const q = sc.to(...dvTo2(sc.B, dvV3(cb.pts[i]))), d = Math.hypot(q[0] - x, q[1] - y);
+    if (d <= tol && (!best || d < best.d)) best = { d, cable:cb, atEnd:i > 0 };
+  }));
+  return best;
+}
+function dvStrokeStart(x, y) {
+  const v = dvActive(); if (!v) return;
+  const sc = dvScreen(v), ce = dvCableEndAt(x, y, sc);
+  const S0 = ce ? dvV3(ce.atEnd ? ce.cable.pts[ce.cable.pts.length - 1] : ce.cable.pts[0]) : dvSnap(x, y).p.clone();
+  const sp = sc.to(...dvTo2(sc.B, S0));
+  DIMV.stroke = { S:S0, depth:S0.clone().sub(sc.B.c).dot(sc.B.dir), pts:[[sp[0], sp[1]]], cont:ce,
+                  color:ce ? ce.cable.color : DV_CABLE_COLORS[(DIMV.doc.cables || []).length % DV_CABLE_COLORS.length] };
+  if (Math.hypot(sp[0] - x, sp[1] - y) > 1.5) DIMV.stroke.pts.push([x, y]);
+  DIMV.ovDirty = true;
+}
+function dvStrokeAdd(x, y) {
+  const st = DIMV.stroke; if (!st) return;
+  const l = st.pts[st.pts.length - 1];
+  if (Math.hypot(x - l[0], y - l[1]) >= 1.5) st.pts.push([x, y]);
+}
+function dvRDP(pts, eps) {   // Ramer–Douglas–Peucker
+  if (pts.length < 3) return pts.slice();
+  const [a, b] = [pts[0], pts[pts.length - 1]], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1e-9;
+  let iMax = 0, dMax = 0;
+  for (let i = 1; i < pts.length - 1; i++) { const d = Math.abs(dy * pts[i][0] - dx * pts[i][1] + b[0] * a[1] - b[1] * a[0]) / L; if (d > dMax) { dMax = d; iMax = i; } }
+  if (dMax <= eps) return [a, b];
+  return dvRDP(pts.slice(0, iMax + 1), eps).slice(0, -1).concat(dvRDP(pts.slice(iMax), eps));
+}
+function dvChaikin(pts, it) {   // suavizado conservando extremos
+  let p = pts;
+  for (let k = 0; k < it && p.length > 2; k++) {
+    const o = [p[0]];
+    for (let i = 0; i < p.length - 1; i++) { const a = p[i], b = p[i + 1];
+      o.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]); }
+    o.push(p[p.length - 1]); p = o;
+  }
+  return p;
+}
+function dvStrokeEnd() {
+  const st = DIMV.stroke; DIMV.stroke = null; DIMV.ovDirty = true;
+  const v = dvActive(); if (!st || !v) return;
+  let len = 0; for (let i = 1; i < st.pts.length; i++) len += Math.hypot(st.pts[i][0] - st.pts[i - 1][0], st.pts[i][1] - st.pts[i - 1][1]);
+  if (len < 8) return;
+  const sc = dvScreen(v), last = st.pts[st.pts.length - 1];
+  // final: extremo de otro cable (unir) o punto del modelo (borne)
+  let join = dvCableEndAt(last[0], last[1], sc, true);
+  if (join && st.cont && join.cable === st.cont.cable && join.atEnd === st.cont.atEnd) join = null;
+  let E = null;
+  if (join) E = dvV3(join.atEnd ? join.cable.pts[join.cable.pts.length - 1] : join.cable.pts[0]);
+  else { const sn = dvSnap(last[0], last[1]); if (sn.kind === 'end' || sn.kind === 'mid' || sn.kind === 'edge') E = sn.p.clone(); }
+  const s2 = dvChaikin(dvRDP(st.pts, 1.2), 2);
+  const P3 = s2.map(([px, py]) => { const q = sc.from(px, py); return dvFrom2(sc.B, q[0], q[1]).addScaledVector(sc.B.dir, st.depth); });
+  P3[0] = st.S.clone(); if (E) P3[P3.length - 1] = E;
+  dvPushUndo();
+  const arr = P3.map(dvArr);
+  let cable;
+  if (st.cont) {
+    cable = st.cont.cable; const add = arr.slice(1);
+    if (st.cont.atEnd) cable.pts.push(...add); else cable.pts.unshift(...add.reverse());
+  } else {
+    cable = { id:dvId(), name:'Cable ' + ((DIMV.doc.cables || []).length + 1), color:st.color, dia:40, pts:arr };
+    DIMV.doc.cables.push(cable);
+  }
+  if (join && join.cable !== cable) {   // unir con el otro cable
+    const o = join.cable, tail = join.atEnd ? o.pts.slice(0, -1).reverse() : o.pts.slice(1);
+    if (!st.cont || st.cont.atEnd) cable.pts.push(...tail); else cable.pts.unshift(...tail.reverse());
+    DIMV.doc.cables = DIMV.doc.cables.filter(c => c !== o);
+    if (!st.cont) { cable.id = o.id; cable.name = o.name; cable.color = o.color; cable.dia = o.dia; }   // conserva la identidad del cable existente
+    dvFlash(`Cables unidos: «${cable.name}»`);
+  } else if (st.cont) dvFlash(`«${cable.name}» continuado`);
+  DIMV.selCable = cable.id; DIMV.selId = null;
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.hoverReq = true;
+}
+function dvCableLen(cb) { let L = 0; for (let i = 1; i < cb.pts.length; i++) L += dvV3(cb.pts[i]).distanceTo(dvV3(cb.pts[i - 1])); return L; }
+function dvCablesSVG(sc) {
+  let h = '';
+  (DIMV.doc.cables || []).forEach(cb => {
+    const pts = cb.pts.map(q => sc.to(...dvTo2(sc.B, dvV3(q))).map(dvF1)), sel = cb.id === DIMV.selCable || cb.id === DIMV.hlCable;
+    const ps = pts.map(q => q.join(',')).join(' ');
+    h += `<g class="dv-cable${sel ? ' sel' : ''}" data-cable="${cb.id}">
+      ${sel ? `<polyline class="dv-cable-halo" points="${ps}"/>` : ''}
+      <polyline class="dv-cable-l" stroke="${dvEsc(cb.color)}" points="${ps}"/>
+      <circle class="dv-cable-end" fill="${dvEsc(cb.color)}" cx="${pts[0][0]}" cy="${pts[0][1]}" r="3.2"/>
+      <circle class="dv-cable-end" fill="${dvEsc(cb.color)}" cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="3.2"/>
+      <polyline class="dv-cable-hit" points="${ps}"/></g>`;
+  });
+  return h;
+}
+function dvSyncCables3D() {
+  let g = scene.getObjectByName('__cables__');
+  if (!g) { g = new THREE.Group(); g.name = '__cables__'; g.userData.__helper = true; scene.add(g); }
+  g.children.slice().forEach(c => { g.remove(c); c.geometry.dispose(); });
+  if (!DIMV.doc || DIMV.doc.settings.cables3d === false) return;
+  (DIMV.doc.cables || []).forEach(cb => {
+    const pts = [];
+    cb.pts.forEach(q => { const p = dvV3(q); if (!pts.length || pts[pts.length - 1].distanceToSquared(p) > 1e-8) pts.push(p); });
+    if (pts.length < 2) return;
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const seg = Math.min(1500, Math.max(8, Math.ceil(curve.getLength() / 0.04)));
+    let mat = dvCableMats.get(cb.color);
+    if (!mat) { mat = new THREE.MeshStandardMaterial({ color:cb.color, roughness:0.45, metalness:0.35 }); dvCableMats.set(cb.color, mat); }
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, Math.max(0.003, (+cb.dia || 40) / 2000), 8, false), mat);
+    m.castShadow = true; m.userData.cableId = cb.id; m.name = cb.name;
+    g.add(m);
+  });
+}
+window.dvOnModelReady = function () {
+  const mn = dvModelName();
+  if (!DIMV.doc || DIMV.doc.model !== mn) {
+    DIMV.doc = dvLoadLocal(mn);
+    if (DIMV.doc) { DIMV.doc.model = mn; DIMV.activeId = DIMV.doc.views[0] ? DIMV.doc.views[0].id : null; DIMV.undo = []; DIMV.selId = null; DIMV.selCable = null; }
+  }
+  dvSyncCables3D();
+};
+function dvRefreshCables() {
+  const el = document.getElementById('dv-cables'); if (!el || !DIMV.doc) return;
+  const v = dvActive(), cs = DIMV.doc.cables || [], sel = cs.find(c => c.id === DIMV.selCable);
+  let h = `<div class="dv-sec-t">〰 Cables · ${cs.length}</div>`;
+  if (!cs.length) h += '<div class="dv-note">Herramienta «〰 Cable» (C): dibuja a mano alzada con el dedo, el lápiz o el ratón. Empieza en un borne del equipo; para seguir el cable en otra vista, empieza sobre su extremo.</div>';
+  else h += '<div class="dv-hlist">' + cs.map(c => `<div class="dv-hrow${c.id === DIMV.selCable ? ' on' : ''}" onclick="dvSelectCable('${c.id}')" onmouseenter="dvHlCable('${c.id}')" onmouseleave="dvHlCable(null)">
+      <span class="dv-swatch" style="background:${dvEsc(c.color)}"></span><span class="dv-hn">${dvEsc(c.name)}</span><small class="dv-hk">${dvCableLen(c).toFixed(2)} m</small>
+      <button class="dv-ib" title="Eliminar cable" onclick="event.stopPropagation();dvDeleteCable('${c.id}')">✕</button></div>`).join('') + '</div>';
+  if (sel) h += `<div class="dv-scope">
+      <label class="dv-f"><span>Nombre</span><input class="dv-in" value="${dvEsc(sel.name)}" onchange="dvSetCable('name',this.value)"></label>
+      <label class="dv-f"><span>Color</span><input class="dv-in dv-color" type="color" value="${dvEsc(sel.color)}" onchange="dvSetCable('color',this.value)"></label>
+      <label class="dv-f"><span>Diámetro (mm)</span><input class="dv-in" type="number" min="2" max="500" step="1" value="${sel.dia}" onchange="dvSetCable('dia',this.value)"></label>
+      <div class="dv-note">${sel.pts.length} puntos · longitud ${dvCableLen(sel).toFixed(2)} m · Supr: eliminar</div></div>`;
+  if (v) h += `<label class="dv-chk"><input type="checkbox"${v.showCables !== false ? ' checked' : ''} onchange="dvSetProp('showCables',this.checked)"> Mostrar cables en esta vista</label>`;
+  h += `<label class="dv-chk"><input type="checkbox"${DIMV.doc.settings.cables3d !== false ? ' checked' : ''} onchange="dvSetSetting('cables3d',this.checked)"> Mostrar cables en el modelo 3D</label>`;
+  el.innerHTML = h;
+}
+window.dvSelectCable = function (id) { DIMV.selCable = DIMV.selCable === id ? null : id; DIMV.selId = null; DIMV.ovDirty = true; dvRefreshCables(); dvUpdateStatus(); };
+window.dvHlCable = function (id) { DIMV.hlCable = id; DIMV.ovDirty = true; };
+window.dvDeleteCable = function (id) {
+  const cb = (DIMV.doc.cables || []).find(c => c.id === id); if (!cb) return;
+  dvPushUndo(); DIMV.doc.cables = DIMV.doc.cables.filter(c => c !== cb);
+  if (DIMV.selCable === id) DIMV.selCable = null;
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.hoverReq = true; dvFlash(`«${cb.name}» eliminado (Ctrl+Z para deshacer)`);
+};
+window.dvSetCable = function (k, val) {
+  const cb = (DIMV.doc.cables || []).find(c => c.id === DIMV.selCable); if (!cb) return;
+  if (k === 'name') cb.name = String(val).trim() || cb.name;
+  else if (k === 'color') cb.color = val;
+  else if (k === 'dia') cb.dia = Math.max(2, Math.min(500, parseFloat(val) || 40));
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false);
+};
+
 // zoom con factor f (>1 aleja) manteniendo fijo el punto (x, y) de la pantalla
 function dvZoomAt(x, y, f) {
   const v = dvActive(); if (!v) return;
@@ -10348,6 +10610,7 @@ window.openDimViews = function (opts) {
   DIMV.open = true; window.__dimOpen = true;
   document.getElementById('dv-modal').classList.add('open');
   canvas.style.visibility = 'hidden';
+  if (DIMV.touchAssist === undefined) { let pref = null; try { pref = localStorage.getItem('sim_dv_touch'); } catch (e) {} DIMV.touchAssist = pref ? pref === '1' : dvTouchDevice(); }
   dvResize(); dvCollect(); dvRefreshUI(); dvSetTool(DIMV.tool);
   if (DIMV.readonly) document.getElementById('dv-model').textContent = (DIMV.roGroup ? DIMV.roGroup + ' · ' : '') + dvModelName();
   DIMV.dirty = true;
@@ -10381,8 +10644,29 @@ window.closeDimViews = function () {
     DIMV.down = { x, y, lx:x, ly:y, btn:e.button, moved:false, shift:e.shiftKey, itemId, mode:null };
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       DIMV.pts = DIMV.pts || new Map(); DIMV.pts.set(e.pointerId, [x, y]);
-      if (DIMV.pts.size === 2) { DIMV.down = null; DIMV.pinch = dvPinchState(); try { st.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); return; }
+      if (DIMV.pts.size === 2) {
+        DIMV.down = null; DIMV.pinch = dvPinchState();
+        if (DIMV.assist || DIMV.stroke) { DIMV.assist = null; DIMV.stroke = null; DIMV.strokePid = null; dvLoupeHide(); DIMV.ovDirty = true; }
+        try { st.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); return;
+      }
     }
+    if (e.pointerType === 'pen' && !DIMV.penMode) { DIMV.penMode = true; dvUpdateStatus(); }
+    const toolOn = DIMV.tool !== 'nav' && !DIMV.readonly && e.button === 0;
+    if (e.pointerType === 'touch' && toolOn && DIMV.penMode) { DIMV.down.mode = 'pan'; DIMV.down.noClick = true; }   // con lápiz: el dedo solo desplaza
+    else if (e.pointerType === 'touch' && toolOn && DIMV.touchAssist) {
+      DIMV.down = null;
+      DIMV.assist = { id:e.pointerId, fx:x, fy:y };
+      DIMV.cursor = [x, y - DV_ASSIST_OFF];
+      if (DIMV.tool === 'cable') dvStrokeStart(DIMV.cursor[0], DIMV.cursor[1]);
+      DIMV.hoverReq = true; DIMV.ovDirty = true;
+      try { st.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault(); return;
+    } else if (toolOn && DIMV.tool === 'cable') {
+      DIMV.down = null; DIMV.strokePid = e.pointerId; dvStrokeStart(x, y);
+      try { st.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault(); return;
+    }
+    if (e.button === 0 && DIMV.tool === 'nav' && !DIMV.readonly && e.target.closest && e.target.closest('[data-cable]')) DIMV.down.cableId = e.target.closest('[data-cable]').getAttribute('data-cable');
     if (e.button === 0 && DIMV.tool === 'nav' && itemId && !DIMV.readonly) {
       const it = dvFindItem(itemId);
       if (it) { DIMV.selId = itemId; DIMV.down.mode = 'item'; DIMV.down.orig = (it.type === 'linear' || it.type === 'aligned') ? (it.offset || 0) : (it.off || [0, 0]).slice(); }
@@ -10405,6 +10689,12 @@ window.closeDimViews = function () {
         DIMV.pinch = nw; return;
       }
     }
+    if (DIMV.assist && e.pointerId === DIMV.assist.id) {
+      DIMV.assist.fx = x; DIMV.assist.fy = y; DIMV.cursor = [x, y - DV_ASSIST_OFF];
+      if (DIMV.stroke) dvStrokeAdd(DIMV.cursor[0], DIMV.cursor[1]);
+      DIMV.hoverReq = true; DIMV.ovDirty = true; return;
+    }
+    if (DIMV.stroke && e.pointerId === DIMV.strokePid) { dvStrokeAdd(x, y); DIMV.hoverReq = true; DIMV.ovDirty = true; return; }
     const d = DIMV.down, v = dvActive();
     if (d && v) {
       if (!d.moved && Math.hypot(x - d.x, y - d.y) > 4) {
@@ -10440,18 +10730,40 @@ window.closeDimViews = function () {
   });
   const up = e => {
     if (DIMV.pts && DIMV.pts.has(e.pointerId)) { DIMV.pts.delete(e.pointerId); if (DIMV.pinch) { if (!DIMV.pts.size) DIMV.pinch = null; DIMV.down = null; dvChanged(false); return; } }
+    if (DIMV.assist && e.pointerId === DIMV.assist.id) {
+      const a = DIMV.assist; DIMV.assist = null; dvLoupeHide();
+      try { st.releasePointerCapture(e.pointerId); } catch (_) {}
+      const [cx, cy] = DIMV.cursor || [a.fx, a.fy - DV_ASSIST_OFF];
+      const inside = cx >= 0 && cy >= 0 && cx <= DIMV.W && cy <= DIMV.H;
+      if (DIMV.stroke) { if (inside) dvStrokeEnd(); else { DIMV.stroke = null; dvFlash('Cable cancelado'); } }
+      else if (inside && dvActive()) dvToolClick(cx, cy);
+      else dvFlash('Cancelado: el punto quedó fuera del plano');
+      DIMV.ovDirty = true; return;
+    }
+    if (DIMV.stroke && e.pointerId === DIMV.strokePid) {
+      DIMV.strokePid = null; try { st.releasePointerCapture(e.pointerId); } catch (_) {}
+      dvStrokeEnd(); return;
+    }
     const d = DIMV.down; DIMV.down = null; st.classList.remove('panning');
     try { st.releasePointerCapture(e.pointerId); } catch (_) {}
     if (!d || !dvActive()) return;
     if (d.moved) { dvChanged(d.mode === 'item'); DIMV.hoverReq = true; return; }
+    if (d.noClick) return;
+    if (DIMV.tool === 'nav' && d.btn === 0) {
+      const prevC = DIMV.selCable; DIMV.selCable = d.cableId || null;
+      if (d.cableId) DIMV.selId = null;
+      if (prevC !== DIMV.selCable) { DIMV.ovDirty = true; dvRefreshCables(); dvUpdateStatus(); }
+      if (d.cableId) return;
+    }
     if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else if (!DIMV.readonly) dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
     if (d.btn !== 0) return;
     if (DIMV.tool === 'nav') { if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
     dvToolClick(d.x, d.y);
   };
   st.addEventListener('pointerup', up);
-  st.addEventListener('pointercancel', e => { DIMV.down = null; st.classList.remove('panning'); if (DIMV.pts) DIMV.pts.delete(e.pointerId); DIMV.pinch = null; });
-  st.addEventListener('pointerleave', () => { if (!DIMV.down) { DIMV.cursor = null; DIMV.hover = null; DIMV.ovDirty = true; dvUpdateCoords(); } });
+  st.addEventListener('pointercancel', e => { DIMV.down = null; st.classList.remove('panning'); if (DIMV.pts) DIMV.pts.delete(e.pointerId); DIMV.pinch = null;
+    if (DIMV.assist || DIMV.stroke) { DIMV.assist = null; DIMV.stroke = null; DIMV.strokePid = null; dvLoupeHide(); DIMV.ovDirty = true; } });
+  st.addEventListener('pointerleave', () => { if (!DIMV.down && !DIMV.assist && !DIMV.stroke) { DIMV.cursor = null; DIMV.hover = null; DIMV.ovDirty = true; dvUpdateCoords(); } });
   st.addEventListener('dblclick', e => {
     if (DIMV.readonly) return;
     if (DIMV.tool !== 'nav') return;
@@ -10484,7 +10796,7 @@ window.closeDimViews = function () {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (k === 'Delete' || k === 'Backspace') { e.preventDefault(); dvDeleteSel(); return; }
     if (DIMV.pending && DIMV.pending.type === 'linear' && DIMV.pending.step === 2 && (lk === 'h' || lk === 'v')) { DIMV.pending.force = lk; DIMV.ovDirty = true; return; }
-    const map = { v:'nav', l:'linear', a:'aligned', e:'edges', n:'level', t:'note' };
+    const map = { v:'nav', l:'linear', a:'aligned', e:'edges', n:'level', t:'note', c:'cable' };
     if (map[lk]) { dvSetTool(map[lk]); return; }
     if (lk === 'f') dvFitActive();
   }, true);
