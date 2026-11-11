@@ -1583,6 +1583,31 @@
   .dv-hrow.on { background:rgba(79,195,247,.12); }
   .dv-color { padding:1px 3px; height:26px; }
   #dv-modal.ro #dv-cables { display:none !important; }
+  .dv-seg { display:inline-flex; gap:2px; padding:2px; border-radius:6px; background:rgba(230,81,0,.08); border:1px solid rgba(230,81,0,.3); }
+  .dv-seg .dv-tb { padding:4px 7px; }
+  .dv-poly-v { fill:#fff; stroke-width:2; }
+  .dv-ced-h { fill:#ffa726; stroke:#fff; stroke-width:2; }
+  .dv-csnap-halo { fill:none; stroke:#00bcd4; stroke-width:8; stroke-opacity:.35; stroke-linecap:round; stroke-linejoin:round; }
+  .dv-snap.cab { stroke:#00838f; stroke-width:2.2; }
+  .dv-snap-dot { fill:#00838f; }
+  .dv-snap-t.cab { fill:#00838f; }
+  .ce-hint.ok { color:#4dd0e1; }
+  #ce-snaptip { position:fixed; z-index:330; display:none; pointer-events:none; transform:translate(14px,-28px); padding:3px 7px; border-radius:5px;
+    background:rgba(0,96,100,.92); color:#fff; font:600 10.5px var(--mono); white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+  .dv-ced-h.end { fill:#43a047; }
+  .dv-ced-h.on { fill:#ffeb3b; stroke:#e65100; }
+  #ce-panel { position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:320; display:none; flex-direction:column; gap:6px; max-width:96vw;
+    padding:9px 12px; background:rgba(9,12,17,.95); border:1px solid rgba(255,167,38,.5); border-radius:10px; box-shadow:0 8px 26px rgba(0,0,0,.45); font-family:var(--mono); font-size:10.5px; color:var(--text); }
+  #ce-panel.open { display:flex; }
+  .ce-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ce-row b { color:#ffa726; font-weight:600; }
+  .ce-len { color:var(--accent2); }
+  .ce-lbl { color:var(--text2); display:flex; align-items:center; gap:4px; }
+  .ce-in { background:var(--bg3); border:1px solid var(--border); color:var(--text); border-radius:5px; font-family:var(--mono); font-size:10px; padding:4px 6px; }
+  .ce-btn { background:var(--bg3); border:1px solid var(--border); color:var(--text); border-radius:5px; font-family:var(--mono); font-size:10.5px; padding:5px 9px; cursor:pointer; }
+  .ce-btn:disabled { opacity:.35; cursor:default; }
+  .ce-btn.ok { border-color:#66bb6a; color:#66bb6a; font-weight:600; }
+  .ce-hint { color:var(--text3); font-size:9.5px; }
   .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
   .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
 </style>
@@ -2211,6 +2236,11 @@
           <button class="dv-tb" data-tool="level" onclick="dvSetTool('level')" title="Nivel / elevación (N)">▽ Nivel</button>
           <button class="dv-tb" data-tool="note" onclick="dvSetTool('note')" title="Nota con flecha (T)">✎ Nota</button>
           <button class="dv-tb" data-tool="cable" onclick="dvSetTool('cable')" title="Cable a mano alzada (C): se dibuja sobre el plano del punto inicial y se ve en 3D y en las demás vistas">〰 Cable</button>
+          <span id="dv-cable-modes" class="dv-seg" style="display:none">
+            <button class="dv-tb" data-cm="free" onclick="dvSetCableMode('free')" title="Mano alzada: arrastra">✍ Mano alzada</button>
+            <button class="dv-tb" data-cm="line" onclick="dvSetCableMode('line')" title="Recta: clic en cada vértice">／ Recta</button>
+            <button class="dv-tb" data-cm="spline" onclick="dvSetCableMode('spline')" title="Spline: clic en cada punto de control">〜 Spline</button>
+          </span>
           <button class="dv-tb" id="dv-touch-btn" onclick="dvToggleTouchAssist()" title="Ayuda táctil: punto de precisión sobre el dedo, con lupa" style="display:none">☝ Lupa</button>
           <span class="dv-sep"></span>
           <span class="dv-lbl">Ajuste</span>
@@ -2218,6 +2248,7 @@
           <button class="dv-tb snap active" data-snap="mid" onclick="dvToggleSnap('mid')" title="Punto medio de arista">△ Medio</button>
           <button class="dv-tb snap active" data-snap="edge" onclick="dvToggleSnap('edge')" title="Punto más cercano sobre la arista">⧖ Arista</button>
           <button class="dv-tb snap active" data-snap="face" onclick="dvToggleSnap('face')" title="Punto sobre la superficie">○ Superficie</button>
+          <button class="dv-tb snap active" data-snap="cable" onclick="dvToggleSnap('cable')" title="Conectar con cables cercanos: unir extremos, conectar a un vértice o derivar sobre el cable">⚡ Cable</button>
           <span class="dv-sep"></span>
           <button class="dv-tb" data-ro onclick="dvFitActive()" title="Encuadrar (F)">⤢ Encuadrar</button>
           <button class="dv-tb" onclick="dvUndo()" title="Deshacer (Ctrl+Z)">↶</button>
@@ -3620,7 +3651,7 @@ function fcTouchEnd(e){
       // toque corto: doble toque = centrar en el punto
       const now=performance.now(), t=e.changedTouches[0];
       if(now-fcTouch.tapT<320 && Math.hypot(t.clientX-fcTouch.tapX,t.clientY-fcTouch.tapY)<30){
-        const P=fcHit(t.clientX,t.clientY); if(P) fcCenterOn(P); fcTouch.tapT=0;
+        if(!ceDoubleTap(t.clientX,t.clientY)){ const P=fcHit(t.clientX,t.clientY); if(P) fcCenterOn(P); } fcTouch.tapT=0;
       } else { fcTouch.tapT=now; fcTouch.tapX=t.clientX; fcTouch.tapY=t.clientY; }
     } else if(performance.now()-fcTouch.lastT<80){
       fcTouch.ox+=fcTouch.vx*5; fcTouch.oy+=fcTouch.vy*5;   // inercia suave al soltar
@@ -8857,7 +8888,7 @@ const DV_STYLE_LABEL = { tech:'Técnico (blanco + aristas)', 'color-edges':'Colo
 
 const DIMV = {
   open:false, doc:null, activeId:null, tool:'nav',
-  snaps:{ end:true, mid:true, edge:true, face:true },
+  snaps:{ end:true, mid:true, edge:true, face:true, cable:true },
   pending:null, hover:null, hoverReq:false, selId:null, down:null, cursor:null,
   undo:[], cam:new THREE.OrthographicCamera(-1,1,1,-1,0.01,1000), ray:new THREE.Raycaster(),
   stage:null, cv:null, ctx2d:null, svg:null, W:0, H:0, dpr:1,
@@ -9042,7 +9073,7 @@ function dvNormalize(d) {
   d.settings.title = Object.assign({}, def.title, (d.settings && d.settings.title) || {});
   d.views = Array.isArray(d.views) ? d.views : [];
   d.cables = Array.isArray(d.cables) ? d.cables.filter(c => c && Array.isArray(c.pts) && c.pts.length >= 2) : [];
-  d.cables.forEach((c, i) => { c.id = c.id || dvId(); c.name = c.name || ('Cable ' + (i + 1)); c.color = c.color || DV_CABLE_COLORS[i % DV_CABLE_COLORS.length]; c.dia = +c.dia > 0 ? +c.dia : 40; });
+  d.cables.forEach((c, i) => { c.id = c.id || dvId(); c.name = c.name || ('Cable ' + (i + 1)); c.color = c.color || DV_CABLE_COLORS[i % DV_CABLE_COLORS.length]; c.dia = +c.dia > 0 ? +c.dia : 40; c.kind = ['free', 'line', 'spline'].includes(c.kind) ? c.kind : 'free'; });
   d.views.forEach(v => {
     v.id = v.id || dvId(); v.name = v.name || 'Vista';
     v.kind = v.kind || 'camera';
@@ -9307,7 +9338,7 @@ function dvSegs(mesh, c) {
   }
   return (c.segs = o);
 }
-function dvSnap(px, py) {
+function dvSnap(px, py, excl) {   // excl: id de cable a ignorar (el que se edita)
   const v = dvActive(), sc = dvScreen(v), B = sc.B, dir = B.dir, r = B.r, u = B.u;
   const [cx, cy] = sc.from(px, py), tol = DV_SNAP_PX * sc.wpp;
   const SP = dvSecPlane(v), sn = SP ? SP.n : null, sc0 = SP ? SP.c : 0;
@@ -9365,7 +9396,10 @@ function dvSnap(px, py) {
       if (S.edge && better(bG, dd, dT)) bG = { d:dd, p:[x1 + (x2-x1)*t, y1 + (y2-y1)*t, z1 + (z2-z1)*t], seg, depth:dT };
     }
   }
-  if (S.end && v.showCables !== false && DIMV.doc.cables) DIMV.doc.cables.forEach(cb => {
+  let bC = null;
+  if (S.cable && v.showCables !== false && DIMV.doc.cables) bC = cableSnapNear(q => sc.to(...dvTo2(B, q)), px, py, DV_SNAP_PX + 4, excl);
+  else if (S.end && v.showCables !== false && DIMV.doc.cables) DIMV.doc.cables.forEach(cb => {
+    if (cb.id === excl) return;
     [0, cb.pts.length - 1].forEach(i => {
       const q = dvV3(cb.pts[i]), q2 = dvTo2(B, q), dd = Math.hypot(q2[0] - cx, q2[1] - cy);
       if (dd <= tol && better(bE, dd, q.dot(dir))) bE = { d:dd, p:cb.pts[i].slice(), seg:cb.pts[i].concat(cb.pts[i ? i - 1 : 1]), depth:q.dot(dir) };
@@ -9375,6 +9409,10 @@ function dvSnap(px, py) {
   if (bE && (!bM || bE.d <= bM.d)) { best = bE; kind = 'end'; }
   else if (bM) { best = bM; kind = 'mid'; }
   else if (bG) { best = bG; kind = 'edge'; }
+  if (bC) {   // conexión con otro cable: tiene preferencia si está tan cerca como el ajuste del modelo
+    const md = best ? best.d / sc.wpp : Infinity;
+    if (bC.d <= md + (bC.sub === 'on' ? 1.5 : 5)) return { kind:'cable', sub:bC.sub, cable:bC.cable, atEnd:bC.atEnd, idx:bC.idx, p:bC.p.clone(), seg:bC.seg };
+  }
   if (best) return { kind, p:dvV3(best.p), seg:[dvV3(best.seg.slice(0,3)), dvV3(best.seg.slice(3))] };
   const fh = hit || DIMV._ghostHit;
   if (fh && S.face) return { kind:'face', p:fh.point.clone(), seg:null };
@@ -9388,6 +9426,7 @@ function dvStepNeedsSnap() {
   return s < 1;
 }
 function dvUpdateHover() {
+  if (DIMV.ced && DIMV.ced.drag) return;   // el arrastre de edición gestiona su propio ajuste
   if (!DIMV.cursor || !dvActive() || !dvStepNeedsSnap() || (DIMV.down && DIMV.down.moved)) { if (DIMV.hover) { DIMV.hover = null; DIMV.ovDirty = true; } dvUpdateCoords(); return; }
   DIMV.hover = dvSnap(DIMV.cursor[0], DIMV.cursor[1]);
   DIMV.ovDirty = true; dvUpdateCoords();
@@ -9502,7 +9541,11 @@ window.dvUndo = function () {
   const s = DIMV.undo.pop(); if (!s) { dvFlash('Nada que deshacer'); return; }
   const v = DIMV.doc.views.find(x => x.id === s.id); if (!v) return;
   v.items = JSON.parse(s.items); if (s.hidden) v.hidden = JSON.parse(s.hidden);
-  if (s.cables) { DIMV.doc.cables = JSON.parse(s.cables); DIMV.selCable = null; dvSyncCables3D(); dvRefreshCables(); }
+  if (s.cables) {
+    DIMV.doc.cables = JSON.parse(s.cables);
+    const cc = dvCedCable(); if (cc) { DIMV.ced.nodes = cableNodes(cc); DIMV.ced.sel = -1; DIMV.selCable = cc.id; } else { DIMV.ced = null; DIMV.selCable = null; }
+    dvSyncCables3D(); dvRefreshCables();
+  }
   DIMV.activeId = v.id; DIMV.selId = null; DIMV.pending = null;
   dvCollect(); DIMV.dirty = true; DIMV.hoverReq = true; dvRefreshHidden(); dvChanged(true);
 };
@@ -9521,6 +9564,7 @@ function dvEditText(it) {
 }
 function dvToolClick(x, y) {
   const v = dvActive(), sc = dvScreen(v), t = DIMV.tool, P = DIMV.pending, step = P ? P.step : 0;
+  if (t === 'cable') { dvPolyClick(x, y); return; }
   if (t === 'secpick') {
     const sp = dvSnap(x, y); v.section.depth = dvSecBase(v).dot(sp.p);
     dvSetTool('nav'); dvRefreshProps(); DIMV.dirty = true; DIMV.hoverReq = true; dvChanged(false);
@@ -9590,7 +9634,13 @@ function dvItemSVG(it, sc, S, cls) {
   return s + hit + '</g>';
 }
 function dvSnapSVG(h, sc) {
-  const [x, y] = sc.to(...dvTo2(sc.B, h.p)).map(dvF1), lab = { end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie', free:'' }[h.kind];
+  const [x, y] = sc.to(...dvTo2(sc.B, h.p)).map(dvF1);
+  if (h.kind === 'cable') {
+    const ps = dvCablePath(h.cable).map(q => sc.to(...dvTo2(sc.B, q)).map(dvF1).join(',')).join(' ');
+    return `<polyline class="dv-csnap-halo" points="${ps}"/><circle class="dv-snap cab" cx="${x}" cy="${y}" r="7"/><circle class="dv-snap-dot" cx="${x}" cy="${y}" r="2.6"/>`
+         + `<text class="dv-snap-t cab" x="${x + 11}" y="${y - 10}">${dvEsc(dvCableSnapLabel(h))}</text>`;
+  }
+  const lab = { end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie', free:'' }[h.kind];
   let s = '';
   if (h.seg) { const a = sc.to(...dvTo2(sc.B, h.seg[0])).map(dvF1), b = sc.to(...dvTo2(sc.B, h.seg[1])).map(dvF1);
     s += `<line class="dv-seg" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; }
@@ -9636,9 +9686,11 @@ function dvDrawOverlay() {
     }
     const pv = dvPreviewItem(sc); if (pv) h += dvItemSVG(pv, sc, S, 'pv');
   }
+  h += dvPolySVG(sc);
+  h += dvCedSVG(sc);
   if (DIMV.stroke && DIMV.stroke.pts.length > 1)
     h += `<polyline class="dv-stroke" stroke="${DIMV.stroke.color}" points="${DIMV.stroke.pts.map(q => dvF1(q[0]) + ',' + dvF1(q[1])).join(' ')}"/>`;
-  if (DIMV.hover && dvStepNeedsSnap()) h += dvSnapSVG(DIMV.hover, sc);
+  if (DIMV.hover && (dvStepNeedsSnap() || (DIMV.ced && DIMV.ced.drag))) h += dvSnapSVG(DIMV.hover, sc);
   if (DIMV.assist && DIMV.cursor) {   // dedo + punto de precisión
     const a = DIMV.assist, c = DIMV.cursor.map(dvF1);
     h += `<circle class="dv-finger" cx="${dvF1(a.fx)}" cy="${dvF1(a.fy)}" r="24"/>
@@ -9665,12 +9717,14 @@ function dvUpdateStatus() {
   const el = document.getElementById('dv-st-hint'); if (!el) return;
   if (DIMV.flashT) { el.innerHTML = '<span class="dv-warn">⚠ ' + dvEsc(DIMV.flashMsg) + '</span>'; return; }
   let s;
-  if (DIMV.readonly) s = 'Arrastrar: desplazar · Rueda o pellizco: zoom · F: encuadrar · Esc: cerrar';
+  const cedC = DIMV.ced && dvCedCable();
+  if (cedC) s = `<b>Editando «${dvEsc(cedC.name)}»</b>: arrastra los puntos (paralelos a esta vista; se ajustan a bornes y aristas, Alt: sin ajuste) · doble clic sobre el cable: agregar punto · Supr: borrar punto · Ctrl+Z: deshacer · Esc o clic fuera: terminar`;
+  else if (DIMV.readonly) s = 'Arrastrar: desplazar · Rueda o pellizco: zoom · F: encuadrar · Esc: cerrar';
   else if (!dvActive()) s = 'Crea una vista con «＋ Nueva vista…» para empezar.';
   else if (DIMV.tool === 'nav' && DIMV.selId) {
     const it = dvFindItem(DIMV.selId), v = dvActive();
     s = it ? `Seleccionado: <b>${{ linear:'Lineal ' + (it.axis === 'v' ? 'vertical' : 'horizontal'), aligned:it.edges ? 'Entre aristas' : 'Alineada', level:'Nivel', note:'Nota' }[it.type]}</b> ${dvEsc(dvLabel(it, dvBasis(v)))} · Arrastrar: mover · Doble clic: editar texto · Supr: borrar` : DV_HINTS.nav[0];
-  } else { const arr = DV_HINTS[DIMV.tool]; s = arr[Math.min(arr.length - 1, DIMV.pending ? DIMV.pending.step : 0)] + (DIMV.tool !== 'nav' ? ' · Esc: cancelar · clic der.: cancelar' : ''); }
+  } else { const arr = DIMV.tool === 'cable' ? [dvCableHint()] : DV_HINTS[DIMV.tool]; s = arr[Math.min(arr.length - 1, DIMV.pending ? DIMV.pending.step : 0)] + (DIMV.tool !== 'nav' ? ' · Esc: cancelar · clic der.: cancelar' : ''); }
   if (!DIMV.readonly && DIMV.tool !== 'nav' && dvTouchDevice()) s += DIMV.penMode
     ? ' · <b>✏ Lápiz:</b> dibuja y ubica con el lápiz; el dedo desplaza'
     : DIMV.touchAssist ? ' · <b>☝ Mantén el dedo:</b> el punto naranja aparece sobre el dedo; suelta para fijarlo (fuera del plano = cancelar)' : '';
@@ -9685,7 +9739,12 @@ function dvUpdateCoords() {
   el.textContent = `X ${h.p.x.toFixed(3)}  Y ${h.p.y.toFixed(3)}  Z ${h.p.z.toFixed(3)}  ·  N ${lv >= 0 ? '+' : ''}${lv.toFixed(3)}`;
 }
 window.dvSetTool = function (t) {
+  if (DIMV.poly && t !== 'cable') dvPolyFinish();
+  if (DIMV.ced && t !== 'nav' && t !== 'cable') dvCedFinish();
   DIMV.tool = t; DIMV.pending = null; if (t !== 'nav') DIMV.selId = null;
+  const cm = document.getElementById('dv-cable-modes'); if (cm) cm.style.display = t === 'cable' ? 'inline-flex' : 'none';
+  if (DIMV.cableMode === undefined) { let m = null; try { m = localStorage.getItem('sim_dv_cablemode'); } catch (e) {} DIMV.cableMode = ['free', 'line', 'spline'].includes(m) ? m : 'free'; }
+  document.querySelectorAll('#dv-cable-modes [data-cm]').forEach(b => b.classList.toggle('active', b.dataset.cm === DIMV.cableMode));
   document.querySelectorAll('#dv-tools [data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
   DIMV.stage.classList.toggle('drawing', t !== 'nav');
   DIMV.hoverReq = true; DIMV.ovDirty = true; dvUpdateStatus();
@@ -9922,6 +9981,7 @@ window.dvNewView = function (kind) {
 };
 window.dvSelectView = function (id) {
   if (id === DIMV.activeId) return;
+  if (DIMV.ced) dvCedFinish();
   DIMV.activeId = id; DIMV.selId = null; DIMV.pending = null; DIMV.hover = null;
   dvCollect(); DIMV.dirty = true; dvRefreshUI();
 };
@@ -10091,7 +10151,7 @@ function dvPdfPage(doc, v, idx, total, aspect) {
     const hx = parseInt(String(cb.color).replace('#', ''), 16) || 0xe65100;
     doc.setDrawColor((hx >> 16) & 255, (hx >> 8) & 255, hx & 255); doc.setLineWidth(0.45);
     let prev = null;
-    cb.pts.forEach(q => { const p2 = to(...dvTo2(B, dvV3(q))); if (prev) doc.line(prev[0], prev[1], p2[0], p2[1]); prev = p2; });
+    dvCablePath(cb).forEach(q => { const p2 = to(...dvTo2(B, q)); if (prev) doc.line(prev[0], prev[1], p2[0], p2[1]); prev = p2; });
   });
   const sgp = dvSectionGeom(v, B, Sz);
   if (sgp) {
@@ -10388,7 +10448,7 @@ function dvLoupeDraw() {
   const toL = (px, py) => [S / 2 + (px - cx) * Z, S / 2 + (py - cy) * Z], sc = dvScreen(v);
   if (v.showCables !== false) (DIMV.doc.cables || []).forEach(cb => {
     g.strokeStyle = cb.color; g.lineWidth = 3; g.beginPath();
-    cb.pts.forEach((q, i) => { const p = toL(...sc.to(...dvTo2(sc.B, dvV3(q)))); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.stroke();
+    dvCablePath(cb).forEach((q, i) => { const p = toL(...sc.to(...dvTo2(sc.B, q))); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.stroke();
   });
   if (DIMV.stroke && DIMV.stroke.pts.length > 1) {
     g.strokeStyle = DIMV.stroke.color; g.lineWidth = 3; g.beginPath();
@@ -10402,11 +10462,169 @@ function dvLoupeDraw() {
     else if (h.kind === 'mid') { g.beginPath(); g.moveTo(p[0], p[1] - 8); g.lineTo(p[0] + 8, p[1] + 6); g.lineTo(p[0] - 8, p[1] + 6); g.closePath(); g.stroke(); }
     else { g.beginPath(); g.arc(p[0], p[1], 6, 0, Math.PI * 2); g.stroke(); }
     g.font = '600 10px IBM Plex Mono, monospace'; g.fillStyle = '#00a152';
-    g.fillText({ end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie' }[h.kind] || '', 8, S - 10);
+    if (h.kind === 'cable') g.strokeStyle = g.fillStyle = '#00838f';
+    g.fillText(h.kind === 'cable' ? dvCableSnapLabel(h) : ({ end:'Extremo', mid:'Medio', edge:'Arista', face:'Superficie' }[h.kind] || ''), 8, S - 10);
   }
   g.strokeStyle = '#e65100'; g.lineWidth = 1.4; g.beginPath();
   [[-18, -5], [5, 18]].forEach(([a0, a1]) => { g.moveTo(S / 2 + a0, S / 2); g.lineTo(S / 2 + a1, S / 2); g.moveTo(S / 2, S / 2 + a0); g.lineTo(S / 2, S / 2 + a1); });
   g.stroke();
+}
+
+// ═══ EDICIÓN DE CABLES EN EL PLANO (doble clic) ═══
+// Los puntos se mueven paralelos al plano de la vista (conservan su profundidad) y se ajustan
+// a bornes/aristas del modelo (Alt: sin ajuste). Deshacer con Ctrl+Z (pila general de planos).
+function dvCedCable() { return DIMV.ced ? (DIMV.doc.cables || []).find(c => c.id === DIMV.ced.id) || null : null; }
+function dvCableAtScreen(x, y, tol) {   // cable más cercano al punto de pantalla (tolerancia en px)
+  const v = dvActive(); if (!v || v.showCables === false) return null;
+  const sc = dvScreen(v); let best = null, bd = tol;
+  (DIMV.doc.cables || []).forEach(cb => {
+    let prev = null, ps = null;
+    dvCablePath(cb).forEach(p => {
+      const sp = sc.to(...dvTo2(sc.B, p));
+      if (ps) {
+        const ex = sp[0] - ps[0], ey = sp[1] - ps[1], L2 = ex * ex + ey * ey;
+        const t = L2 > 1e-9 ? Math.max(0, Math.min(1, ((x - ps[0]) * ex + (y - ps[1]) * ey) / L2)) : 0;
+        const d = Math.hypot(ps[0] + ex * t - x, ps[1] + ey * t - y);
+        if (d < bd) { bd = d; best = { cable:cb, point:prev.clone().lerp(p, t) }; }
+      }
+      prev = p; ps = sp;
+    });
+  });
+  return best;
+}
+function dvCedStart(cb) {
+  if (DIMV.readonly) return;
+  DIMV.ced = { id:cb.id, nodes:cableNodes(cb), sel:-1, hover:-1, drag:null };
+  DIMV.selCable = cb.id; DIMV.selId = null;
+  DIMV.ovDirty = true; dvRefreshCables(); dvUpdateStatus();
+}
+window.dvCedFinish = function () {
+  if (!DIMV.ced) return;
+  DIMV.ced = null; DIMV.stage.style.cursor = '';
+  dvSyncCables3D(); dvRefreshCables(); DIMV.ovDirty = true; dvUpdateStatus();
+};
+function dvCedHandleAt(x, y, tol) {
+  const cb = dvCedCable(), v = dvActive(); if (!cb || !v) return -1;
+  const sc = dvScreen(v); let best = -1, bd = tol;
+  DIMV.ced.nodes.forEach((ni, i) => { const p = sc.to(...dvTo2(sc.B, dvV3(cb.pts[ni]))), d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function dvCedBeginDrag(i, x, y) {
+  const cb = dvCedCable(); if (!cb) return;
+  dvPushUndo();
+  const p = dvV3(cb.pts[DIMV.ced.nodes[i]]), sc = dvScreen(dvActive());
+  DIMV.ced.sel = i;
+  DIMV.ced.drag = { i, att:cableAttached(cb), start:p.clone(), orig:cb.pts.map(q => q.slice()), depth:p.clone().sub(sc.B.c).dot(sc.B.dir), gx:x, gy:y, sp:sc.to(...dvTo2(sc.B, p)) };
+  DIMV.stage.style.cursor = 'grabbing';
+}
+function dvCedDragTo(x, y, noSnap) {
+  const cb = dvCedCable(), d = DIMV.ced && DIMV.ced.drag; if (!cb || !d) return;
+  const v = dvActive(), sc = dvScreen(v);
+  // el punto conserva el desfase con que se agarró (no salta al centro del cursor)
+  const tx = d.sp[0] + (x - d.gx), ty = d.sp[1] + (y - d.gy);
+  let P = dvPlanePoint(sc, tx, ty, d.depth);
+  DIMV.hover = null;
+  d.conn = null;
+  if (!noSnap) {
+    const sn = dvSnap(tx, ty, cb.id);
+    if (dvSnapOk(sn)) { P = sn.p.clone(); DIMV.hover = sn; if (sn.kind === 'cable' && (d.i === 0 || d.i === DIMV.ced.nodes.length - 1)) d.conn = sn; }
+  }
+  cableApplyDrag(cb, d.orig, DIMV.ced.nodes, d.i, P, d.start);
+  cableMoveAttached(cb, d.att);
+  DIMV.ovDirty = true;
+}
+function dvCedEndDrag() {
+  if (!DIMV.ced || !DIMV.ced.drag) return;
+  const d = DIMV.ced.drag, cb = dvCedCable();
+  if (d.conn && cb) {   // extremo soltado sobre otro cable: conexión automática
+    const msg = cableConnect(cb, d.i !== 0, d.conn);
+    DIMV.ced.nodes = cableNodes(cb); DIMV.ced.sel = d.i === 0 ? 0 : DIMV.ced.nodes.length - 1;
+    if (msg) dvFlash(msg);
+  }
+  DIMV.ced.drag = null; DIMV.hover = null; DIMV.stage.style.cursor = '';
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.ovDirty = true;
+}
+function dvCedDeleteNode() {
+  const cb = dvCedCable(), c = DIMV.ced; if (!cb) return false;
+  if ((cb.kind || 'free') === 'free' || c.sel <= 0 || c.sel >= c.nodes.length - 1 || cb.pts.length <= 2) { dvFlash('Selecciona un punto intermedio de una recta o spline'); return true; }
+  dvPushUndo(); cb.pts.splice(c.nodes[c.sel], 1); c.nodes = cableNodes(cb); c.sel = -1;
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.ovDirty = true; return true;
+}
+function dvCedSVG(sc) {
+  const cb = dvCedCable(); if (!cb) return '';
+  const last = DIMV.ced.nodes.length - 1;
+  return DIMV.ced.nodes.map((ni, i) => {
+    const p = sc.to(...dvTo2(sc.B, dvV3(cb.pts[ni]))).map(dvF1), on = i === DIMV.ced.sel || i === DIMV.ced.hover;
+    return `<circle class="dv-ced-h${i === 0 || i === last ? ' end' : ''}${on ? ' on' : ''}" cx="${p[0]}" cy="${p[1]}" r="${on ? 7 : 5.5}"/>`;
+  }).join('');
+}
+
+// ═══ CABLES: RECTA / SPLINE POR CLICS ═══
+function dvPlanePoint(sc, x, y, depth) { const q = sc.from(x, y); return dvFrom2(sc.B, q[0], q[1]).addScaledVector(sc.B.dir, depth); }
+function dvSnapOk(sn) { return !!sn && (sn.kind === 'end' || sn.kind === 'mid' || sn.kind === 'edge' || sn.kind === 'cable'); }
+function dvPolyClickPoint(sc, x, y, depth) {   // ajuste a borne/arista/cable; si no, sobre el plano del punto inicial
+  const sn = dvSnap(x, y);
+  return { p:dvSnapOk(sn) ? sn.p.clone() : dvPlanePoint(sc, x, y, depth), tap:sn.kind === 'cable' ? sn : null };
+}
+function dvPolyClick(x, y) {
+  const v = dvActive(); if (!v) return;
+  const sc = dvScreen(v), pl = DIMV.poly;
+  if (!pl) {
+    const ce = dvCableEndAt(x, y, sc), sn = ce ? null : dvSnap(x, y);
+    const S0 = ce ? dvV3(ce.atEnd ? ce.cable.pts[ce.cable.pts.length - 1] : ce.cable.pts[0]) : sn.p.clone();
+    DIMV.poly = { kind:DIMV.cableMode, depth:S0.clone().sub(sc.B.c).dot(sc.B.dir), pts:[S0], cont:ce, tapA:sn && sn.kind === 'cable' ? sn : null,
+                  color:ce ? ce.cable.color : DV_CABLE_COLORS[(DIMV.doc.cables || []).length % DV_CABLE_COLORS.length] };
+  } else {
+    const last = sc.to(...dvTo2(sc.B, pl.pts[pl.pts.length - 1]));
+    if (Math.hypot(last[0] - x, last[1] - y) < 8) { if (pl.pts.length >= 2) dvPolyFinish(); return; }   // clic sobre el último punto = terminar
+    let join = dvCableEndAt(x, y, sc, true);
+    if (join && pl.cont && join.cable === pl.cont.cable && join.atEnd === pl.cont.atEnd) join = null;
+    const cp = join ? null : dvPolyClickPoint(sc, x, y, pl.depth);
+    pl.pts.push(join ? dvV3(join.atEnd ? join.cable.pts[join.cable.pts.length - 1] : join.cable.pts[0]) : cp.p);
+    pl.tapB = cp ? cp.tap : null;
+    if (join) { pl.join = join; dvPolyFinish(); return; }
+  }
+  DIMV.ovDirty = true; dvUpdateStatus();
+}
+window.dvPolyFinish = function () {
+  const pl = DIMV.poly; DIMV.poly = null; DIMV.ovDirty = true; dvUpdateStatus();
+  if (!pl || pl.pts.length < 2) return;
+  dvPushUndo();
+  const arr = pl.pts.map(dvArr);
+  let cable;
+  if (pl.cont) { cable = pl.cont.cable; dvCableAppend(cable, arr, pl.kind, pl.cont.atEnd); }
+  else { cable = { id:dvId(), name:'Cable ' + ((DIMV.doc.cables || []).length + 1), color:pl.color, dia:40, kind:pl.kind, pts:arr }; DIMV.doc.cables.push(cable); }
+  const tapMsg = dvCableTaps(cable, pl.tapA, pl.join ? null : pl.tapB);
+  if (pl.join && pl.join.cable !== cable) { dvCableJoin(cable, pl.join, !pl.cont || pl.cont.atEnd, !pl.cont); dvFlash(`Cables unidos: «${cable.name}»`); }
+  else if (tapMsg) dvFlash(tapMsg);
+  else if (pl.cont) dvFlash(`«${cable.name}» continuado`);
+  DIMV.selCable = cable.id; DIMV.selId = null;
+  dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.hoverReq = true;
+};
+function dvPolySVG(sc) {
+  const pl = DIMV.poly; if (!pl) return '';
+  const pts = pl.pts.slice();
+  if (DIMV.cursor && !DIMV.down) {
+    const h = DIMV.hover;
+    pts.push(dvSnapOk(h) ? h.p.clone() : dvPlanePoint(sc, DIMV.cursor[0], DIMV.cursor[1], pl.depth));
+  }
+  const path = dvCablePath({ kind:pl.kind, pts:pts.map(dvArr) });
+  let h = `<polyline class="dv-stroke" stroke="${pl.color}" points="${path.map(q => sc.to(...dvTo2(sc.B, q)).map(dvF1).join(',')).join(' ')}"/>`;
+  pl.pts.forEach(q => { const p = sc.to(...dvTo2(sc.B, q)).map(dvF1); h += `<circle class="dv-poly-v" stroke="${pl.color}" cx="${p[0]}" cy="${p[1]}" r="4"/>`; });
+  return h;
+}
+window.dvSetCableMode = function (m) {
+  if (DIMV.poly) dvPolyFinish();
+  DIMV.cableMode = m; try { localStorage.setItem('sim_dv_cablemode', m); } catch (e) {}
+  document.querySelectorAll('#dv-cable-modes [data-cm]').forEach(b => b.classList.toggle('active', b.dataset.cm === m));
+  dvUpdateStatus();
+};
+function dvCableHint() {
+  const m = DIMV.cableMode, pl = DIMV.poly;
+  if (m === 'free') return DV_HINTS.cable[0];
+  const nm = m === 'line' ? 'Recta' : 'Spline';
+  return pl ? `${nm}: clic para agregar puntos (${pl.pts.length}) · ajusta a bornes y aristas · doble clic, Enter, clic der. o clic en el último punto: terminar · terminar sobre otro cable los une · Esc: cancelar`
+            : `${nm}: clic en el punto inicial (un borne del equipo o el extremo de un cable para continuarlo)`;
 }
 
 // ═══ CABLES A MANO ALZADA ═══
@@ -10426,10 +10644,10 @@ function dvCableEndAt(x, y, sc, isEnd) {
 }
 function dvStrokeStart(x, y) {
   const v = dvActive(); if (!v) return;
-  const sc = dvScreen(v), ce = dvCableEndAt(x, y, sc);
-  const S0 = ce ? dvV3(ce.atEnd ? ce.cable.pts[ce.cable.pts.length - 1] : ce.cable.pts[0]) : dvSnap(x, y).p.clone();
+  const sc = dvScreen(v), ce = dvCableEndAt(x, y, sc), sn = ce ? null : dvSnap(x, y);
+  const S0 = ce ? dvV3(ce.atEnd ? ce.cable.pts[ce.cable.pts.length - 1] : ce.cable.pts[0]) : sn.p.clone();
   const sp = sc.to(...dvTo2(sc.B, S0));
-  DIMV.stroke = { S:S0, depth:S0.clone().sub(sc.B.c).dot(sc.B.dir), pts:[[sp[0], sp[1]]], cont:ce,
+  DIMV.stroke = { S:S0, depth:S0.clone().sub(sc.B.c).dot(sc.B.dir), pts:[[sp[0], sp[1]]], cont:ce, tapA:sn && sn.kind === 'cable' ? sn : null,
                   color:ce ? ce.cable.color : DV_CABLE_COLORS[(DIMV.doc.cables || []).length % DV_CABLE_COLORS.length] };
   if (Math.hypot(sp[0] - x, sp[1] - y) > 1.5) DIMV.stroke.pts.push([x, y]);
   DIMV.ovDirty = true;
@@ -10466,37 +10684,72 @@ function dvStrokeEnd() {
   // final: extremo de otro cable (unir) o punto del modelo (borne)
   let join = dvCableEndAt(last[0], last[1], sc, true);
   if (join && st.cont && join.cable === st.cont.cable && join.atEnd === st.cont.atEnd) join = null;
-  let E = null;
+  let E = null, tapB = null;
   if (join) E = dvV3(join.atEnd ? join.cable.pts[join.cable.pts.length - 1] : join.cable.pts[0]);
-  else { const sn = dvSnap(last[0], last[1]); if (sn.kind === 'end' || sn.kind === 'mid' || sn.kind === 'edge') E = sn.p.clone(); }
+  else { const sn = dvSnap(last[0], last[1]); if (dvSnapOk(sn)) E = sn.p.clone(); if (sn.kind === 'cable') tapB = sn; }
   const s2 = dvChaikin(dvRDP(st.pts, 1.2), 2);
   const P3 = s2.map(([px, py]) => { const q = sc.from(px, py); return dvFrom2(sc.B, q[0], q[1]).addScaledVector(sc.B.dir, st.depth); });
   P3[0] = st.S.clone(); if (E) P3[P3.length - 1] = E;
   dvPushUndo();
   const arr = P3.map(dvArr);
   let cable;
-  if (st.cont) {
-    cable = st.cont.cable; const add = arr.slice(1);
-    if (st.cont.atEnd) cable.pts.push(...add); else cable.pts.unshift(...add.reverse());
-  } else {
-    cable = { id:dvId(), name:'Cable ' + ((DIMV.doc.cables || []).length + 1), color:st.color, dia:40, pts:arr };
+  if (st.cont) { cable = st.cont.cable; dvCableAppend(cable, arr, 'free', st.cont.atEnd); }
+  else {
+    cable = { id:dvId(), name:'Cable ' + ((DIMV.doc.cables || []).length + 1), color:st.color, dia:40, kind:'free', pts:arr };
     DIMV.doc.cables.push(cable);
   }
+  const tapMsg = dvCableTaps(cable, st.tapA, join ? null : tapB);
   if (join && join.cable !== cable) {   // unir con el otro cable
-    const o = join.cable, tail = join.atEnd ? o.pts.slice(0, -1).reverse() : o.pts.slice(1);
-    if (!st.cont || st.cont.atEnd) cable.pts.push(...tail); else cable.pts.unshift(...tail.reverse());
-    DIMV.doc.cables = DIMV.doc.cables.filter(c => c !== o);
-    if (!st.cont) { cable.id = o.id; cable.name = o.name; cable.color = o.color; cable.dia = o.dia; }   // conserva la identidad del cable existente
+    dvCableJoin(cable, join, !st.cont || st.cont.atEnd, !st.cont);
     dvFlash(`Cables unidos: «${cable.name}»`);
-  } else if (st.cont) dvFlash(`«${cable.name}» continuado`);
+  } else if (tapMsg) dvFlash(tapMsg);
+  else if (st.cont) dvFlash(`«${cable.name}» continuado`);
   DIMV.selCable = cable.id; DIMV.selId = null;
   dvSyncCables3D(); dvRefreshCables(); dvChanged(false); DIMV.hoverReq = true;
 }
-function dvCableLen(cb) { let L = 0; for (let i = 1; i < cb.pts.length; i++) L += dvV3(cb.pts[i]).distanceTo(dvV3(cb.pts[i - 1])); return L; }
+// Tipos: 'free' (mano alzada, puntos densos) · 'line' (polilínea recta) · 'spline' (curva por puntos de control)
+function dvCableCurve(cb) {
+  const P = [];
+  cb.pts.forEach(q => { const p = dvV3(q); if (!P.length || P[P.length - 1].distanceToSquared(p) > 1e-8) P.push(p); });
+  if (P.length < 2) return null;
+  if (cb.kind === 'line') { const cp = new THREE.CurvePath(); for (let i = 0; i < P.length - 1; i++) cp.add(new THREE.LineCurve3(P[i], P[i + 1])); return cp; }
+  return new THREE.CatmullRomCurve3(P, false, 'centripetal');
+}
+function dvCablePath(cb) {   // puntos para dibujar la línea en 2D
+  const P = cb.pts.map(dvV3);
+  if (cb.kind === 'spline' && P.length > 2) { const c = dvCableCurve(cb); return c ? c.getPoints(Math.min(400, Math.max(16, Math.ceil(c.getLength() / 0.1)))) : P; }
+  return P;
+}
+function dvCableDense(cb) {   // conversión a mano alzada (puntos cada ~5 cm)
+  const P = cb.pts.map(dvV3); if (P.length < 2) return P;
+  if (cb.kind === 'spline' && P.length > 2) { const c = new THREE.CatmullRomCurve3(P, false, 'centripetal'); return c.getPoints(Math.min(2000, Math.max(16, Math.ceil(c.getLength() / 0.05)))); }
+  if (cb.kind === 'line') {
+    const out = [P[0].clone()];
+    for (let i = 0; i < P.length - 1; i++) { const n = Math.max(1, Math.ceil(P[i].distanceTo(P[i + 1]) / 0.05)); for (let k = 1; k <= n; k++) out.push(P[i].clone().lerp(P[i + 1], k / n)); }
+    return out;
+  }
+  return P;
+}
+function dvCableToFree(c) { if ((c.kind || 'free') !== 'free') { c.pts = dvCableDense(c).map(dvArr); c.kind = 'free'; } }
+// agrega puntos (arr[0] = extremo existente) a un cable; si los tipos difieren, se convierte a mano alzada
+function dvCableAppend(cable, arr, kind, atEnd) {
+  if ((cable.kind || 'free') !== kind) { dvCableToFree(cable); if (kind !== 'free') arr = dvCableDense({ kind, pts:arr }).map(dvArr); }
+  const add = arr.slice(1);
+  if (atEnd) cable.pts.push(...add); else cable.pts.unshift(...add.reverse());
+}
+function dvCableJoin(cable, join, atCableEnd, adopt) {
+  const o = join.cable;
+  if ((cable.kind || 'free') !== (o.kind || 'free')) { dvCableToFree(cable); dvCableToFree(o); }
+  const tail = join.atEnd ? o.pts.slice(0, -1).reverse() : o.pts.slice(1);
+  if (atCableEnd) cable.pts.push(...tail); else cable.pts.unshift(...tail.reverse());
+  DIMV.doc.cables = DIMV.doc.cables.filter(c => c !== o);
+  if (adopt) { cable.id = o.id; cable.name = o.name; cable.color = o.color; cable.dia = o.dia; }   // conserva la identidad del cable existente
+}
+function dvCableLen(cb) { const P = dvCablePath(cb); let L = 0; for (let i = 1; i < P.length; i++) L += P[i].distanceTo(P[i - 1]); return L; }
 function dvCablesSVG(sc) {
   let h = '';
   (DIMV.doc.cables || []).forEach(cb => {
-    const pts = cb.pts.map(q => sc.to(...dvTo2(sc.B, dvV3(q))).map(dvF1)), sel = cb.id === DIMV.selCable || cb.id === DIMV.hlCable;
+    const pts = dvCablePath(cb).map(q => sc.to(...dvTo2(sc.B, q)).map(dvF1)), sel = cb.id === DIMV.selCable || cb.id === DIMV.hlCable;
     const ps = pts.map(q => q.join(',')).join(' ');
     h += `<g class="dv-cable${sel ? ' sel' : ''}" data-cable="${cb.id}">
       ${sel ? `<polyline class="dv-cable-halo" points="${ps}"/>` : ''}
@@ -10513,19 +10766,397 @@ function dvSyncCables3D() {
   g.children.slice().forEach(c => { g.remove(c); c.geometry.dispose(); });
   if (!DIMV.doc || DIMV.doc.settings.cables3d === false) return;
   (DIMV.doc.cables || []).forEach(cb => {
-    const pts = [];
-    cb.pts.forEach(q => { const p = dvV3(q); if (!pts.length || pts[pts.length - 1].distanceToSquared(p) > 1e-8) pts.push(p); });
-    if (pts.length < 2) return;
-    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
-    const seg = Math.min(1500, Math.max(8, Math.ceil(curve.getLength() / 0.04)));
+    const geo = dvCableGeo(cb); if (!geo) return;
     let mat = dvCableMats.get(cb.color);
     if (!mat) { mat = new THREE.MeshStandardMaterial({ color:cb.color, roughness:0.45, metalness:0.35 }); dvCableMats.set(cb.color, mat); }
-    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, Math.max(0.003, (+cb.dia || 40) / 2000), 8, false), mat);
+    const m = new THREE.Mesh(geo, mat);
     m.castShadow = true; m.userData.cableId = cb.id; m.name = cb.name;
     g.add(m);
   });
 }
+function dvCableGeo(cb) {
+  const curve = dvCableCurve(cb); if (!curve) return null;
+  const segs = cb.kind === 'line' ? Math.max(8 * cb.pts.length, Math.ceil(curve.getLength() / 0.04)) : Math.ceil(curve.getLength() / 0.04);
+  return new THREE.TubeGeometry(curve, Math.min(1500, Math.max(8, segs)), Math.max(0.003, (+cb.dia || 40) / 2000), 8, false);
+}
+function dvRebuildCableMesh(cb) {   // solo el cable editado (durante el arrastre)
+  const g = scene.getObjectByName('__cables__'); if (!g) return;
+  const m = g.children.find(o => o.userData.cableId === cb.id);
+  if (!m) { dvSyncCables3D(); return; }
+  const geo = dvCableGeo(cb); if (!geo) return;
+  m.geometry.dispose(); m.geometry = geo;
+}
+// ═══ EDICIÓN DE CABLES EN 3D ═══
+// Doble clic sobre un cable en el modelo → aparecen sus puntos; se arrastran con ratón o dedo.
+// Mano alzada: puntos guía con deformación suave entre vecinos. Recta/Spline: puntos de control.
+const CE = { active:false, cable:null, nodes:[], sel:-1, hover:-1, drag:null, undo:[], plane:'screen', snapEnds:true, snapCables:true, group:null, raf:0, dirty:false, mark:null };
+const ceGeo = new THREE.SphereGeometry(1, 14, 10);
+const ceMats = { end:new THREE.MeshBasicMaterial({ color:0x66bb6a, depthTest:false, transparent:true, opacity:.95 }),
+                 mid:new THREE.MeshBasicMaterial({ color:0xffa726, depthTest:false, transparent:true, opacity:.95 }),
+                 sel:new THREE.MeshBasicMaterial({ color:0xffeb3b, depthTest:false }) };
+function ceRdpIdx(P, a, b, tol, out) {
+  let iMax = -1, dMax = 0; const A = P[a], AB = P[b].clone().sub(A), L2 = Math.max(1e-12, AB.lengthSq());
+  for (let i = a + 1; i < b; i++) { const t = Math.max(0, Math.min(1, P[i].clone().sub(A).dot(AB) / L2)), d = P[i].distanceTo(A.clone().addScaledVector(AB, t)); if (d > dMax) { dMax = d; iMax = i; } }
+  if (dMax > tol && iMax > 0) { ceRdpIdx(P, a, iMax, tol, out); out.push(iMax); ceRdpIdx(P, iMax, b, tol, out); }
+}
+// ── lógica compartida por la edición 2D (planos) y 3D (modelo) ──
+// ═══ CONEXIÓN ENTRE CABLES ═══
+// Candidato más cercano (en px de pantalla) sobre otros cables: extremo (unir), vértice o punto del
+// trazo (derivación en T). proj: Vector3 → [px, py] o null si queda detrás de la cámara.
+function cableSnapNear(proj, sx, sy, tol, excl) {
+  let best = null;
+  const take = c => { c.score = c.d - (c.sub === 'end' ? tol * 0.5 : c.sub === 'node' ? tol * 0.3 : 0); if (!best || c.score < best.score) best = c; };
+  ((DIMV.doc && DIMV.doc.cables) || []).forEach(cb => {
+    if (excl && cb.id === excl) return;
+    const n = cb.pts.length; if (n < 2) return;
+    const V = cb.pts.map(dvV3);
+    [0, n - 1].forEach(i => { const q = proj(V[i]); if (!q) return; const d = Math.hypot(q[0] - sx, q[1] - sy);
+      if (d <= tol) take({ sub:'end', cable:cb, atEnd:i > 0, idx:i, p:V[i], d, seg:[V[i], V[i ? i - 1 : 1]] }); });
+    if ((cb.kind || 'free') !== 'free') for (let i = 1; i < n - 1; i++) { const q = proj(V[i]); if (!q) continue; const d = Math.hypot(q[0] - sx, q[1] - sy);
+      if (d <= tol) take({ sub:'node', cable:cb, idx:i, p:V[i], d, seg:[V[i - 1], V[i + 1]] }); }
+    const P = dvCablePath(cb); let ps = proj(P[0]);
+    for (let i = 1; i < P.length; i++) {
+      const qs = proj(P[i]);
+      if (ps && qs) {
+        const ex = qs[0] - ps[0], ey = qs[1] - ps[1], L2 = ex * ex + ey * ey;
+        const t = L2 > 1e-9 ? Math.max(0, Math.min(1, ((sx - ps[0]) * ex + (sy - ps[1]) * ey) / L2)) : 0;
+        const d = Math.hypot(ps[0] + ex * t - sx, ps[1] + ey * t - sy);
+        if (d <= tol) take({ sub:'on', cable:cb, p:P[i - 1].clone().lerp(P[i], t), d, seg:[P[i - 1], P[i]] });
+      }
+      ps = qs;
+    }
+  });
+  return best;
+}
+function dvCableSnapLabel(h) {
+  const nm = '«' + h.cable.name + '»';
+  if (!(DIMV.tool === 'cable' || (DIMV.ced && DIMV.ced.drag) || CE.drag)) return 'Cable ' + nm;
+  return h.sub === 'end' ? '⚡ Unir con ' + nm : h.sub === 'node' ? '⚡ Conectar al vértice de ' + nm : '⚡ Derivar de ' + nm;
+}
+// inserta P como vértice del cable anfitrión (la derivación queda fija aunque luego se edite)
+function cableTap(host, P) {
+  const n = host.pts.length;
+  for (let i = 0; i < n; i++) { const q = dvV3(host.pts[i]); if (q.distanceToSquared(P) < 4e-6) return q; }
+  let seg = 0;
+  if ((host.kind || 'free') === 'spline' && n > 2) {   // tramo de la spline según el parámetro de la curva
+    const c = dvCableCurve(host), N = Math.max(64, (n - 1) * 32), Q = c.getPoints(N);
+    let bk = 0, bd = Infinity; Q.forEach((q, i) => { const d = q.distanceToSquared(P); if (d < bd) { bd = d; bk = i; } });
+    seg = Math.max(0, Math.min(n - 2, Math.floor(bk / N * (n - 1) - 1e-9)));
+  } else {
+    let bd = Infinity;
+    for (let i = 0; i < n - 1; i++) {
+      const A = dvV3(host.pts[i]), AB = dvV3(host.pts[i + 1]).sub(A), t = Math.max(0, Math.min(1, P.clone().sub(A).dot(AB) / Math.max(1e-12, AB.lengthSq())));
+      const d = P.distanceTo(A.clone().addScaledVector(AB, t)); if (d < bd) { bd = d; seg = i; }
+    }
+  }
+  host.pts.splice(seg + 1, 0, dvArr(P));
+  return P.clone();
+}
+// extremo (atEnd) de cb soltado sobre el candidato c → une extremos o crea la derivación
+function cableConnect(cb, atEnd, c) {
+  const o = c && c.cable; if (!o || o === cb || !(DIMV.doc.cables || []).includes(o)) return '';
+  const k = atEnd ? cb.pts.length - 1 : 0;
+  if (c.sub === 'end') {
+    cb.pts[k] = o.pts[c.atEnd ? o.pts.length - 1 : 0].slice();
+    dvCableJoin(cb, { cable:o, atEnd:c.atEnd }, atEnd, false);
+    return `Cables unidos: «${cb.name}» continúa por el antiguo «${o.name}»`;
+  }
+  cb.pts[k] = dvArr(cableTap(o, c.p));
+  return `«${cb.name}» conectado a «${o.name}» (derivación)`;
+}
+// cable nuevo que empieza (tapA) o termina (tapB) sobre otro cable
+function dvCableTaps(cable, tapA, tapB) {
+  const names = [];
+  [[tapA, false], [tapB, true]].forEach(([t, atEnd]) => {
+    if (!t || t.cable === cable || !(DIMV.doc.cables || []).includes(t.cable)) return;
+    if (t.sub === 'end') { if (atEnd) { cableConnect(cable, true, t); names.push('unido'); } return; }   // inicio en extremo = continuar (ya resuelto)
+    const k = atEnd ? cable.pts.length - 1 : 0;
+    cable.pts[k] = dvArr(cableTap(t.cable, dvV3(cable.pts[k])));
+    names.push('«' + t.cable.name + '»');
+  });
+  if (!names.length) return '';
+  return names.includes('unido') ? `Cables unidos: «${cable.name}»` : `«${cable.name}» conectado a ${names.join(' y ')} (derivación)`;
+}
+// extremos de otros cables que coinciden con puntos de cb: se mueven junto con él al editarlo
+function cableAttached(cb) {
+  const out = [], P = cb.pts.map(dvV3);
+  ((DIMV.doc && DIMV.doc.cables) || []).forEach(o => {
+    if (o === cb || o.pts.length < 2) return;
+    [0, o.pts.length - 1].forEach(k => { const q = dvV3(o.pts[k]);
+      for (let j = 0; j < P.length; j++) if (P[j].distanceToSquared(q) < 4e-6) { out.push({ o, k, j }); break; } });
+  });
+  return out;
+}
+function cableMoveAttached(cb, att) { (att || []).forEach(a => { if (cb.pts[a.j]) a.o.pts[a.k] = cb.pts[a.j].slice(); }); }
+function cableNodes(cb) {   // índices editables: todos (recta/spline) o puntos guía (mano alzada)
+  const n = cb.pts.length;
+  if ((cb.kind || 'free') !== 'free') return cb.pts.map((_, i) => i);
+  const P = cb.pts.map(dvV3);
+  let tol = Math.max(0.03, dvCableLen(cb) / 60), idx;
+  for (let k = 0; k < 12; k++) { const out = []; ceRdpIdx(P, 0, n - 1, tol, out); idx = [0, ...out, n - 1]; if (idx.length <= 18) break; tol *= 1.5; }
+  if (idx.length < 3 && n > 6) idx = [0, Math.round((n - 1) / 2), n - 1];
+  return idx;
+}
+function cableApplyDrag(cb, orig, nodes, i, P, start) {
+  const D = P.clone().sub(start), k = nodes[i];
+  if ((cb.kind || 'free') !== 'free') { cb.pts = orig.map(q => q.slice()); cb.pts[k] = dvArr(P); return; }
+  // mano alzada: deformación suave con peso coseno entre el punto guía y sus vecinos
+  const kp = i > 0 ? nodes[i - 1] : null, kn = i < nodes.length - 1 ? nodes[i + 1] : null;
+  cb.pts = orig.map(q => q.slice());
+  const move = (j, w) => { cb.pts[j] = [orig[j][0] + D.x * w, orig[j][1] + D.y * w, orig[j][2] + D.z * w]; };
+  if (kp !== null) for (let j = kp + 1; j <= k; j++) move(j, 0.5 - 0.5 * Math.cos(Math.PI * (j - kp) / (k - kp)));
+  else move(k, 1);
+  if (kn !== null) for (let j = k; j < kn; j++) move(j, 0.5 + 0.5 * Math.cos(Math.PI * (j - k) / (kn - k)));
+}
+function cableInsert(cb, nodes, P) {   // → { nodes, sel }
+  if ((cb.kind || 'free') === 'free') {
+    let bi = 0, bd = Infinity; cb.pts.forEach((q, i) => { const d = dvV3(q).distanceToSquared(P); if (d < bd) { bd = d; bi = i; } });
+    const nn = nodes.includes(bi) ? nodes.slice() : nodes.concat([bi]).sort((a, b) => a - b);
+    return { nodes:nn, sel:nn.indexOf(bi) };
+  }
+  let bi = 0, bd = Infinity;
+  for (let i = 0; i < cb.pts.length - 1; i++) {
+    const A = dvV3(cb.pts[i]), B = dvV3(cb.pts[i + 1]), AB = B.clone().sub(A), t = Math.max(0, Math.min(1, P.clone().sub(A).dot(AB) / Math.max(1e-12, AB.lengthSq())));
+    const d = P.distanceTo(A.clone().addScaledVector(AB, t)); if (d < bd) { bd = d; bi = i; }
+  }
+  cb.pts.splice(bi + 1, 0, dvArr(P));
+  return { nodes:cableNodes(cb), sel:bi + 1 };
+}
+function ceComputeNodes() { CE.nodes = cableNodes(CE.cable); }
+function ceBuildHandles() {
+  if (!CE.group) { CE.group = new THREE.Group(); CE.group.name = '__cable_edit__'; CE.group.userData.__helper = true; scene.add(CE.group); }
+  CE.group.clear();
+  CE.nodes.forEach(() => { const m = new THREE.Mesh(ceGeo, ceMats.mid); m.renderOrder = 1001; CE.group.add(m); });
+  ceUpdateHandles();
+}
+function ceUpdateHandles() {
+  if (!CE.group) return;
+  const last = CE.nodes.length - 1;
+  CE.group.children.forEach((m, i) => {
+    const p = dvV3(CE.cable.pts[CE.nodes[i]]); m.position.copy(p);
+    const big = (i === CE.sel || i === CE.hover) ? 1.45 : 1;
+    m.scale.setScalar(Math.max(0.015, camera.position.distanceTo(p) * 0.009 * big));
+    m.material = i === CE.sel ? ceMats.sel : (i === 0 || i === last) ? ceMats.end : ceMats.mid;
+  });
+}
+function ceSyncCam() { if (state.camMode === 'free' && !simCamPose) { camera.position.copy(fcEye()); camera.lookAt(freeCam.pos); camera.updateMatrixWorld(); } }
+function ceHandleAt(cx, cy, tol) {
+  ceSyncCam();
+  const r = canvas.getBoundingClientRect(); let best = -1, bd = tol;
+  CE.nodes.forEach((ni, i) => {
+    const v = dvV3(CE.cable.pts[ni]).project(camera); if (v.z > 1) return;
+    const d = Math.hypot((v.x + 1) / 2 * r.width + r.left - cx, (1 - v.y) / 2 * r.height + r.top - cy);
+    if (d < bd) { bd = d; best = i; }
+  });
+  return best;
+}
+// Cable bajo el cursor con tolerancia en pantalla (los tubos son delgados: 1–2 px de lejos)
+function ceCableHit(cx, cy, tol) {
+  if (!DIMV.doc || !(DIMV.doc.cables || []).length || DIMV.doc.settings.cables3d === false) return null;
+  tol = tol || 12; ceSyncCam();
+  const r = canvas.getBoundingClientRect(); let best = null, bd = tol;
+  DIMV.doc.cables.forEach(cb => {
+    let prev = null, ps = null;
+    dvCablePath(cb).forEach(p => {
+      const v = p.clone().project(camera), sp = v.z < 1 ? [(v.x + 1) / 2 * r.width + r.left, (1 - v.y) / 2 * r.height + r.top] : null;
+      if (prev && sp && ps) {
+        const ex = sp[0] - ps[0], ey = sp[1] - ps[1], L2 = ex * ex + ey * ey;
+        const t = L2 > 1e-9 ? Math.max(0, Math.min(1, ((cx - ps[0]) * ex + (cy - ps[1]) * ey) / L2)) : 0;
+        const d = Math.hypot(ps[0] + ex * t - cx, ps[1] + ey * t - cy);
+        if (d < bd) { bd = d; best = { cable:cb, point:prev.clone().lerp(p, t) }; }
+      }
+      prev = p; ps = sp;
+    });
+  });
+  return best;
+}
+// doble toque (tablet/teléfono): editar o agregar punto; devuelve true si lo atendió
+function ceDoubleTap(cx, cy) {
+  if (typeof PUB !== 'undefined' && PUB.simple) return false;
+  const hit = ceCableHit(cx, cy, 22); if (!hit) return false;
+  if (CE.active && hit.cable === CE.cable) ceInsertAt(hit.point); else ceStart(hit.cable);
+  return true;
+}
+function ceUndoPush() { CE.undo.push(JSON.stringify({ cables:DIMV.doc.cables, id:CE.cable.id, nodes:CE.nodes })); if (CE.undo.length > 60) CE.undo.shift(); }
+window.ceUndo = function () {   // guarda todos los cables: las conexiones también modifican a los vecinos
+  const s = CE.undo.pop(); if (!s || !CE.active) return;
+  const o = JSON.parse(s); DIMV.doc.cables = o.cables;
+  CE.cable = o.cables.find(c => c.id === o.id) || o.cables[0]; CE.nodes = o.nodes; CE.sel = -1;
+  if (!CE.cable) { ceFinish(); return; }
+  dvSyncCables3D(); ceBuildHandles(); cePanel(); dvSaveLocal();
+};
+function ceStart(cb) {
+  if ((typeof PUB !== 'undefined' && PUB.simple) || DIMV.readonly && DIMV.open) return;
+  if (CE.active) ceFinish(true);
+  if (state.camMode !== 'free') setCamMode('free');
+  CE.active = true; CE.cable = cb; CE.sel = -1; CE.hover = -1; CE.undo = []; CE.drag = null;
+  ceComputeNodes(); ceBuildHandles(); cePanel();
+  document.getElementById('ce-panel').classList.add('open');
+  cancelAnimationFrame(CE.raf); ceLoop();
+}
+window.ceFinish = function (silent) {
+  if (!CE.active) return;
+  CE.active = false; CE.drag = null; cancelAnimationFrame(CE.raf);
+  if (CE.group) CE.group.clear();
+  document.getElementById('ce-panel').classList.remove('open');
+  canvas.style.cursor = '';
+  dvSyncCables3D(); dvSaveLocal(); if (DIMV.open) { dvRefreshCables(); DIMV.ovDirty = true; }
+};
+function ceLoop() {
+  if (!CE.active) return;
+  CE.raf = requestAnimationFrame(ceLoop);
+  if (CE.dirty) { CE.dirty = false; dvRebuildCableMesh(CE.cable); if (CE.drag && CE.drag.att) CE.drag.att.forEach(a => dvRebuildCableMesh(a.o)); }
+  ceSnapMark(CE.drag ? CE.drag.show : null);
+  ceUpdateHandles();
+}
+function cePanel() {
+  const cb = CE.cable, k = cb.kind || 'free';
+  document.getElementById('ce-name').textContent = cb.name;
+  document.getElementById('ce-kind').value = k;
+  document.getElementById('ce-plane').value = CE.plane;
+  document.getElementById('ce-snap').checked = CE.snapEnds;
+  document.getElementById('ce-snapc').checked = CE.snapCables;
+  document.getElementById('ce-len').textContent = dvCableLen(cb).toFixed(2) + ' m';
+  document.getElementById('ce-del').disabled = k === 'free' || CE.sel <= 0 || CE.sel >= CE.nodes.length - 1 || cb.pts.length <= 2;
+  document.getElementById('ce-hint').textContent = k === 'free'
+    ? 'Arrastra los puntos guía: la curva se deforma suavemente · doble clic sobre el cable: nuevo punto guía · Shift: solo vertical · Ctrl: solo horizontal · Esc: terminar'
+    : 'Arrastra los puntos de control · doble clic sobre el cable: agregar punto · Supr: borrar el punto seleccionado · Shift: solo vertical · Ctrl: solo horizontal · Esc: terminar';
+}
+function ceConvertKind(cb, kind) {
+  const from = cb.kind || 'free'; if (from === kind) return;
+  if (kind === 'free') cb.pts = dvCableDense(cb).map(dvArr);
+  else if (from === 'free') {
+    const was = CE.active && CE.cable === cb ? CE.nodes : null, keep = CE.cable; CE.cable = cb;
+    if (!was) ceComputeNodes();
+    cb.pts = (was || CE.nodes).map(i => cb.pts[i].slice()); CE.cable = keep;
+  }
+  cb.kind = kind;
+  if (CE.active && CE.cable === cb) { ceComputeNodes(); CE.sel = -1; ceBuildHandles(); cePanel(); }
+  dvSyncCables3D(); dvSaveLocal(); if (DIMV.open) { dvRefreshCables(); DIMV.ovDirty = true; }
+}
+window.ceSetKind = function (k) { if (!CE.active) return; ceUndoPush(); ceConvertKind(CE.cable, k); };
+window.ceSetPlane = function (v) { CE.plane = v; };
+window.ceSetSnap = function (v) { CE.snapEnds = !!v; };
+window.ceSetSnapCables = function (v) { CE.snapCables = !!v; };
+window.ceDeleteNode = function () {
+  const cb = CE.cable; if (!CE.active || (cb.kind || 'free') === 'free') return;
+  if (CE.sel <= 0 || CE.sel >= CE.nodes.length - 1 || cb.pts.length <= 2) return;
+  ceUndoPush(); cb.pts.splice(CE.nodes[CE.sel], 1); CE.sel = -1;
+  ceComputeNodes(); ceBuildHandles(); dvRebuildCableMesh(cb); cePanel(); dvSaveLocal();
+};
+function ceInsertAt(P) {
+  const cb = CE.cable; ceUndoPush();
+  const r = cableInsert(cb, CE.nodes, P); CE.nodes = r.nodes; CE.sel = r.sel;
+  ceBuildHandles(); dvRebuildCableMesh(cb); cePanel(); dvSaveLocal();
+}
+function ceBeginDrag(i, cx, cy) {
+  ceUndoPush(); CE.sel = i;
+  const p = dvV3(CE.cable.pts[CE.nodes[i]]);
+  CE.drag = { i, start:p.clone(), orig:CE.cable.pts.map(q => q.slice()), att:cableAttached(CE.cable), conn:null, show:null };
+  cePanel(); canvas.style.cursor = 'grabbing';
+}
+function ceDragTo(cx, cy, shift, ctrl) {
+  const d = CE.drag; if (!d) return;
+  ceSyncCam();
+  const ray = fcRayAt(cx, cy).ray, Y = new THREE.Vector3(0, 1, 0), cd = new THREE.Vector3(); camera.getWorldDirection(cd);
+  const hz = new THREE.Vector3(cd.x, 0, cd.z); if (hz.lengthSq() < 1e-6) hz.set(0, 0, 1); hz.normalize();
+  const mode = shift ? 'vert' : ctrl ? 'horiz' : CE.plane;
+  const n = mode === 'horiz' ? Y : mode === 'vert' ? hz : cd.clone().negate();
+  let P = new THREE.Vector3();
+  if (!ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(n, d.start), P)) return;
+  if (shift) P.set(d.start.x, P.y, d.start.z);                                   // solo vertical
+  const isEnd = d.i === 0 || d.i === CE.nodes.length - 1;
+  d.conn = d.show = null;
+  if (CE.snapCables && !shift && !ctrl) {   // otro cable cerca: sugerir la conexión
+    const r = canvas.getBoundingClientRect();
+    const proj = q => { const v = q.clone().project(camera); return v.z > 1 ? null : [(v.x + 1) / 2 * r.width + r.left, (1 - v.y) / 2 * r.height + r.top]; };
+    const c = cableSnapNear(proj, cx, cy, CE.touchId !== undefined ? 24 : 15, CE.cable.id);
+    if (c) { P = c.p.clone(); d.show = c; if (isEnd) d.conn = c; }
+  }
+  if (!d.show && isEnd && CE.snapEnds && !shift && !ctrl) { const h = fcHit(cx, cy); if (h) P = h; }   // extremo pegado al equipo
+  cableApplyDrag(CE.cable, d.orig, CE.nodes, d.i, P, d.start);
+  cableMoveAttached(CE.cable, d.att);
+  CE.dirty = true;
+}
+function ceEndDrag() {
+  if (!CE.drag) return;
+  const d = CE.drag; CE.drag = null; canvas.style.cursor = ''; ceSnapMark(null);
+  let msg = '';
+  if (d.conn) {
+    msg = cableConnect(CE.cable, d.i !== 0, d.conn);
+    ceComputeNodes(); CE.sel = d.i === 0 ? 0 : CE.nodes.length - 1; ceBuildHandles();
+  }
+  if (msg || (d.att && d.att.length)) dvSyncCables3D(); else dvRebuildCableMesh(CE.cable);
+  cePanel(); dvSaveLocal();
+  if (msg) { const el = document.getElementById('ce-hint'); el.textContent = '⚡ ' + msg; el.classList.add('ok'); setTimeout(() => { el.classList.remove('ok'); if (CE.active) cePanel(); }, 3500); }
+}
+function ceSnapMark(c) {   // marcador + rótulo de la conexión sugerida
+  const tip = document.getElementById('ce-snaptip');
+  if (!CE.mark) {
+    CE.mark = new THREE.Mesh(new THREE.TorusGeometry(1, 0.22, 8, 28), new THREE.MeshBasicMaterial({ color:0x00bcd4, depthTest:false, transparent:true, opacity:.95 }));
+    CE.mark.renderOrder = 1002; CE.mark.userData.__helper = true; CE.mark.visible = false; scene.add(CE.mark);
+  }
+  if (!c) { CE.mark.visible = false; if (tip) tip.style.display = 'none'; return; }
+  CE.mark.visible = true; CE.mark.position.copy(c.p); CE.mark.quaternion.copy(camera.quaternion);
+  CE.mark.scale.setScalar(Math.max(0.02, camera.position.distanceTo(c.p) * 0.016));
+  if (tip) {
+    const r = canvas.getBoundingClientRect(), v = c.p.clone().project(camera);
+    tip.textContent = dvCableSnapLabel(c) + (CE.drag && CE.drag.conn ? '' : ' (solo ajuste)');
+    tip.style.left = ((v.x + 1) / 2 * r.width + r.left) + 'px'; tip.style.top = ((1 - v.y) / 2 * r.height + r.top) + 'px'; tip.style.display = 'block';
+  }
+}
+// eventos (fase de captura: tienen prioridad sobre la navegación cuando se toca un punto)
+canvas.addEventListener('dblclick', e => {
+  if (typeof PUB !== 'undefined' && PUB.simple) return;
+  const hit = ceCableHit(e.clientX, e.clientY);
+  if (CE.active) {
+    if (hit && hit.cable === CE.cable) ceInsertAt(hit.point);
+    else if (hit) ceStart(hit.cable);
+    else return;
+    e.stopImmediatePropagation(); return;
+  }
+  if (hit) { ceStart(hit.cable); e.stopImmediatePropagation(); }
+}, true);
+canvas.addEventListener('mousedown', e => {
+  if (!CE.active || e.button !== 0) return;
+  const i = ceHandleAt(e.clientX, e.clientY, 14);
+  if (i < 0) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  ceBeginDrag(i, e.clientX, e.clientY);
+}, true);
+window.addEventListener('mousemove', e => {
+  if (!CE.active) return;
+  if (CE.drag) { ceDragTo(e.clientX, e.clientY, e.shiftKey, e.ctrlKey || e.metaKey); return; }
+  if (e.target !== canvas) return;
+  const i = ceHandleAt(e.clientX, e.clientY, 14);
+  if (i !== CE.hover) { CE.hover = i; canvas.style.cursor = i >= 0 ? 'grab' : ''; }
+});
+window.addEventListener('mouseup', () => { if (CE.drag) ceEndDrag(); });
+canvas.addEventListener('touchstart', e => {
+  if (!CE.active || e.touches.length !== 1) return;
+  const t = e.changedTouches[0], i = ceHandleAt(t.clientX, t.clientY, 28);
+  if (i < 0) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  CE.touchId = t.identifier; ceBeginDrag(i, t.clientX, t.clientY);
+}, { capture:true, passive:false });
+window.addEventListener('touchmove', e => {
+  if (!CE.drag || CE.touchId === undefined) return;
+  for (const t of e.changedTouches) if (t.identifier === CE.touchId) { e.preventDefault(); ceDragTo(t.clientX, t.clientY, false, false); }
+}, { passive:false });
+window.addEventListener('touchend', e => {
+  if (CE.touchId === undefined) return;
+  for (const t of e.changedTouches) if (t.identifier === CE.touchId) { CE.touchId = undefined; ceEndDrag(); }
+});
+window.addEventListener('keydown', e => {
+  if (!CE.active || DIMV.open) return;
+  if (/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return;
+  if (e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); ceFinish(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.stopImmediatePropagation(); e.preventDefault(); ceDeleteNode(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.stopImmediatePropagation(); e.preventDefault(); ceUndo(); }
+}, true);
+
 window.dvOnModelReady = function () {
+  if (CE.active) ceFinish(true);
   const mn = dvModelName();
   if (!DIMV.doc || DIMV.doc.model !== mn) {
     DIMV.doc = dvLoadLocal(mn);
@@ -10545,7 +11176,10 @@ function dvRefreshCables() {
       <label class="dv-f"><span>Nombre</span><input class="dv-in" value="${dvEsc(sel.name)}" onchange="dvSetCable('name',this.value)"></label>
       <label class="dv-f"><span>Color</span><input class="dv-in dv-color" type="color" value="${dvEsc(sel.color)}" onchange="dvSetCable('color',this.value)"></label>
       <label class="dv-f"><span>Diámetro (mm)</span><input class="dv-in" type="number" min="2" max="500" step="1" value="${sel.dia}" onchange="dvSetCable('dia',this.value)"></label>
-      <div class="dv-note">${sel.pts.length} puntos · longitud ${dvCableLen(sel).toFixed(2)} m · Supr: eliminar</div></div>`;
+      <label class="dv-f"><span>Tipo</span><select class="dv-in" onchange="dvSetCable('kind',this.value)">
+        ${[['free','Mano alzada'],['line','Recta (polilínea)'],['spline','Spline']].map(([k, l]) => `<option value="${k}"${(sel.kind || 'free') === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <div class="dv-note">${sel.pts.length} puntos · longitud ${dvCableLen(sel).toFixed(2)} m · Supr: eliminar · para ajustar la forma: doble clic sobre el cable (aquí o en la vista 3D)</div>
+      ${DIMV.ced && DIMV.ced.id === sel.id ? '<button class="dv-btn sm" onclick="dvCedFinish()">✓ Terminar edición</button>' : ''}</div>`;
   if (v) h += `<label class="dv-chk"><input type="checkbox"${v.showCables !== false ? ' checked' : ''} onchange="dvSetProp('showCables',this.checked)"> Mostrar cables en esta vista</label>`;
   h += `<label class="dv-chk"><input type="checkbox"${DIMV.doc.settings.cables3d !== false ? ' checked' : ''} onchange="dvSetSetting('cables3d',this.checked)"> Mostrar cables en el modelo 3D</label>`;
   el.innerHTML = h;
@@ -10563,6 +11197,7 @@ window.dvSetCable = function (k, val) {
   if (k === 'name') cb.name = String(val).trim() || cb.name;
   else if (k === 'color') cb.color = val;
   else if (k === 'dia') cb.dia = Math.max(2, Math.min(500, parseFloat(val) || 40));
+  else if (k === 'kind') { dvPushUndo(); ceConvertKind(cb, val); if (DIMV.ced && DIMV.ced.id === cb.id) { DIMV.ced.nodes = cableNodes(cb); DIMV.ced.sel = -1; DIMV.ovDirty = true; } }
   dvSyncCables3D(); dvRefreshCables(); dvChanged(false);
 };
 
@@ -10619,7 +11254,7 @@ window.openDimViews = function (opts) {
 window.closeDimViews = function () {
   if (!DIMV.open) return;
   DIMV.open = false; window.__dimOpen = false; cancelAnimationFrame(DIMV.raf);
-  DIMV.pending = null; DIMV.down = null; DIMV.hover = null; DIMV.hlNode = null; dvCtxClose();
+  DIMV.pending = null; DIMV.down = null; DIMV.hover = null; DIMV.hlNode = null; dvCtxClose(); DIMV.ced = null; DIMV.poly = null;
   document.getElementById('dv-modal').classList.remove('open');
   if (DIMV.edgeGroup && DIMV.edgeGroup.parent) scene.remove(DIMV.edgeGroup);
   renderer.clippingPlanes = [];
@@ -10637,6 +11272,13 @@ window.closeDimViews = function () {
   DIMV.stage = st; DIMV.cv = document.getElementById('dv-canvas'); DIMV.ctx2d = DIMV.cv.getContext('2d'); DIMV.svg = document.getElementById('dv-svg');
   const xy = e => { const r = st.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   st.addEventListener('contextmenu', e => e.preventDefault());
+  // el área del plano cambia de tamaño sin que cambie la ventana (p. ej. la barra de herramientas pasa a 2 filas
+  // al mostrar Mano alzada/Recta/Spline): recalcular para que el puntero y el dibujo sigan alineados
+  if (window.ResizeObserver) new ResizeObserver(() => {
+    if (!DIMV.open) return;
+    const r = st.getBoundingClientRect();
+    if (Math.round(r.width) !== DIMV.W || Math.round(r.height) !== DIMV.H) { dvResize(); DIMV.hoverReq = true; }
+  }).observe(st);
   st.addEventListener('pointerdown', e => {
     if (!dvActive()) return;
     const [x, y] = xy(e), el = e.target.closest ? e.target.closest('[data-id]') : null;
@@ -10651,17 +11293,21 @@ window.closeDimViews = function () {
       }
     }
     if (e.pointerType === 'pen' && !DIMV.penMode) { DIMV.penMode = true; dvUpdateStatus(); }
+    if (DIMV.ced && e.button === 0) {
+      const hi = dvCedHandleAt(x, y, e.pointerType === 'mouse' ? 11 : 24);
+      if (hi >= 0) { DIMV.down = null; DIMV.cedPid = e.pointerId; dvCedBeginDrag(hi, x, y); try { st.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); return; }
+    }
     const toolOn = DIMV.tool !== 'nav' && !DIMV.readonly && e.button === 0;
     if (e.pointerType === 'touch' && toolOn && DIMV.penMode) { DIMV.down.mode = 'pan'; DIMV.down.noClick = true; }   // con lápiz: el dedo solo desplaza
-    else if (e.pointerType === 'touch' && toolOn && DIMV.touchAssist) {
+    else if (e.pointerType === 'touch' && toolOn && DIMV.touchAssist && !DIMV.ced) {
       DIMV.down = null;
       DIMV.assist = { id:e.pointerId, fx:x, fy:y };
       DIMV.cursor = [x, y - DV_ASSIST_OFF];
-      if (DIMV.tool === 'cable') dvStrokeStart(DIMV.cursor[0], DIMV.cursor[1]);
+      if (DIMV.tool === 'cable' && DIMV.cableMode === 'free') dvStrokeStart(DIMV.cursor[0], DIMV.cursor[1]);
       DIMV.hoverReq = true; DIMV.ovDirty = true;
       try { st.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault(); return;
-    } else if (toolOn && DIMV.tool === 'cable') {
+    } else if (toolOn && DIMV.tool === 'cable' && DIMV.cableMode === 'free' && !DIMV.ced) {
       DIMV.down = null; DIMV.strokePid = e.pointerId; dvStrokeStart(x, y);
       try { st.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault(); return;
@@ -10688,6 +11334,11 @@ window.closeDimViews = function () {
         }
         DIMV.pinch = nw; return;
       }
+    }
+    if (DIMV.ced && DIMV.ced.drag && e.pointerId === DIMV.cedPid) { dvCedDragTo(x, y, e.altKey); return; }
+    if (DIMV.ced && !DIMV.down) {
+      const hi = dvCedHandleAt(x, y, e.pointerType === 'mouse' ? 11 : 24);
+      if (hi !== DIMV.ced.hover) { DIMV.ced.hover = hi; st.style.cursor = hi >= 0 ? 'grab' : ''; DIMV.ovDirty = true; }
     }
     if (DIMV.assist && e.pointerId === DIMV.assist.id) {
       DIMV.assist.fx = x; DIMV.assist.fy = y; DIMV.cursor = [x, y - DV_ASSIST_OFF];
@@ -10730,6 +11381,10 @@ window.closeDimViews = function () {
   });
   const up = e => {
     if (DIMV.pts && DIMV.pts.has(e.pointerId)) { DIMV.pts.delete(e.pointerId); if (DIMV.pinch) { if (!DIMV.pts.size) DIMV.pinch = null; DIMV.down = null; dvChanged(false); return; } }
+    if (DIMV.ced && DIMV.ced.drag && e.pointerId === DIMV.cedPid) {
+      DIMV.cedPid = null; try { st.releasePointerCapture(e.pointerId); } catch (_) {}
+      dvCedEndDrag(); return;
+    }
     if (DIMV.assist && e.pointerId === DIMV.assist.id) {
       const a = DIMV.assist; DIMV.assist = null; dvLoupeHide();
       try { st.releasePointerCapture(e.pointerId); } catch (_) {}
@@ -10749,12 +11404,16 @@ window.closeDimViews = function () {
     if (!d || !dvActive()) return;
     if (d.moved) { dvChanged(d.mode === 'item'); DIMV.hoverReq = true; return; }
     if (d.noClick) return;
+    if (DIMV.ced && d.btn === 0) {   // durante la edición un clic no dibuja: fuera del cable termina la edición
+      const h = dvCableAtScreen(d.x, d.y, 10); if (!h || h.cable.id !== DIMV.ced.id) dvCedFinish(); return;
+    }
     if (DIMV.tool === 'nav' && d.btn === 0) {
       const prevC = DIMV.selCable; DIMV.selCable = d.cableId || null;
       if (d.cableId) DIMV.selId = null;
       if (prevC !== DIMV.selCable) { DIMV.ovDirty = true; dvRefreshCables(); dvUpdateStatus(); }
       if (d.cableId) return;
     }
+    if (d.btn === 2 && DIMV.poly) { dvPolyFinish(); return; }
     if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else if (!DIMV.readonly) dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
     if (d.btn !== 0) return;
     if (DIMV.tool === 'nav') { if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
@@ -10766,6 +11425,17 @@ window.closeDimViews = function () {
   st.addEventListener('pointerleave', () => { if (!DIMV.down && !DIMV.assist && !DIMV.stroke) { DIMV.cursor = null; DIMV.hover = null; DIMV.ovDirty = true; dvUpdateCoords(); } });
   st.addEventListener('dblclick', e => {
     if (DIMV.readonly) return;
+    if ((DIMV.tool === 'nav' || DIMV.tool === 'cable') && !DIMV.stroke) {
+      if (DIMV.tool === 'cable' && DIMV.poly) { if (DIMV.poly.pts.length > 1) return; DIMV.poly = null; }   // doble clic que termina una recta/spline
+      const [x, y] = xy(e), hit = dvCableAtScreen(x, y, 10);
+      if (hit) {
+        if (DIMV.ced && DIMV.ced.id === hit.cable.id) {   // doble clic sobre el cable en edición: nuevo punto
+          dvPushUndo(); const r = cableInsert(hit.cable, DIMV.ced.nodes, hit.point); DIMV.ced.nodes = r.nodes; DIMV.ced.sel = r.sel;
+          dvSyncCables3D(); dvRefreshCables(); dvChanged(false);
+        } else dvCedStart(hit.cable);
+        DIMV.ovDirty = true; dvUpdateStatus(); return;
+      }
+    }
     if (DIMV.tool !== 'nav') return;
     const el = e.target.closest ? e.target.closest('[data-id]') : null;
     if (el) dvEditText(dvFindItem(el.getAttribute('data-id')));
@@ -10790,6 +11460,9 @@ window.closeDimViews = function () {
     const k = e.key, lk = k.toLowerCase();
     if (DIMV.readonly) { if (k === 'Escape') { e.preventDefault(); closeDimViews(); } else if (lk === 'f') dvFitActive(); return; }
     if (k === 'Escape' && dvCtxIsOpen()) { e.preventDefault(); dvCtxClose(); return; }
+    if (DIMV.ced && k === 'Escape') { e.preventDefault(); dvCedFinish(); return; }
+    if (DIMV.ced && (k === 'Delete' || k === 'Backspace') && DIMV.ced.sel >= 0) { e.preventDefault(); dvCedDeleteNode(); return; }
+    if (DIMV.poly && (k === 'Enter' || k === 'Escape')) { e.preventDefault(); if (k === 'Enter') dvPolyFinish(); else { DIMV.poly = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
     if (k === 'Escape') { e.preventDefault(); if (DIMV.pending) DIMV.pending = null; else if (DIMV.selId) DIMV.selId = null; else if (DIMV.tool !== 'nav') dvSetTool('nav'); DIMV.ovDirty = true; dvUpdateStatus(); return; }
     if ((e.ctrlKey || e.metaKey) && lk === 'z') { e.preventDefault(); dvUndo(); return; }
     if ((e.ctrlKey || e.metaKey) && lk === 's') { e.preventDefault(); dvSaveJSON(); return; }
@@ -11242,6 +11915,23 @@ animate();
   </div>
 </div>
 <div id="pub-panel"></div>
+<div id="ce-snaptip"></div>
+<div id="ce-panel">
+  <div class="ce-row">
+    <b>✏ Editando cable:</b> <span id="ce-name"></span> <span id="ce-len" class="ce-len"></span>
+    <select id="ce-kind" class="ce-in" onchange="ceSetKind(this.value)" title="Tipo de línea">
+      <option value="free">Mano alzada</option><option value="line">Recta (polilínea)</option><option value="spline">Spline</option></select>
+    <span class="ce-lbl">Mover en</span>
+    <select id="ce-plane" class="ce-in" onchange="ceSetPlane(this.value)">
+      <option value="screen">Plano de pantalla</option><option value="horiz">Horizontal</option><option value="vert">Vertical</option></select>
+    <label class="ce-lbl"><input type="checkbox" id="ce-snap" checked onchange="ceSetSnap(this.checked)"> Extremos al equipo</label>
+    <label class="ce-lbl" title="Al acercar un extremo a otro cable se sugiere la conexión: unir extremos o derivar"><input type="checkbox" id="ce-snapc" checked onchange="ceSetSnapCables(this.checked)"> ⚡ Conectar a cables</label>
+    <button class="ce-btn" onclick="ceUndo()" title="Deshacer (Ctrl+Z)">↶</button>
+    <button class="ce-btn" id="ce-del" onclick="ceDeleteNode()" title="Borrar el punto seleccionado (Supr)">🗑 Punto</button>
+    <button class="ce-btn ok" onclick="ceFinish()">✓ Terminar</button>
+  </div>
+  <div id="ce-hint" class="ce-hint"></div>
+</div>
 <button id="pub-return" onclick="pubEnterSimple()" title="Volver a la vista simple">📋 Vista simple</button>
 <div id="share-modal" onclick="if(event.target===this)closeShareDialog()">
   <div class="sh-box">
