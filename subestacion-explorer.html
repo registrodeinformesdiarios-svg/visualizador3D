@@ -10444,6 +10444,17 @@ function dvPdfPage(doc, v, idx, total, aspect) {
       doc.text(str, sx, sy, { angle:Math.atan2(t.dir[1], t.dir[0]) * 180 / Math.PI });
     });
   });
+  if (v.showCables !== false) (DIMV.doc.cables || []).forEach(cb => {   // banda del radio de aislamiento (debajo de los cables)
+    if (!cb.clr) return;
+    const q = dvCablePath(cb).map(p => to(...dvTo2(B, p))); if (q.length < 2) return;
+    const k = Math.hypot(...[0, 1].map(i => to(1, 0)[i] - to(0, 0)[i])), hx = parseInt(String(cb.color).replace('#', ''), 16) || 0xe65100;
+    pdfAlpha(doc, 0.16, () => {
+      doc.setDrawColor((hx >> 16) & 255, (hx >> 8) & 255, hx & 255); doc.setLineWidth(2 * cableClrR(cb) * k);
+      doc.setLineCap('round'); doc.setLineJoin('round');
+      doc.lines(q.slice(1).map((p, i) => [p[0] - q[i][0], p[1] - q[i][1]]), q[0][0], q[0][1], [1, 1], 'S', false);
+    });
+    doc.setLineCap('butt'); doc.setLineJoin('miter');
+  });
   if (v.showCables !== false) (DIMV.doc.cables || []).forEach(cb => {
     const hx = parseInt(String(cb.color).replace('#', ''), 16) || 0xe65100;
     doc.setDrawColor((hx >> 16) & 255, (hx >> 8) & 255, hx & 255); doc.setLineWidth(0.45);
@@ -11187,11 +11198,21 @@ function insSVG(ci, sc) {
   });
   return h;
 }
+function pdfAlpha(doc, op, fn) {   // dibuja con transparencia (si el visor de PDF la soporta)
+  let ok = false;
+  try { doc.saveGraphicsState(); if (doc.GState) { doc.setGState(new doc.GState({ opacity:op, 'stroke-opacity':op })); ok = true; } } catch (e) {}
+  try { fn(ok); } finally { try { doc.restoreGraphicsState(); } catch (e) {} }
+}
 function insPdf(doc, ci, B, to) {
+  const k = Math.hypot(...[0, 1].map(i => to(1, 0)[i] - to(0, 0)[i]));   // mm de lámina por metro
   ci.strings.forEach(s => {
-    const a = to(...dvTo2(B, s.A)), e = to(...dvTo2(B, s.E));
-    doc.setDrawColor(85, 85, 85); doc.setLineWidth(0.25); doc.line(a[0], a[1], e[0], e[1]);
-    const T = INS_TYPES[s.t]; doc.setDrawColor((T.c >> 16) & 255, (T.c >> 8) & 255, T.c & 255); doc.setLineWidth(0.18);
+    const a = to(...dvTo2(B, s.A)), e = to(...dvTo2(B, s.E)), T = INS_TYPES[s.t], rgb = [(T.c >> 16) & 255, (T.c >> 8) & 255, T.c & 255];
+    // cuerpo de la cadena: banda del ancho del disco (mín. 0.9 mm para que se lea a escalas pequeñas)
+    pdfAlpha(doc, 0.55, () => { doc.setDrawColor(...rgb); doc.setLineWidth(Math.max(0.9, T.D * k)); doc.setLineCap('butt'); doc.line(a[0], a[1], e[0], e[1]); });
+    doc.setDrawColor(70, 70, 70); doc.setLineWidth(0.2); doc.line(a[0], a[1], e[0], e[1]);
+    doc.setFillColor(70, 70, 70); doc.circle(a[0], a[1], 0.45, 'F');
+    if (T.pitch * k < 0.45) return;   // discos demasiado juntos en el papel: solo la banda
+    doc.setDrawColor(...rgb.map(c => Math.round(c * 0.7))); doc.setLineWidth(Math.min(0.25, T.pitch * k * 0.35));
     insDiscs2D(s, B).forEach(d => {
       const pts = []; for (let i = 0; i <= 24; i++) { const t = i / 24 * Math.PI * 2, x = d.rx * Math.cos(t), y = d.ry * Math.sin(t);
         pts.push(to(d.c[0] + x * Math.cos(d.ang) - y * Math.sin(d.ang), d.c[1] + x * Math.sin(d.ang) + y * Math.cos(d.ang))); }
