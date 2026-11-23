@@ -1208,6 +1208,44 @@
   .chip-e { background: rgba(246,173,85,.15); border-color: rgba(246,173,85,.45); color: #f6ad55; }
 
 
+  /* Block F (excavaciones) */
+  .chip-f { background: rgba(176,132,98,.18); border-color: rgba(176,132,98,.5); color: #d7a77f; }
+  #block-f-panel {
+    position: fixed; top: 58px; left: 652px; z-index: 125;
+    width: 310px; max-height: calc(100vh - 120px);
+    background: rgba(8,10,14,.96); backdrop-filter: blur(16px);
+    border: 1px solid rgba(176,132,98,.35); border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(calc(-100% - 680px));
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #block-f-panel.open { transform: translateX(0); }
+  #block-f-panel.user-positioned { transform:none !important; transition:none !important; display:none; }
+  #block-f-panel.user-positioned.open { display:flex; }
+  .bf-in { background:var(--bg3); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:var(--mono); font-size:9px; padding:4px 6px; outline:none; }
+  .bf-row { padding:7px 8px; border:1px solid var(--border); border-radius:7px; margin-bottom:6px; display:flex; flex-direction:column; gap:3px; background:rgba(176,132,98,.04); }
+  .bf-row.pile { background:rgba(201,162,124,.06); }
+  .bf-rn { font-family:var(--mono); font-size:10px; color:#d7a77f; font-weight:600; }
+  .bf-rd { font-family:var(--mono); font-size:8.5px; color:var(--text2); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .bf-rd b { color:var(--text); }
+  .bf-tot { font-family:var(--mono); font-size:9px; color:#d7a77f; padding:4px 2px; }
+  .bf-empty { font-family:var(--mono); font-size:9px; color:var(--text3); line-height:1.5; }
+  /* excavaciones en planos */
+  .exc-fill { fill:url(#excHatch); fill-opacity:.55; stroke:none; pointer-events:none; }
+  .exc-top { fill:none; stroke:#5d4037; stroke-width:1.8; pointer-events:none; }
+  .exc-bot { fill:none; stroke:#8d6e63; stroke-width:1.1; stroke-dasharray:6 4; pointer-events:none; }
+  .exc-pile { fill:rgba(201,162,124,.25); stroke:#6d4c41; stroke-width:1.2; stroke-dasharray:7 4; pointer-events:none; }
+  .exc-hit { fill:none; stroke:#000; stroke-opacity:0; stroke-width:12; pointer-events:stroke; cursor:move; }
+  .exc-g.pile .exc-hit { pointer-events:all; fill:#000; fill-opacity:0; }
+  #dv-stage.drawing .exc-hit, #dv-modal.ro .exc-hit { pointer-events:none; }
+  .exc-g.sel .exc-top { stroke:#e65100; stroke-width:2.4; }
+  .exc-t { font:600 11px 'IBM Plex Mono', monospace; fill:#4e342e; paint-order:stroke; stroke:#fff; stroke-width:3.5px; stroke-linejoin:round; pointer-events:none; }
+  .exc-t.s { font-size:9.5px; font-weight:500; }
+  .exc-h { fill:#fff; stroke:#e65100; stroke-width:1.6; }
+  .exc-h.on { fill:#ffb300; }
+  .exc-pv { fill:rgba(141,110,99,.18); stroke:#e65100; stroke-width:1.4; stroke-dasharray:6 4; pointer-events:none; }
+  .dv-btn.on { border-color:var(--accent); color:var(--accent); }
+
   /* Block E panel */
   #block-e-panel {
     position: fixed; top: 58px; left: 652px; z-index: 125;
@@ -1394,7 +1432,7 @@
   body.pub-simple #speed-badge, body.pub-simple #cam-toggle, body.pub-simple #minimap-wrap, body.pub-simple #joystick-wrap, body.pub-simple #crosshair,
   body.pub-simple #crane-dpad-wrap, body.pub-simple #load-monitor, body.pub-simple #crane-panel, body.pub-simple #crane-status-bar, body.pub-simple #sim-timeline,
   body.pub-simple #floor-config-panel, body.pub-simple #measure-panel, body.pub-simple #lift-pos-panel, body.pub-simple #crane-config-panel,
-  body.pub-simple #cloud-panel, body.pub-simple #record-panel, body.pub-simple #block-a-panel, body.pub-simple #block-c-panel, body.pub-simple #block-e-panel,
+  body.pub-simple #cloud-panel, body.pub-simple #record-panel, body.pub-simple #block-a-panel, body.pub-simple #block-c-panel, body.pub-simple #block-e-panel, body.pub-simple #block-f-panel,
   body.pub-simple #chip-editor, body.pub-simple #capsule-editor { display:none !important; }
   #pub-panel { position:fixed; top:16px; left:16px; z-index:300; width:340px; max-height:calc(100vh - 32px); display:none; flex-direction:column;
     background:rgba(9,12,17,.94); backdrop-filter:blur(14px); border:1px solid rgba(79,195,247,.22); border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.45); overflow:hidden; font-family:var(--sans); }
@@ -2260,6 +2298,7 @@
         </div>
         <div class="dv-sec" id="dv-props"></div>
         <div class="dv-sec" id="dv-hidden"></div>
+        <div class="dv-sec" id="dv-exc" style="display:none"></div>
         <div class="dv-sec" id="dv-sketch"></div>
         <div class="dv-sec" id="dv-cables"></div>
         <details class="dv-sec">
@@ -3847,6 +3886,7 @@ function onModelReady(gltf,name){
   document.getElementById('loading-bar-wrap').style.display='none';
   document.getElementById('loading-bar').style.width='0%';
   if (typeof dvOnModelReady === 'function') dvOnModelReady();   // planos guardados: cables en 3D
+  if (typeof excOnModelReady === 'function') excOnModelReady();   // excavaciones guardadas
 }
 
 // ── FILE LOAD ────────────────────────────────────────────────────────────────
@@ -4950,6 +4990,7 @@ function makeDefaultRows() {
     { id: 'visib',   label: 'Visibilidad 1',color: '#4fd1c5', block: 'C' },
     { id: 'camera',  label: 'Cámara 1',    color: '#f687b3', block: 'D' },
     { id: 'crane',   label: 'Grúas 1',     color: '#f6ad55', block: 'E' },
+    { id: 'excav',   label: 'Excavaciones 1', color: '#d7a77f', block: 'F' },
   ];
 }
 
@@ -5008,8 +5049,9 @@ const BLOCK_META = {
   C:     { name: 'Visibilidad', color: '#4fd1c5' },
   D:     { name: 'Cámara',      color: '#f687b3' },
   E:     { name: 'Grúas',       color: '#f6ad55' },
+  F:     { name: 'Excavaciones', color: '#d7a77f' },
 };
-const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D', 'E'];
+const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D', 'E', 'F'];
 function rowBlock(rowId) {
   const r = SIM.rows.find(r => r.id === rowId);
   return r ? r.block : null;
@@ -5485,6 +5527,7 @@ function chipEditorPopulateLinks(chip) {
   camWrap.style.display = 'none';
   const capWrap = document.getElementById('ce-cap-wrap');
   if (capWrap) capWrap.style.display = 'none';
+  const excWrap = document.getElementById('ce-exc-wrap'); if (excWrap) excWrap.style.display = 'none';
 
   const block = rowBlock(chip.rowId);
 
@@ -5520,6 +5563,9 @@ function chipEditorPopulateLinks(chip) {
     wrap.style.display = 'none';
     document.getElementById('ce-cap-wrap').style.display = 'flex';
     ceRenderCapEditor(chip);
+  } else if (block === 'F') {
+    wrap.style.display = 'flex';
+    ceRenderExcEditor(chip);
   } else {
     // titles row — no link
     wrap.style.display = 'none';
@@ -5684,6 +5730,10 @@ window.chipEditorSave = function() {
     }
   } else if (block === 'D') {
     if (_ceCam) chip.blockData.cam = JSON.parse(JSON.stringify(_ceCam));
+  } else if (block === 'F') {
+    if (linkKey && excFind(linkKey)) { chip.blockData.excKey = linkKey; chip.blockData.excName = excFind(linkKey).name; }
+    else { delete chip.blockData.excKey; delete chip.blockData.excName; }
+    chip.blockData.toPct = Math.max(1, Math.min(100, parseFloat(document.getElementById('ce-exc-pct').value) || 100));
   } else if (block === 'E') {
     const capId = document.getElementById('ce-cap-state').value;
     if (capId && craneCapsules.has(capId)) {
@@ -5703,6 +5753,658 @@ document.addEventListener('click', e => {
   const ed = document.getElementById('chip-editor');
   if (ed && !ed.contains(e.target) && ed.style.display==='flex') chipEditorClose();
 });
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BLOCK F — EXCAVACIONES (área sobre el NTP, talud, retroexcavadora, acopios)
+// ══════════════════════════════════════════════════════════════════════════════
+// Definición compartida (como cimientos/grúas): se guarda en el JSON maestro (blockF)
+// y en el navegador por modelo. Los chips del bloque F avanzan cada excavación 0→100 %.
+const EXC = { ntp:0, terrain:null, preview:'done', items:[], piles:[], cnt:0, rt:null };
+const EXC_COLORS = ['#8d6e63', '#a1887f', '#795548', '#bcaaa4', '#6d4c41'];
+function excId(p) { EXC.cnt++; return p + '_' + Date.now().toString(36) + '_' + EXC.cnt; }
+function excFind(id) { return EXC.items.find(i => i.id === id) || null; }
+function excPile(id) { return EXC.piles.find(p => p.id === id) || null; }
+function excSerialize() {
+  return { ntp:EXC.ntp, terrain:EXC.terrain, preview:EXC.preview,
+    items:EXC.items.map(i => ({ id:i.id, name:i.name, pts:i.pts.map(p => [+p[0].toFixed(4), +p[1].toFixed(4)]), ntp:i.ntp, depth:i.depth, slope:i.slope, swell:i.swell, pile:i.pile || null })),
+    piles:EXC.piles.map(p => ({ id:p.id, name:p.name, x:p.x, z:p.z, ntp:p.ntp, phi:p.phi })) };
+}
+function excNormalize(o) {
+  o = o || {};
+  EXC.ntp = isFinite(+o.ntp) ? +o.ntp : 0;
+  EXC.terrain = Array.isArray(o.terrain) && o.terrain.length ? o.terrain.slice() : null;
+  EXC.preview = o.preview === 'none' ? 'none' : 'done';
+  EXC.items = (o.items || []).filter(i => i && Array.isArray(i.pts) && i.pts.length >= 3).map((i, k) => ({
+    id:i.id || excId('exc'), name:i.name || ('Excavación ' + (k + 1)), pts:i.pts.map(p => [+p[0], +p[1]]),
+    ntp:isFinite(+i.ntp) ? +i.ntp : EXC.ntp, depth:Math.max(0.05, +i.depth || 1.5), slope:Math.max(0, +i.slope || 0), swell:Math.max(1, +i.swell || 1.25), pile:i.pile || null }));
+  EXC.piles = (o.piles || []).filter(p => p && isFinite(+p.x) && isFinite(+p.z)).map((p, k) => ({
+    id:p.id || excId('pile'), name:p.name || ('Acopio ' + (k + 1)), x:+p.x, z:+p.z, ntp:isFinite(+p.ntp) ? +p.ntp : EXC.ntp, phi:Math.min(60, Math.max(15, +p.phi || 35)) }));
+  EXC.items.forEach(i => { if (i.pile && !excPile(i.pile)) i.pile = null; });
+}
+function excSave() { try { localStorage.setItem('sim_exc:' + dvModelName(), JSON.stringify(excSerialize())); } catch (e) {} }
+function importExcData(o) { excNormalize(o); excSave(); excTerrainStencil(); excApplyStatic(); excRefreshUI(); }
+window.excOnModelReady = function () {
+  let o = null; try { o = JSON.parse(localStorage.getItem('sim_exc:' + dvModelName()) || 'null'); } catch (e) {}
+  excNormalize(o || {});
+  if (EXC.rt) { EXC.rt.pits.forEach(p => excDisposePit(p)); EXC.rt.pits.clear(); EXC.rt.piles.forEach(m => { EXC.rt.g.remove(m); m.geometry.dispose(); }); EXC.rt.piles.clear(); EXC.rt.exs.forEach(x => x.root.visible = false); }
+  _excTerrainCache = null;
+  excTerrainStencil(); excApplyStatic(); excRefreshUI();
+};
+// cambios de definición (desde el plano o el panel)
+function excChanged() { excSave(); excApplyStatic(true); excRefreshUI(); if (typeof DIMV !== 'undefined' && DIMV.open) { DIMV.ovDirty = true; } }
+
+// ── geometría en planta (x, z) ──
+function excArea(P) { let a = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; }
+function excPerim(P) { let s = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; s += Math.hypot(q[0] - p[0], q[1] - p[1]); } return s; }
+function excCentroid(P) {
+  const A = excArea(P); if (Math.abs(A) < 1e-9) return [P.reduce((s, p) => s + p[0], 0) / P.length, P.reduce((s, p) => s + p[1], 0) / P.length];
+  let cx = 0, cz = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length], f = p[0] * q[1] - q[0] * p[1]; cx += (p[0] + q[0]) * f; cz += (p[1] + q[1]) * f; }
+  return [cx / (6 * A), cz / (6 * A)];
+}
+function excInsetRaw(P, d) {   // desplaza cada lado hacia adentro d metros
+  const s = Math.sign(excArea(P)) || 1, n = P.length, L = [];
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
+    const nx = -dz / l * s, nz = dx / l * s;   // normal interior
+    L.push({ p:[a[0] + nx * d, a[1] + nz * d], v:[dx / l, dz / l] });
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const A = L[(i - 1 + n) % n], B = L[i], den = A.v[0] * B.v[1] - A.v[1] * B.v[0];
+    if (Math.abs(den) < 1e-9) { out.push(B.p.slice()); continue; }
+    const t = ((B.p[0] - A.p[0]) * B.v[1] - (B.p[1] - A.p[1]) * B.v[0]) / den;
+    out.push([A.p[0] + A.v[0] * t, A.p[1] + A.v[1] * t]);
+  }
+  return out;
+}
+function excInset(P, d) {   // como excInsetRaw pero sin invertir el polígono si el talud lo cierra
+  if (d <= 0) return P.map(p => p.slice());
+  const A0 = excArea(P), ok = Q => Math.sign(excArea(Q)) === Math.sign(A0) && Math.abs(excArea(Q)) > Math.abs(A0) * 1e-4;
+  let Q = excInsetRaw(P, d); if (ok(Q)) return Q;
+  let lo = 0, hi = d; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (ok(excInsetRaw(P, m))) lo = m; else hi = m; }
+  return excInsetRaw(P, lo);
+}
+function excVolAt(it, d) {   // fórmula prismoidal (exacta para talud constante)
+  if (d <= 0) return 0;
+  const A = x => Math.abs(excArea(excInset(it.pts, it.slope * x)));
+  return d / 6 * (A(0) + 4 * A(d / 2) + A(d));
+}
+function excVol(it) { return excVolAt(it, it.depth); }
+function excInPoly(q, P) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > q[1]) !== (b[1] > q[1]) && q[0] < (b[0] - a[0]) * (q[1] - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+function excPileVol(pid, levels) {   // volumen suelto acumulado en el acopio
+  let v = 0;
+  EXC.items.forEach(it => { if (it.pile === pid) v += excVolAt(it, (levels ? (levels[it.id] || 0) : 1) * it.depth) * it.swell; });
+  return v;
+}
+function excPileR(p, V) { return Math.cbrt(3 * V / (Math.PI * Math.tan(p.phi * Math.PI / 180))); }
+
+// ── terreno: el hueco se "abre" con stencil (el terreno no se dibuja dentro del área) ──
+let _excTerrainCache = null;
+function excModelMeshes() { const m = scene.getObjectByName('__model__'), out = []; if (m) m.traverse(o => { if (o.isMesh) out.push(o); }); return out; }
+function excTerrainCandidates() {   // mallas planas y extensas (las más probables primero)
+  const ms = excModelMeshes(), box = new THREE.Box3(), out = [];
+  ms.forEach(o => { box.setFromObject(o); const sx = box.max.x - box.min.x, sz = box.max.z - box.min.z, sy = box.max.y - box.min.y;
+    if (sx * sz > 1) out.push({ o, name:o.name || o.parent?.name || 'malla', area:sx * sz, flat:sy / Math.max(sx, sz) }); });
+  out.sort((a, b) => b.area - a.area);
+  return out;
+}
+function excTerrainMeshes() {
+  if (_excTerrainCache) return _excTerrainCache;
+  const ms = excModelMeshes(); let res = [];
+  if (EXC.terrain) {
+    const set = new Set(EXC.terrain);
+    res = ms.filter(o => { for (let p = o; p && p.name !== '__model__'; p = p.parent) if (set.has(p.name)) return true; return false; });
+  } else {
+    const rx = /terr|suelo|ground|topo|explan|grading|terrain|lastre|plataforma/i;
+    res = ms.filter(o => { for (let p = o; p && p.name !== '__model__'; p = p.parent) if (rx.test(p.name || '')) return true; return false; });
+    if (!res.length) { const c = excTerrainCandidates(); if (c.length && c[0].flat < 0.2) res = [c[0].o]; }
+  }
+  return (_excTerrainCache = res);
+}
+function excTerrainStencil() {
+  excModelMeshes().forEach(o => { if (o.userData.__excOrigMat) { o.material = o.userData.__excOrigMat; delete o.userData.__excOrigMat; } });
+  _excTerrainCache = null;
+  if (!EXC.items.length) return;
+  excTerrainMeshes().forEach(o => {
+    o.userData.__excOrigMat = o.material;
+    const fix = m => { const c = m.clone(); c.stencilWrite = true; c.stencilRef = 1; c.stencilFunc = THREE.NotEqualStencilFunc;
+      c.stencilFail = c.stencilZFail = c.stencilZPass = THREE.KeepStencilOp; return c; };
+    o.material = Array.isArray(o.material) ? o.material.map(fix) : fix(o.material);
+  });
+}
+function excGroundY(x, z) {   // nivel del terreno bajo (x, z); null si no hay terreno
+  const ms = excTerrainMeshes().length ? excTerrainMeshes() : excModelMeshes(); if (!ms.length) return null;
+  const rc = new THREE.Raycaster(new THREE.Vector3(x, 1e4, z), new THREE.Vector3(0, -1, 0), 0, 2e4);
+  const h = rc.intersectObjects(ms, false)[0]; return h ? h.point.y : null;
+}
+
+// ── objetos 3D ──
+function excRT() {
+  if (!EXC.rt) {
+    const g = new THREE.Group(); g.name = '__excavations__'; g.userData.__helper = true;
+    EXC.rt = { g, pits:new Map(), piles:new Map(), exs:new Map(), lvl:{}, base:{}, phase:{}, lastTs:0, tex:null };
+  }
+  if (!EXC.rt.g.parent) scene.add(EXC.rt.g);
+  return EXC.rt;
+}
+function excSoilTex() {
+  const R = excRT(); if (R.tex) return R.tex;
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#8a6a4f'; g.fillRect(0, 0, 256, 256);
+  let s = 12345; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) { const v = rnd(); g.fillStyle = `rgba(${v < 0.5 ? '60,42,28' : '170,140,110'},${0.08 + rnd() * 0.22})`; const r = 0.6 + rnd() * 2.6; g.beginPath(); g.arc(rnd() * 256, rnd() * 256, r, 0, 7); g.fill(); }
+  for (let i = 0; i < 70; i++) { g.fillStyle = `rgba(${150 + rnd() * 60},${140 + rnd() * 50},${120 + rnd() * 50},.75)`; g.beginPath(); g.ellipse(rnd() * 256, rnd() * 256, 1.5 + rnd() * 3, 1 + rnd() * 2, rnd() * 3, 0, 7); g.fill(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return (R.tex = t);
+}
+let _excMats = null;
+function excMats() {
+  if (_excMats) return _excMats;
+  const tex = excSoilTex();
+  _excMats = {
+    pit:new THREE.MeshStandardMaterial({ map:tex, vertexColors:true, roughness:0.97, metalness:0, side:THREE.DoubleSide }),
+    pile:new THREE.MeshStandardMaterial({ map:tex, vertexColors:true, roughness:1, metalness:0, color:0xc9a27c }),
+    open:new THREE.MeshBasicMaterial({ colorWrite:false, depthWrite:false, depthTest:false, side:THREE.DoubleSide,
+      stencilWrite:true, stencilRef:1, stencilFunc:THREE.AlwaysStencilFunc, stencilZPass:THREE.ReplaceStencilOp, stencilZFail:THREE.ReplaceStencilOp, stencilFail:THREE.ReplaceStencilOp }),
+    rim:new THREE.LineBasicMaterial({ color:0x4e342e, transparent:true, opacity:0.8 }),
+  };
+  return _excMats;
+}
+function excDisposePit(p) { [p.mesh, p.open, p.rim].forEach(o => { if (o) { o.parent?.remove(o); o.geometry.dispose(); } }); }
+function excPitGeo(it, d) {
+  const P = it.pts, Q = excInset(P, it.slope * d), y0 = it.ntp, y1 = it.ntp - d, n = P.length;
+  const pos = [], uv = [], col = [], idx = [];
+  const push = (x, y, z, u, v, shade) => { pos.push(x, y, z); uv.push(u, v); col.push(shade, shade * 0.97, shade * 0.94); return pos.length / 3 - 1; };
+  let acc = 0;
+  for (let i = 0; i < n; i++) {   // taludes
+    const a = P[i], b = P[(i + 1) % n], qa = Q[i], qb = Q[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]), sl = Math.hypot(d, it.slope * d);
+    const i0 = push(a[0], y0, a[1], acc / 2.5, 0, 1), i1 = push(b[0], y0, b[1], (acc + L) / 2.5, 0, 1);
+    const i2 = push(qb[0], y1, qb[1], (acc + L) / 2.5, sl / 2.5, 0.62), i3 = push(qa[0], y1, qa[1], acc / 2.5, sl / 2.5, 0.62);
+    idx.push(i0, i1, i2, i0, i2, i3); acc += L;
+  }
+  const base = pos.length / 3;   // fondo
+  Q.forEach(q => push(q[0], y1, q[1], q[0] / 2.5, q[1] / 2.5, 0.55));
+  THREE.ShapeUtils.triangulateShape(Q.map(q => new THREE.Vector2(q[0], q[1])), []).forEach(t => idx.push(base + t[0], base + t[1], base + t[2]));
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+function excOpenGeo(it) {
+  const P = it.pts, pos = [], idx = [];
+  P.forEach(p => pos.push(p[0], it.ntp + 0.03, p[1]));
+  THREE.ShapeUtils.triangulateShape(P.map(p => new THREE.Vector2(p[0], p[1])), []).forEach(t => idx.push(t[0], t[1], t[2]));
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); return g;
+}
+function excUpdatePit(it, level, force) {
+  const R = excRT(), M = excMats(); let p = R.pits.get(it.id);
+  const d = Math.max(0, Math.min(1, level)) * it.depth;
+  if (!p) { p = { d:-1 }; R.pits.set(it.id, p); }
+  if (d < 0.005) { if (p.mesh) { excDisposePit(p); p.mesh = p.open = p.rim = null; } p.d = 0; return; }
+  if (!force && p.mesh && Math.abs(d - p.d) < Math.max(0.004, it.depth * 0.004)) return;
+  if (p.mesh) excDisposePit(p);
+  p.mesh = new THREE.Mesh(excPitGeo(it, d), M.pit); p.mesh.receiveShadow = true; p.mesh.userData.excId = it.id; p.mesh.name = it.name;
+  p.open = new THREE.Mesh(excOpenGeo(it), M.open); p.open.renderOrder = -100; p.open.frustumCulled = false;
+  const rp = it.pts.map(q => new THREE.Vector3(q[0], it.ntp + 0.02, q[1])); rp.push(rp[0].clone());
+  p.rim = new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp), M.rim);
+  R.g.add(p.open, p.mesh, p.rim); p.d = d;
+}
+let _excPileGeo = new Map();
+function excPileUnitGeo(phi) {   // montículo de radio 1 con relieve irregular (determinista)
+  const key = Math.round(phi); if (_excPileGeo.has(key)) return _excPileGeo.get(key);
+  const H = Math.tan(phi * Math.PI / 180), NR = 18, NS = 48, pos = [], uv = [], col = [], idx = [];
+  let s = 777; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const amp = []; for (let k = 0; k < 6; k++) amp.push([0.02 + rnd() * 0.05, rnd() * 6.28, 2 + Math.floor(rnd() * 5)]);
+  for (let r = 0; r <= NR; r++) {
+    const rho = r / NR;
+    for (let a = 0; a < NS; a++) {
+      const th = a / NS * Math.PI * 2;
+      let w = 1; amp.forEach(([A, ph, f]) => { w += A * Math.sin(f * th + ph) * Math.sin(Math.PI * Math.min(1, rho * 1.2)); });
+      const rr = rho * w, hh = H * (1 - Math.pow(rho, 1.15)) * (1 + 0.04 * Math.sin(7 * th + rho * 5)), x = Math.cos(th) * rr, z = Math.sin(th) * rr;
+      pos.push(x, Math.max(0, hh), z); uv.push(x * 0.6, z * 0.6); const sh = 0.78 + 0.22 * (1 - rho); col.push(sh, sh * 0.96, sh * 0.92);
+    }
+  }
+  for (let r = 0; r < NR; r++) for (let a = 0; a < NS; a++) {
+    const i0 = r * NS + a, i1 = r * NS + (a + 1) % NS, i2 = (r + 1) * NS + (a + 1) % NS, i3 = (r + 1) * NS + a;
+    idx.push(i0, i1, i2, i0, i2, i3);   // caras hacia arriba (normal +Y)
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals(); _excPileGeo.set(key, g);
+  return g;
+}
+function excUpdatePile(p, V) {
+  const R = excRT(); let m = R.piles.get(p.id);
+  if (!m || m.userData.phi !== Math.round(p.phi)) {
+    if (m) R.g.remove(m);
+    m = new THREE.Mesh(excPileUnitGeo(p.phi), excMats().pile); m.castShadow = m.receiveShadow = true; m.userData.phi = Math.round(p.phi); m.userData.pileId = p.id; m.name = p.name;
+    R.piles.set(p.id, m); R.g.add(m);
+  }
+  m.visible = V > 0.01;
+  if (m.visible) { m.scale.setScalar(Math.max(0.05, excPileR(p, V))); m.position.set(p.x, p.ntp - 0.02, p.z); }
+}
+
+// ── retroexcavadora (modelo propio, sin marcas) ──
+const EXC_L1 = 5.6, EXC_L2 = 2.9;   // pluma y brazo (m) — excavadora de ~20 t
+function excBuildExcavator() {
+  const Y = new THREE.MeshStandardMaterial({ color:0xf2b200, roughness:0.45, metalness:0.25 });
+  const D = new THREE.MeshStandardMaterial({ color:0x2b2b2b, roughness:0.8, metalness:0.3 });
+  const S = new THREE.MeshStandardMaterial({ color:0x8c8f93, roughness:0.35, metalness:0.85 });
+  const G = new THREE.MeshStandardMaterial({ color:0x9fd3ff, roughness:0.05, metalness:0.2, transparent:true, opacity:0.45 });
+  const box = (w, h, dd, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, dd), m); o.position.set(x, y, z); o.castShadow = true; return o; };
+  const root = new THREE.Group(); root.name = 'Retroexcavadora';
+  [-1.1, 1.1].forEach(z => {   // orugas
+    root.add(box(4.3, 0.75, 0.62, D, 0, 0.42, z));
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.62, 16), D); r.rotation.x = Math.PI / 2; r.position.set(2.1, 0.42, z); root.add(r);
+    const r2 = r.clone(); r2.position.x = -2.1; root.add(r2);
+    root.add(box(3.6, 0.12, 0.66, S, 0, 0.82, z));
+  });
+  root.add(box(3.2, 0.45, 1.6, D, 0, 0.6, 0));
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.2, 24), D); ring.position.y = 0.95; root.add(ring);
+  const house = new THREE.Group(); house.position.y = 0; root.add(house);
+  house.add(box(2.9, 0.95, 2.5, Y, -0.25, 1.55, 0));                 // cuerpo
+  house.add(box(0.55, 0.95, 2.5, D, -1.95, 1.5, 0));                 // contrapeso
+  house.add(box(1.1, 1.25, 0.95, Y, 0.55, 2.62, -0.75));             // cabina (lado izquierdo)
+  house.add(box(1.0, 0.95, 0.03, G, 0.6, 2.7, -0.27)); house.add(box(0.03, 0.95, 0.85, G, 1.11, 2.7, -0.75));
+  house.add(box(0.9, 0.5, 0.9, D, -1.0, 2.25, 0.6));                 // capó motor
+  const ex = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), D); ex.position.set(-1.1, 2.7, 0.85); house.add(ex);
+  const pivot = new THREE.Vector3(1.05, 1.75, 0.25);
+  const boom = new THREE.Group(); boom.position.copy(pivot); house.add(boom);
+  const seg = (a, b, w, h, m, parent) => { const d = b.clone().sub(a), o = new THREE.Mesh(new THREE.BoxGeometry(d.length() + 0.2, h, w), m);
+    o.position.copy(a).add(b).multiplyScalar(0.5); o.rotation.z = Math.atan2(d.y, d.x); o.castShadow = true; parent.add(o); return o; };
+  const bk = new THREE.Vector3(EXC_L1 * 0.52, 0.75, 0);   // pluma curvada ("banana")
+  seg(new THREE.Vector3(0, 0, 0), bk, 0.55, 0.62, Y, boom); seg(bk, new THREE.Vector3(EXC_L1, 0, 0), 0.5, 0.52, Y, boom);
+  const stick = new THREE.Group(); stick.position.set(EXC_L1, 0, 0); boom.add(stick);
+  seg(new THREE.Vector3(-0.5, 0.15, 0), new THREE.Vector3(EXC_L2, 0, 0), 0.4, 0.42, Y, stick);
+  const bucket = new THREE.Group(); bucket.position.set(EXC_L2, 0, 0); stick.add(bucket);
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.0, 18, 1, true, 0, Math.PI * 1.15), D);
+  shell.rotation.x = Math.PI / 2; shell.position.set(0.55, -0.1, 0); shell.material = new THREE.MeshStandardMaterial({ color:0x3a3a3a, roughness:0.6, metalness:0.6, side:THREE.DoubleSide }); bucket.add(shell);
+  [-0.5, 0.5].forEach(z => { const sp = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16, 0, Math.PI * 1.15), shell.material); sp.position.set(0.55, -0.1, z); bucket.add(sp); });
+  for (let i = 0; i < 5; i++) { const t = box(0.22, 0.06, 0.09, S, 1.2, -0.12, -0.4 + i * 0.2); bucket.add(t); }
+  const soil = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), excMats().pile); soil.scale.set(1.1, 0.6, 1.05); soil.position.set(0.55, 0.05, 0); soil.visible = false; bucket.add(soil);
+  const cyl = () => { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 1, 10), S); c.castShadow = true; house.add(c); return c; };
+  const ex2 = { root, house, boom, stick, bucket, soil, pivot, cylB:cyl(), cylS:cyl() };
+  root.traverse(o => { o.userData.__excavator = true; });
+  return ex2;
+}
+const _excV = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+function excSetCyl(ex, c, aLocal, aObj, bLocal, bObj) {   // cilindro hidráulico entre dos puntos (en el marco de la tornamesa)
+  const A = _excV[0].copy(aLocal), Bv = _excV[1].copy(bLocal);
+  aObj.localToWorld(A); bObj.localToWorld(Bv); ex.house.worldToLocal(A); ex.house.worldToLocal(Bv);
+  const d = _excV[2].copy(Bv).sub(A), L = d.length();
+  c.position.copy(A).addScaledVector(d, 0.5); c.scale.set(1, Math.max(0.1, L), 1);
+  c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+}
+function excIK(ex, tx, ty, phi) {   // pasador del cucharón en (tx, ty) del marco de la tornamesa; phi = ángulo absoluto
+  const dx = tx - ex.pivot.x, dy = ty - ex.pivot.y;
+  let d = Math.hypot(dx, dy); d = Math.max(Math.abs(EXC_L1 - EXC_L2) + 0.2, Math.min(EXC_L1 + EXC_L2 - 0.08, d));
+  const c2 = Math.max(-1, Math.min(1, (d * d - EXC_L1 * EXC_L1 - EXC_L2 * EXC_L2) / (2 * EXC_L1 * EXC_L2)));
+  const t2 = -Math.acos(c2), t1 = Math.atan2(dy, dx) - Math.atan2(EXC_L2 * Math.sin(t2), EXC_L1 + EXC_L2 * Math.cos(t2));
+  ex.boom.rotation.z = t1; ex.stick.rotation.z = t2; ex.bucket.rotation.z = phi - t1 - t2;
+  ex.root.updateMatrixWorld(true);
+  excSetCyl(ex, ex.cylB, new THREE.Vector3(0.9, 1.05, 0.25), ex.house, new THREE.Vector3(EXC_L1 * 0.4, 0.15, 0), ex.boom);
+  excSetCyl(ex, ex.cylS, new THREE.Vector3(EXC_L1 * 0.52, 1.05, 0), ex.boom, new THREE.Vector3(-0.45, 0.5, 0), ex.stick);
+}
+function excStation(it, level) {   // dónde se para la máquina: fuera del talud, del lado del acopio (o el más largo)
+  const P = it.pts, n = P.length, s = Math.sign(excArea(P)) || 1, pile = excPile(it.pile), C = excCentroid(P);
+  const off = it.slope * it.depth + 2.7, cands = [];
+  function dzOut(a, b, s, L) { return [(b[1] - a[1]) / L * s, -(b[0] - a[0]) / L * s]; }   // normal exterior
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.5) continue;
+    const nx = dzOut(a, b, s, L), m = [(a[0] + b[0]) / 2 + nx[0] * off, (a[1] + b[1]) / 2 + nx[1] * off];
+    let score = pile ? -Math.hypot(m[0] - pile.x, m[1] - pile.z) : L;
+    if (EXC.items.some(o => o !== it && excInPoly(m, o.pts))) score -= 1e6;   // no pararse dentro de otra excavación
+    cands.push({ a, b, L, n:nx, score });
+  }
+  const best = cands.sort((x, y) => y.score - x.score)[0];
+  const t = best.L > 7 ? 0.25 + 0.5 * Math.min(1, level) : 0.5;
+  const x = best.a[0] + (best.b[0] - best.a[0]) * t + best.n[0] * off, z = best.a[1] + (best.b[1] - best.a[1]) * t + best.n[1] * off;
+  const C2 = [C[0] + (x - C[0]) * 0.15, C[1] + (z - C[1]) * 0.15];
+  return { x, z, dir:Math.atan2(-(C2[1] - z), C2[0] - x), reachC:Math.hypot(C[0] - x, C[1] - z) };
+}
+const _ease = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+function excPoseExcavator(ex, it, level, phase) {
+  const st = excStation(it, level), y = it.ntp;
+  ex.root.position.set(st.x, y, st.z); ex.root.rotation.y = st.dir;
+  const k = Math.floor(phase), u = phase - k, sway = (((k * 0.618) % 1) - 0.5) * 0.55;
+  const d = level * it.depth, rDig = Math.max(3.4, Math.min(7.6, st.reachC * (0.6 + 0.35 * (((k * 0.37) % 1)))));
+  let sDump = Math.PI * 0.58;
+  const pile = excPile(it.pile);
+  if (pile) { const ang = Math.atan2(-(pile.z - st.z), pile.x - st.x) - st.dir, a = Math.atan2(Math.sin(ang), Math.cos(ang));
+    if (Math.hypot(pile.x - st.x, pile.z - st.z) < 14 && Math.abs(a) > 1.0) sDump = a; }
+  const Pd = [5.2, 2.9], Pu = [rDig, 2.6], P0 = [rDig, -d + 0.85], P1 = [Math.max(3.0, rDig - 1.7), -d + 0.6], Pr = [Math.max(3.2, rDig - 1.3), 3.1];
+  const L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], R = Math.PI / 180;
+  let p, phi, sw, soil = false;
+  const seg = (a, b) => _ease((u - a) / (b - a));
+  if (u < 0.22)      { const t = seg(0, 0.22);    p = L(Pd, Pu, t); phi = (-115 + 55 * t) * R; sw = sDump + (sway - sDump) * t; }
+  else if (u < 0.40) { const t = seg(0.22, 0.4); p = L(Pu, P0, t); phi = (-60 - 15 * t) * R; sw = sway; }
+  else if (u < 0.58) { const t = seg(0.4, 0.58); p = L(P0, P1, t); phi = (-75 + 105 * t) * R; sw = sway; soil = t > 0.55; }
+  else if (u < 0.72) { const t = seg(0.58, 0.72); p = L(P1, Pr, t); phi = 30 * R; sw = sway; soil = true; }
+  else if (u < 0.86) { const t = seg(0.72, 0.86); p = L(Pr, Pd, t); phi = (30 - 10 * t) * R; sw = sway + (sDump - sway) * t; soil = true; }
+  else if (u < 0.95) { const t = seg(0.86, 0.95); p = Pd; phi = (20 - 135 * t) * R; sw = sDump; soil = t < 0.45; }
+  else { p = Pd; phi = -115 * R; sw = sDump; }
+  ex.house.rotation.y = sw; ex.soil.visible = soil;
+  excIK(ex, p[0], p[1], phi);
+}
+
+// ── estado de la escena ──
+function excApplyLevels(levels, active) {
+  EXC.items.forEach(it => excUpdatePit(it, levels[it.id] || 0));
+  EXC.piles.forEach(p => excUpdatePile(p, excPileVol(p.id, levels)));
+  const R = excRT(), on = new Set();
+  (active || []).forEach(a => {
+    let ex = R.exs.get(a.it.id);
+    if (!ex) { ex = excBuildExcavator(); R.exs.set(a.it.id, ex); R.g.add(ex.root); }
+    ex.root.visible = true; on.add(a.it.id);
+    excPoseExcavator(ex, a.it, levels[a.it.id] || 0, a.phase);
+  });
+  R.exs.forEach((ex, id) => { if (!on.has(id)) ex.root.visible = false; });
+}
+function excApplyStatic(force) {   // fuera de la simulación: terminadas o sin excavar
+  excRT();
+  const lv = {}; EXC.items.forEach(it => { lv[it.id] = EXC.preview === 'done' ? 1 : 0; EXC.rt.lvl[it.id] = lv[it.id]; });
+  if (force) EXC.rt.pits.forEach(p => { p.d = -1; });
+  [...EXC.rt.pits.keys()].forEach(id => { if (!excFind(id)) { excDisposePit(EXC.rt.pits.get(id)); EXC.rt.pits.delete(id); } });
+  [...EXC.rt.piles.keys()].forEach(id => { if (!excPile(id)) { EXC.rt.g.remove(EXC.rt.piles.get(id)); EXC.rt.piles.delete(id); } });
+  EXC.items.forEach(it => excUpdatePit(it, lv[it.id], force));
+  excApplyLevels(lv, []);
+}
+function excResetSim() { if (!EXC.rt) return; EXC.items.forEach(it => { EXC.rt.base[it.id] = 0; EXC.rt.lvl[it.id] = 0; }); excApplyLevels(EXC.rt.lvl, []); }
+function excDayStart() { if (!EXC.rt) excRT(); EXC.items.forEach(it => { EXC.rt.base[it.id] = EXC.rt.lvl[it.id] || 0; }); }
+const EXC_CYCLE_SEC = 3.6;   // segundos reales por ciclo del cucharón
+function excFrame(hour) {
+  if (!EXC.items.length) return;
+  const R = excRT(), now = performance.now(), dt = R.lastTs ? Math.min(0.1, (now - R.lastTs) / 1000) : 0; R.lastTs = now;
+  const levels = {}, active = [];
+  EXC.items.forEach(it => {
+    const chips = SIM.chips.filter(c => rowBlock(c.rowId) === 'F' && c.blockData?.excKey === it.id).sort((a, b) => a.startH - b.startH);
+    let level = R.base[it.id] || 0, on = false;
+    for (const c of chips) {
+      const to = Math.max(0, Math.min(1, (c.blockData.toPct ?? 100) / 100));
+      if (hour < c.startH) break;
+      if (hour >= c.endH) { level = Math.max(level, to); continue; }
+      const t = (hour - c.startH) / Math.max(0.001, c.endH - c.startH), L0 = level;
+      if (to > L0) { level = L0 + (to - L0) * t; on = true; }
+      break;
+    }
+    levels[it.id] = Math.min(1, level); R.lvl[it.id] = levels[it.id];
+    if (on) { if (SIM.playing || (typeof REC !== 'undefined' && REC.recording)) R.phase[it.id] = (R.phase[it.id] || 0) + dt / EXC_CYCLE_SEC; active.push({ it, phase:R.phase[it.id] || 0 }); }
+  });
+  excApplyLevels(levels, active);
+}
+
+// ── Panel Bloque F ──
+let blockFOpen = false;
+window.toggleBlockF = function () {
+  blockFOpen = !blockFOpen;
+  document.getElementById('block-f-panel').classList.toggle('open', blockFOpen);
+  document.getElementById('btn-block-f')?.classList.toggle('active', blockFOpen);
+  if (blockFOpen) excRefreshUI();
+};
+const excF = (x, d) => (+x).toFixed(d === undefined ? 2 : d);
+function excRefreshUI() {
+  const cnt = document.getElementById('bf-count'); if (cnt) cnt.textContent = EXC.items.length + ' excav. · ' + EXC.piles.length + ' acopios';
+  const el = document.getElementById('bf-list');
+  if (el) {
+    if (!EXC.items.length && !EXC.piles.length) el.innerHTML = `<div class="bf-empty">Sin excavaciones. Usa <b>📐 Definir en planta</b>: dibuja el área (rectángulo o polígono) y los sitios de acopio en la vista en planta.</div>`;
+    else {
+      let tB = 0, tS = 0;
+      let h = EXC.items.map(it => {
+        const V = excVol(it), A = Math.abs(excArea(it.pts)); tB += V; tS += V * it.swell;
+        return `<div class="bf-row"><div class="bf-rn">⛏ ${dvEsc(it.name)}</div>
+          <div class="bf-rd">A ${excF(A)} m² · h ${excF(it.depth)} m · talud ${excF(it.slope)}:1 · NTP ${excF(it.ntp)}</div>
+          <div class="bf-rd">V banco <b>${excF(V)} m³</b> · suelto ${excF(V * it.swell)} m³ (×${excF(it.swell)})</div>
+          <label class="bf-rd">Acopio <select class="bf-in" onchange="excSetProp('${it.id}','pile',this.value)"><option value="">— ninguno —</option>${EXC.piles.map(p => `<option value="${p.id}"${p.id === it.pile ? ' selected' : ''}>${dvEsc(p.name)}</option>`).join('')}</select></label></div>`;
+      }).join('');
+      h += EXC.piles.map(p => { const V = excPileVol(p.id); return `<div class="bf-row pile"><div class="bf-rn">⛰ ${dvEsc(p.name)}</div><div class="bf-rd">${excF(V)} m³ sueltos · Ø base ${excF(2 * excPileR(p, V))} m · reposo ${p.phi}°</div></div>`; }).join('');
+      h += `<div class="bf-tot">Total: ${excF(tB)} m³ en banco · ${excF(tS)} m³ sueltos</div>`;
+      el.innerHTML = h;
+    }
+  }
+  const nt = document.getElementById('bf-ntp'); if (nt && document.activeElement !== nt) nt.value = EXC.ntp;
+  const pv = document.getElementById('bf-preview'); if (pv) pv.value = EXC.preview;
+  const tr = document.getElementById('bf-terrain');
+  if (tr && document.activeElement !== tr) {
+    const cands = excTerrainCandidates().slice(0, 14), auto = EXC.terrain ? null : excTerrainMeshes().map(o => o.name || o.parent?.name).join(', ');
+    tr.innerHTML = `<option value="">Automático${auto ? ' (' + dvEsc(auto.slice(0, 40)) + ')' : ' (no encontrado)'}</option>` +
+      cands.map(c => `<option value="${dvEsc(c.name)}"${EXC.terrain && EXC.terrain[0] === c.name ? ' selected' : ''}>${dvEsc(c.name.slice(0, 40))}</option>`).join('');
+  }
+  if (typeof DIMV !== 'undefined' && DIMV.open) excDvPanel();
+}
+window.excSetGlobal = function (k, v) {
+  if (k === 'ntp') EXC.ntp = parseFloat(v) || 0;
+  if (k === 'preview') EXC.preview = v === 'none' ? 'none' : 'done';
+  if (k === 'terrain') { EXC.terrain = v ? [v] : null; excTerrainStencil(); }
+  excSave(); if (!SIM.playing) excApplyStatic(true); excRefreshUI();
+};
+window.excSetProp = function (id, k, v) {
+  const it = excFind(id), p = excPile(id);
+  if (typeof DIMV !== 'undefined' && DIMV.open) dvPushUndo();
+  if (it) {
+    if (k === 'name') it.name = String(v).trim() || it.name;
+    else if (k === 'pile') it.pile = v || null;
+    else if (k === 'ntp') it.ntp = parseFloat(v) || 0;
+    else if (k === 'depth') it.depth = Math.max(0.05, parseFloat(v) || it.depth);
+    else if (k === 'slope') it.slope = Math.max(0, Math.min(5, parseFloat(v) || 0));
+    else if (k === 'swell') it.swell = Math.max(1, Math.min(2, parseFloat(v) || 1.25));
+    else if (k === 'ground') { const c = excCentroid(it.pts), y = excGroundY(c[0], c[1]); if (y === null) { alert('No se encontró terreno bajo el área.'); return; } it.ntp = +y.toFixed(3); }
+  } else if (p) {
+    if (k === 'name') p.name = String(v).trim() || p.name;
+    else if (k === 'phi') p.phi = Math.min(60, Math.max(15, parseFloat(v) || 35));
+    else if (k === 'ntp') p.ntp = parseFloat(v) || 0;
+    else if (k === 'ground') { const y = excGroundY(p.x, p.z); if (y === null) { alert('No se encontró terreno en ese punto.'); return; } p.ntp = +y.toFixed(3); }
+  }
+  excChanged();
+};
+window.excDelete = function (id) {
+  const it = excFind(id), p = excPile(id); if (!it && !p) return;
+  if (!confirm(`¿Eliminar «${(it || p).name}»?`)) return;
+  if (typeof DIMV !== 'undefined' && DIMV.open) dvPushUndo();
+  if (it) EXC.items = EXC.items.filter(x => x !== it);
+  else { EXC.piles = EXC.piles.filter(x => x !== p); EXC.items.forEach(i => { if (i.pile === p.id) i.pile = null; }); }
+  if (DIMV.excSel && DIMV.excSel.id === id) DIMV.excSel = null;
+  excTerrainStencil(); excChanged();
+};
+// abre Vistas y cotas en una planta dedicada (crea la vista si no existe)
+window.excOpenPlan = function (tool) {
+  if (!state.modelLoaded) { alert('Carga primero un modelo.'); return; }
+  openDimViews();
+  if (!DIMV.open) return;
+  let v = DIMV.doc.views.find(x => x.kind === 'plan' && x.excPlan) || DIMV.doc.views.find(x => x.kind === 'plan');
+  if (!v) { dvNewView('plan'); v = dvActive(); v.name = dvUniqueName('Plano de excavaciones'); v.excPlan = true; dvChanged(true); }
+  else if (v.id !== DIMV.activeId) dvSelectView(v.id);
+  v.showExc = true; dvRefreshUI();
+  if (tool) dvSetTool(tool);
+};
+
+// ── chip editor (bloque F) ──
+function ceRenderExcEditor(chip) {
+  const sel = document.getElementById('ce-link'), lab = document.getElementById('ce-link-label');
+  lab.textContent = '🔗 Enlazar con excavación';
+  EXC.items.forEach(it => { const o = document.createElement('option'); o.value = it.id; o.textContent = '⛏ ' + it.name + ' (' + excF(excVol(it), 1) + ' m³)'; if (chip.blockData?.excKey === it.id) o.selected = true; sel.appendChild(o); });
+  if (!EXC.items.length) sel.innerHTML = '<option value="">⚠ No hay excavaciones — defínelas en Bloque F</option>';
+  document.getElementById('ce-exc-wrap').style.display = 'flex';
+  document.getElementById('ce-exc-pct').value = chip.blockData?.toPct ?? 100;
+}
+
+// ═══ EXCAVACIONES EN VISTAS Y COTAS (definición en planta + plano) ═══
+const EXC_STEPS = { 'exc-rect':['Excavación: clic en la primera esquina', 'Clic en la esquina opuesta · Shift: cuadrado'],
+  'exc-poly':['Excavación: clic en el primer vértice', 'Clic en cada vértice · Shift: 15° · Enter, doble clic o clic der.: cerrar (mín. 3)'],
+  'exc-pile':['Acopio: clic donde se acumulará el material'] };
+function excIsTool(t) { return t === 'exc-rect' || t === 'exc-poly' || t === 'exc-pile'; }
+function excViewOn(v) { return v && v.kind === 'plan' && v.showExc !== false; }
+function excXZ(B, x2, y2) { const p = dvFrom2(B, x2, y2); return [p.x, p.z]; }
+function exc2D(B, x, z, y) { return dvTo2(B, new THREE.Vector3(x, y || 0, z)); }
+function excCursorXZ(x, y) {
+  const v = dvActive(), sc = dvScreen(v), S = DIMV.excDraw;
+  const h = dvSnap(x, y); let P = dvTo2(sc.B, h.p);
+  if (DIMV.shift && S && S.pts.length) {
+    const b = exc2D(sc.B, ...S.pts[S.pts.length - 1]), c = sc.from(x, y), dx = c[0] - b[0], dy = c[1] - b[1];
+    if (S.t === 'exc-rect') { const m = Math.max(Math.abs(dx), Math.abs(dy)); P = [b[0] + Math.sign(dx || 1) * m, b[1] + Math.sign(dy || 1) * m]; }
+    else { const L = Math.hypot(dx, dy), a = Math.round(Math.atan2(dy, dx) / (Math.PI / 12)) * (Math.PI / 12); P = [b[0] + L * Math.cos(a), b[1] + L * Math.sin(a)]; }
+    return { kind:'free', p:dvFrom2(sc.B, P[0], P[1]), ortho:true, xz:excXZ(sc.B, P[0], P[1]) };
+  }
+  return Object.assign(h, { xz:[h.p.x, h.p.z] });
+}
+function excClick(x, y) {
+  const v = dvActive(); if (!v || v.kind !== 'plan') { dvFlash('Las excavaciones se definen en una vista en planta'); return; }
+  const t = DIMV.tool, h = excCursorXZ(x, y), xz = h.xz;
+  if (t === 'exc-pile') {
+    dvPushUndo();
+    const gy = excGroundY(xz[0], xz[1]), p = { id:excId('pile'), name:'Acopio ' + (EXC.piles.length + 1), x:xz[0], z:xz[1], ntp:gy !== null ? +gy.toFixed(3) : EXC.ntp, phi:35 };
+    EXC.piles.push(p); EXC.items.forEach(i => { if (!i.pile) i.pile = p.id; });
+    DIMV.excSel = { id:p.id }; dvSetTool('nav'); excChanged(); dvFlash(`«${p.name}» creado · excavaciones sin acopio asignadas a él`); return;
+  }
+  const S = DIMV.excDraw || (DIMV.excDraw = { t, pts:[] });
+  if (S.pts.length) { const sc = dvScreen(v), q = sc.to(...exc2D(sc.B, ...S.pts[S.pts.length - 1])); if (Math.hypot(q[0] - x, q[1] - y) < 3) return; }
+  S.pts.push(xz);
+  if (t === 'exc-rect' && S.pts.length === 2) {
+    const B = dvScreen(v).B, a = exc2D(B, ...S.pts[0]), c = exc2D(B, ...S.pts[1]);
+    if (Math.abs(a[0] - c[0]) < 0.05 || Math.abs(a[1] - c[1]) < 0.05) { DIMV.excDraw = null; dvFlash('Rectángulo demasiado pequeño'); return; }
+    excCreate([a, [c[0], a[1]], c, [a[0], c[1]]].map(q => excXZ(B, q[0], q[1])));
+  }
+  DIMV.ovDirty = true; dvUpdateStatus();
+}
+function excFinishPoly(commit) {
+  const S = DIMV.excDraw; DIMV.excDraw = null;
+  if (commit && S && S.t === 'exc-poly') { if (S.pts.length >= 3 && Math.abs(excArea(S.pts)) > 0.01) excCreate(S.pts); else dvFlash('El polígono necesita al menos 3 vértices'); }
+  DIMV.ovDirty = true; dvUpdateStatus();
+}
+function excCreate(pts) {
+  dvPushUndo();
+  const c = excCentroid(pts), gy = excGroundY(c[0], c[1]), last = EXC.items[EXC.items.length - 1];
+  const it = { id:excId('exc'), name:'Excavación ' + (EXC.items.length + 1), pts, ntp:gy !== null ? +gy.toFixed(3) : EXC.ntp,
+    depth:last ? last.depth : 1.5, slope:last ? last.slope : 0.5, swell:last ? last.swell : 1.25, pile:last ? last.pile : (EXC.piles[0]?.id || null) };
+  EXC.items.push(it); DIMV.excSel = { id:it.id };
+  excTerrainStencil(); excChanged();
+  dvFlash(`«${it.name}»: ${excF(Math.abs(excArea(pts)))} m² · V ${excF(excVol(it))} m³ — ajusta profundidad y talud en el panel`);
+}
+function excHint() { const S = DIMV.excDraw, a = EXC_STEPS[DIMV.tool] || ['']; return a[Math.min(a.length - 1, S ? S.pts.length : 0)] + ' · ajuste al modelo activo · Esc: cancelar'; }
+
+// ── dibujo SVG ──
+function excSVG(sc, v) {
+  if (!excViewOn(v) || (!EXC.items.length && !EXC.piles.length && !DIMV.excDraw)) return '';
+  const B = sc.B, S = (x, z, y) => sc.to(...exc2D(B, x, z, y)).map(dvF1);
+  let h = `<defs><pattern id="excHatch" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#8d6e63" stroke-width="1.1"/></pattern></defs>`;
+  EXC.items.forEach(it => {
+    const sel = DIMV.excSel && DIMV.excSel.id === it.id, top = it.pts.map(p => S(p[0], p[1]).join(',')).join(' ');
+    const bot = excInset(it.pts, it.slope * it.depth).map(p => S(p[0], p[1]).join(',')).join(' ');
+    const c = S(...excCentroid(it.pts)), V = excVol(it);
+    h += `<g class="exc-g${sel ? ' sel' : ''}" data-exc="${it.id}"><polygon class="exc-fill" points="${top}"/>${it.slope > 0 ? `<polygon class="exc-bot" points="${bot}"/>` : ''}
+      <polygon class="exc-top" points="${top}"/><polygon class="exc-hit" points="${top}"/>
+      <text class="exc-t" x="${c[0]}" y="${dvF1(c[1] - 4)}" text-anchor="middle">${dvEsc(it.name)}</text>
+      <text class="exc-t s" x="${c[0]}" y="${dvF1(+c[1] + 9)}" text-anchor="middle">h ${excF(it.depth)} · V ${excF(V, 1)} m³</text></g>`;
+    if (sel && !DIMV.readonly) it.pts.forEach((p, i) => { const q = S(p[0], p[1]); h += `<rect class="exc-h${DIMV.excHov === i ? ' on' : ''}" x="${dvF1(q[0] - 5)}" y="${dvF1(q[1] - 5)}" width="10" height="10"/>`; });
+  });
+  EXC.piles.forEach(p => {
+    const V = excPileVol(p.id), r = Math.max(0.3, excPileR(p, V)) / sc.wpp, c = S(p.x, p.z), sel = DIMV.excSel && DIMV.excSel.id === p.id;
+    h += `<g class="exc-g pile${sel ? ' sel' : ''}" data-exc="${p.id}"><circle class="exc-pile" cx="${c[0]}" cy="${c[1]}" r="${dvF1(r)}"/>
+      <path class="exc-top" d="M${c[0] - 6} ${c[1]}H${+c[0] + 6}M${c[0]} ${c[1] - 6}V${+c[1] + 6}"/><circle class="exc-hit" cx="${c[0]}" cy="${c[1]}" r="${dvF1(Math.max(8, r))}"/>
+      <text class="exc-t" x="${c[0]}" y="${dvF1(c[1] - Math.max(10, r) - 12)}" text-anchor="middle">⛰ ${dvEsc(p.name)}</text>
+      <text class="exc-t s" x="${c[0]}" y="${dvF1(c[1] - Math.max(10, r) - 1)}" text-anchor="middle">${excF(V, 1)} m³ sueltos</text></g>`;
+  });
+  const D = DIMV.excDraw;
+  if (D && DIMV.hover) {
+    const cur = DIMV.hover.xz || [DIMV.hover.p.x, DIMV.hover.p.z];
+    let pts = [...D.pts, cur];
+    if (D.t === 'exc-rect' && D.pts.length === 1) { const a = exc2D(B, ...D.pts[0]), c = exc2D(B, ...cur); pts = [a, [c[0], a[1]], c, [a[0], c[1]]].map(q => excXZ(B, q[0], q[1])); }
+    const ps = pts.map(p => S(p[0], p[1]).join(',')).join(' ');
+    h += `<polygon class="exc-pv" points="${ps}"/>`;
+    if (pts.length >= 3 && DIMV.cursor) h += `<text class="sk-meas" x="${dvF1(DIMV.cursor[0] + 16)}" y="${dvF1(DIMV.cursor[1] + 26)}">A ${excF(Math.abs(excArea(pts)))} m²</text>`;
+    else if (pts.length === 2 && DIMV.cursor) h += `<text class="sk-meas" x="${dvF1(DIMV.cursor[0] + 16)}" y="${dvF1(DIMV.cursor[1] + 26)}">L ${excF(Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]))} m</text>`;
+  }
+  return h;
+}
+// ── edición con 🖐 ──
+function excHandleAt(x, y, tol) {
+  const v = dvActive(); if (!excViewOn(v) || !DIMV.excSel) return -1;
+  const it = excFind(DIMV.excSel.id); if (!it) return -1;
+  const sc = dvScreen(v); let bi = -1, bd = tol;
+  it.pts.forEach((p, i) => { const q = sc.to(...exc2D(sc.B, p[0], p[1])), d = Math.hypot(q[0] - x, q[1] - y); if (d <= bd) { bd = d; bi = i; } });
+  return bi;
+}
+function excDrag(d, x, y) {
+  const v = dvActive(), sc = dvScreen(v), it = excFind(d.excId), p = excPile(d.excId);
+  if (d.mode === 'excpt' && it) { const h = dvSnap(x, y); it.pts[d.excIdx] = [h.p.x, h.p.z]; DIMV.hover = h; }
+  else {
+    const a = excXZ(sc.B, ...sc.from(d.x, d.y)), b = excXZ(sc.B, ...sc.from(x, y)), dx = b[0] - a[0], dz = b[1] - a[1];
+    if (it) it.pts = d.orig.map(q => [q[0] + dx, q[1] + dz]);
+    if (p) { p.x = d.orig[0][0] + dx; p.z = d.orig[0][1] + dz; }
+  }
+  DIMV.ovDirty = true;
+}
+// ── panel lateral ──
+function excDvPanel() {
+  const el = document.getElementById('dv-exc'), v = dvActive(); if (!el) return;
+  if (!v || v.kind !== 'plan') { el.innerHTML = EXC.items.length ? `<div class="dv-sec-t">⛏ Excavaciones · ${EXC.items.length}</div><div class="dv-note">Se definen y se dibujan en las vistas en planta.</div>` : ''; el.style.display = EXC.items.length ? '' : 'none'; return; }
+  el.style.display = '';
+  let h = `<div class="dv-sec-t">⛏ Excavaciones · ${EXC.items.length}</div>
+    <label class="dv-chk"><input type="checkbox"${v.showExc !== false ? ' checked' : ''} onchange="excShowInView(this.checked)"> Mostrar en esta planta (y en su PDF)</label>`;
+  if (!DIMV.readonly) h += `<div class="dv-btnrow ed"><button class="dv-btn sm${DIMV.tool === 'exc-rect' ? ' on' : ''}" onclick="dvSetTool('exc-rect')" title="Área rectangular: dos esquinas">▭ Rectángulo</button>
+      <button class="dv-btn sm${DIMV.tool === 'exc-poly' ? ' on' : ''}" onclick="dvSetTool('exc-poly')" title="Área poligonal: clic en cada vértice">⬠ Polígono</button>
+      <button class="dv-btn sm${DIMV.tool === 'exc-pile' ? ' on' : ''}" onclick="dvSetTool('exc-pile')" title="Sitio donde se acumula el material">⛰ Acopio</button></div>`;
+  const row = (o, isP) => `<div class="dv-hrow${DIMV.excSel && DIMV.excSel.id === o.id ? ' on' : ''}" onclick="excSelect('${o.id}')"><span class="dv-hn">${isP ? '⛰' : '⛏'} ${dvEsc(o.name)}</span><small class="dv-hk">${isP ? excF(excPileVol(o.id), 1) : excF(excVol(o), 1)} m³</small>${DIMV.readonly ? '' : `<button class="dv-ib ed" title="Eliminar" onclick="event.stopPropagation();excDelete('${o.id}')">✕</button>`}</div>`;
+  h += '<div class="dv-hlist">' + EXC.items.map(o => row(o, false)).join('') + EXC.piles.map(o => row(o, true)).join('') + '</div>';
+  const sel = DIMV.excSel ? (excFind(DIMV.excSel.id) || excPile(DIMV.excSel.id)) : null;
+  if (sel && !DIMV.readonly) {
+    const isP = !!excPile(sel.id), f = (lab, k, val, step, extra) => `<label class="dv-f"><span>${lab}</span><input class="dv-in" type="number" step="${step}" value="${val}" onchange="excSetProp('${sel.id}','${k}',this.value)"${extra || ''}></label>`;
+    h += `<div class="dv-scope ed"><label class="dv-f"><span>Nombre</span><input class="dv-in" value="${dvEsc(sel.name)}" onchange="excSetProp('${sel.id}','name',this.value)"></label>`;
+    if (!isP) {
+      const V = excVol(sel);
+      h += f('NTP (Y, m)', 'ntp', sel.ntp, 0.01) + `<button class="dv-btn sm" onclick="excSetProp('${sel.id}','ground')" title="Toma el nivel del terreno del modelo en el centro del área">↧ NTP del terreno</button>` +
+        f('Profundidad (m)', 'depth', sel.depth, 0.05, ' min="0.05"') + f('Talud (H:V)', 'slope', sel.slope, 0.1, ' min="0" max="5"') + f('Esponjamiento', 'swell', sel.swell, 0.05, ' min="1" max="2"') +
+        `<label class="dv-f"><span>Acopio</span><select class="dv-in" onchange="excSetProp('${sel.id}','pile',this.value)"><option value="">— ninguno —</option>${EXC.piles.map(p => `<option value="${p.id}"${p.id === sel.pile ? ' selected' : ''}>${dvEsc(p.name)}</option>`).join('')}</select></label>
+        <div class="dv-note">Área ${excF(Math.abs(excArea(sel.pts)))} m² · fondo ${excF(Math.abs(excArea(excInset(sel.pts, sel.slope * sel.depth))))} m²<br>V banco <b>${excF(V)} m³</b> · V suelto ${excF(V * sel.swell)} m³<br>Arrastra el área para moverla; los cuadros, para mover vértices.</div>`;
+    } else {
+      const V = excPileVol(sel.id);
+      h += f('NTP (Y, m)', 'ntp', sel.ntp, 0.01) + `<button class="dv-btn sm" onclick="excSetProp('${sel.id}','ground')">↧ NTP del terreno</button>` + f('Ángulo de reposo (°)', 'phi', sel.phi, 1, ' min="15" max="60"') +
+        `<div class="dv-note">${excF(V)} m³ sueltos · Ø ${excF(2 * excPileR(sel, V))} m · altura ${excF(excPileR(sel, V) * Math.tan(sel.phi * Math.PI / 180))} m<br>Recibe: ${EXC.items.filter(i => i.pile === sel.id).map(i => dvEsc(i.name)).join(', ') || '—'}</div>`;
+    }
+    h += '</div>';
+  }
+  el.innerHTML = h;
+}
+window.excShowInView = function (on) { const v = dvActive(); if (!v) return; v.showExc = !!on; dvChanged(false); DIMV.ovDirty = true; };
+window.excSelect = function (id) { DIMV.excSel = DIMV.excSel && DIMV.excSel.id === id ? null : { id }; DIMV.skSel = null; DIMV.selId = null; DIMV.ovDirty = true; excDvPanel(); dvUpdateStatus(); };
+// ── PDF ──
+function excPdfLabel(doc, x, y, t1, t2) {   // rótulo de dos líneas sobre fondo blanco
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); const w1 = doc.getTextWidth(dvPS(t1));
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); const w2 = doc.getTextWidth(dvPS(t2)), w = Math.max(w1, w2) + 1.6;
+  doc.setFillColor(255, 255, 255); doc.rect(x - w / 2, y - 3, w, 5.6, 'F');
+  doc.setTextColor(78, 52, 46); doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.text(dvPS(t1), x, y - 0.6, { align:'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.text(dvPS(t2), x, y + 2, { align:'center' });
+}
+function excPdf(doc, v, B, to, A) {
+  if (!excViewOn(v) || (!EXC.items.length && !EXC.piles.length)) return;
+  const k = Math.hypot(...[0, 1].map(i => to(1, 0)[i] - to(0, 0)[i])), P = (x, z) => to(...exc2D(B, x, z));
+  const path = (pts, style, closed) => { const q = pts.map(p => P(p[0], p[1])); doc.lines(q.slice(1).map((p, i) => [p[0] - q[i][0], p[1] - q[i][1]]), q[0][0], q[0][1], [1, 1], style, closed !== false); };
+  EXC.items.forEach(it => {
+    pdfAlpha(doc, 0.18, () => { doc.setFillColor(141, 110, 99); path(it.pts, 'F'); });
+    doc.setDrawColor(93, 64, 55); doc.setLineWidth(0.35); doc.setLineDashPattern([], 0); path(it.pts, 'S');
+    if (it.slope > 0) { doc.setLineWidth(0.2); doc.setLineDashPattern([1.2, 0.8], 0); path(excInset(it.pts, it.slope * it.depth), 'S'); doc.setLineDashPattern([], 0); }
+    const c = P(...excCentroid(it.pts));
+    excPdfLabel(doc, c[0], c[1], it.name, `h ${excF(it.depth)} m · V ${excF(excVol(it), 1)} m3`);
+  });
+  EXC.piles.forEach(p => {
+    const V = excPileVol(p.id), c = P(p.x, p.z), r = Math.max(0.6, excPileR(p, V) * k);
+    pdfAlpha(doc, 0.2, () => { doc.setFillColor(201, 162, 124); doc.circle(c[0], c[1], r, 'F'); });
+    doc.setDrawColor(93, 64, 55); doc.setLineWidth(0.25); doc.setLineDashPattern([1.5, 0.8], 0); doc.circle(c[0], c[1], r, 'S'); doc.setLineDashPattern([], 0);
+    doc.line(c[0] - 1, c[1], c[0] + 1, c[1]); doc.line(c[0], c[1] - 1, c[0], c[1] + 1);
+    excPdfLabel(doc, c[0], c[1] - r - 2.2, p.name, `${excF(V, 1)} m3 sueltos`);
+  });
+  if (!A || !EXC.items.length) return;   // cuadro de cantidades (esquina superior derecha)
+  const cols = [['Excavación', 26], ['Área m2', 13], ['h m', 9], ['Talud', 9], ['V banco m3', 16], ['V suelto m3', 16], ['Acopio', 20]], W = cols.reduce((s, c) => s + c[1], 0), rh = 3.6;
+  const x0 = A.x + 3, y0 = A.y + 3, rows = EXC.items.length + 2;   // esquina superior izquierda (la flecha del norte va a la derecha)
+  doc.setFillColor(255, 255, 255); doc.rect(x0, y0, W, rh * rows, 'F'); doc.setDrawColor(93, 64, 55); doc.setLineWidth(0.2); doc.rect(x0, y0, W, rh * rows, 'S');
+  doc.setFontSize(5.8); doc.setTextColor(40, 30, 25);
+  const line = (vals, r, bold) => { let x = x0; doc.setFont('helvetica', bold ? 'bold' : 'normal'); vals.forEach((t, i) => { doc.text(dvPS(String(t)), x + 1, y0 + rh * r + 2.5); x += cols[i][1]; }); if (r) doc.line(x0, y0 + rh * r, x0 + W, y0 + rh * r); };
+  line(cols.map(c => c[0]), 0, true);
+  let tB = 0, tS = 0;
+  EXC.items.forEach((it, i) => { const V = excVol(it); tB += V; tS += V * it.swell;
+    line([it.name.slice(0, 18), excF(Math.abs(excArea(it.pts))), excF(it.depth), excF(it.slope, 1) + ':1', excF(V), excF(V * it.swell), (excPile(it.pile)?.name || '—').slice(0, 14)], i + 1); });
+  line(['TOTAL', '', '', '', excF(tB), excF(tS), ''], rows - 1, true);
+}
 
 // ── VIDEO RECORDING (MediaRecorder + canvas.captureStream) ───────────────────
 // Records the WebGL canvas to a YouTube-compatible WebM (VP9), low weight via
@@ -6620,6 +7322,7 @@ function startDayPlayback(onDayEnd, resetFirst) {
   // Capture the accumulated baseline for each foundation at the start of this
   // day, so this day's pours build on top of whatever was already poured.
   foundations.forEach((f) => { f.simBaseLevel = f.pourLevel || 0; });
+  excDayStart();
   // Skip the empty time before the first block: jump the cursor to the first
   // event and end at the last event.
   const startHour = dayFirstEventHour(activeDay());
@@ -6818,6 +7521,9 @@ function applySimFrame(hour) {
     });
   // restore physics default when no capsule is currently driving a crane
   if (!anyCapsuleActive && typeof liftPhysicsEnabled !== 'undefined') liftPhysicsEnabled = _physicsDefault;
+
+  // ── Block F: excavaciones (hueco, retroexcavadora, acopios) ──
+  excFrame(hour);
 }
 
 // Linear interpolation between two poses
@@ -6857,10 +7563,13 @@ function resetToInitialState() {
     applyPoseToObject(cfg, { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz });
   });
   resetVisibility();   // all Block-C targets back to visible
+  excResetSim();
 }
 
 function restoreSimState() {
   hideScreenTitle();
+  if (EXC.rt) EXC.rt.lastTs = 0;
+  excApplyStatic();
   foundations.forEach((f, key) => applyFoundationProgress(key, f.pourLevel));
   // Reset every piece that has movement chips back to its original model position
   liftPositions.forEach((cfg, key) => {
@@ -6944,7 +7653,8 @@ function serializeDay(day) {
     const bd = Object.assign({}, c.blockData);
     if (bd.foundationKey && foundations.has(bd.foundationKey)) bd.foundationName = foundations.get(bd.foundationKey).name;
     if (bd.liftPositionKey && liftPositions.has(bd.liftPositionKey)) bd.liftPositionName = liftPositions.get(bd.liftPositionKey).name;
-    delete bd.foundationKey; delete bd.liftPositionKey;
+    if (bd.excKey && excFind(bd.excKey)) bd.excName = excFind(bd.excKey).name;
+    delete bd.foundationKey; delete bd.liftPositionKey; delete bd.excKey;
     return Object.assign({}, c, { blockData: bd });
   });
   return {
@@ -7131,6 +7841,7 @@ function buildMasterPayload() {
     blockB: { liftPositions: defs.liftPositions },
     blockC: { visStates: defs.visStates },
     blockE: { capsules: defs.capsules },
+    blockF: excSerialize(),
   };
 }
 
@@ -7152,6 +7863,7 @@ window.exportDayJSON = function(dayId) {
     blockB: { liftPositions: collectBlockDefs().liftPositions },
     blockC: { visStates: collectBlockDefs().visStates },
     blockE: { capsules: collectBlockDefs().capsules },
+    blockF: excSerialize(),
   };
   const safe = (day.date||'dia') + '_' + (day.label||'').replace(/[^a-z0-9]+/gi,'-');
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -7171,6 +7883,7 @@ function relinkChips(chips) {
     if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
     if (c.blockData.visStateName && visByName[c.blockData.visStateName]) c.blockData.visStateKey = visByName[c.blockData.visStateName];
     if (c.blockData.capsuleName && capByName[c.blockData.capsuleName]) c.blockData.capsuleKey = capByName[c.blockData.capsuleName];
+    if (c.blockData.excName) { const ex = EXC.items.find(i => i.name === c.blockData.excName); if (ex) c.blockData.excKey = ex.id; }
   });
 }
 
@@ -7202,6 +7915,7 @@ function loadSimObject(p) {
   if (p.blockA?.foundations) importFoundationsData(p.blockA.foundations);
   if (p.blockC?.visStates) importVisStatesData(p.blockC.visStates);
   if (p.blockE?.capsules) importCapsulesData(p.blockE.capsules);
+  if (p.blockF) importExcData(p.blockF);
   if (p.blockB?.liftPositions) importLiftPositionsData(p.blockB.liftPositions);
 
   if (p.kind === 'day' && p.day) {
@@ -8380,6 +9094,7 @@ let _winTopZ = 200;
   ['block-a-panel',  '.bap-header'],
   ['block-c-panel',  '.bap-header'],
   ['block-e-panel',  '.bap-header'],
+  ['block-f-panel',  '.bap-header'],
   ['record-panel',   '.rp-header'],
   ['cloud-panel',    '.cp-header'],
 ].forEach(([id, sel]) => makeWindowDraggable(id, sel));
@@ -9698,15 +10413,15 @@ function dvSnap(px, py, excl) {   // excl: id de cable a ignorar (el que se edit
 }
 function dvStepNeedsSnap() {
   const t = DIMV.tool, s = DIMV.pending ? DIMV.pending.step : 0;
-  if (t === 'secpick' || t === 'cable' || skIsTool(t)) return true;
+  if (t === 'secpick' || t === 'cable' || skIsTool(t) || excIsTool(t)) return true;
   if (t === 'nav') return false;
   if (t === 'linear' || t === 'aligned' || t === 'edges') return s < 2;
   return s < 1;
 }
 function dvUpdateHover() {
-  if ((DIMV.ced && DIMV.ced.drag) || (DIMV.down && DIMV.down.mode === 'skpt')) return;   // el arrastre de edición gestiona su propio ajuste
+  if ((DIMV.ced && DIMV.ced.drag) || (DIMV.down && (DIMV.down.mode === 'skpt' || DIMV.down.mode === 'excpt'))) return;   // el arrastre de edición gestiona su propio ajuste
   if (!DIMV.cursor || !dvActive() || !dvStepNeedsSnap() || (DIMV.down && DIMV.down.moved)) { if (DIMV.hover) { DIMV.hover = null; DIMV.ovDirty = true; } dvUpdateCoords(); return; }
-  DIMV.hover = skIsTool(DIMV.tool) ? skCursor(DIMV.cursor[0], DIMV.cursor[1]) : dvSnap(DIMV.cursor[0], DIMV.cursor[1]);
+  DIMV.hover = skIsTool(DIMV.tool) ? skCursor(DIMV.cursor[0], DIMV.cursor[1]) : excIsTool(DIMV.tool) ? excCursorXZ(DIMV.cursor[0], DIMV.cursor[1]) : dvSnap(DIMV.cursor[0], DIMV.cursor[1]);
   DIMV.ovDirty = true; dvUpdateCoords();
 }
 
@@ -9812,13 +10527,14 @@ function dvFootOnEdge(a, segA, seg, B) {
 }
 function dvPushUndo() {
   const v = dvActive(); if (!v) return;
-  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items), hidden:JSON.stringify(v.hidden || []), cables:JSON.stringify(DIMV.doc.cables || []), sk:JSON.stringify(v.sketches || []) });
+  DIMV.undo.push({ id:v.id, items:JSON.stringify(v.items), hidden:JSON.stringify(v.hidden || []), cables:JSON.stringify(DIMV.doc.cables || []), sk:JSON.stringify(v.sketches || []), exc:JSON.stringify(excSerialize()) });
   if (DIMV.undo.length > 100) DIMV.undo.shift();
 }
 window.dvUndo = function () {
   const s = DIMV.undo.pop(); if (!s) { dvFlash('Nada que deshacer'); return; }
   const v = DIMV.doc.views.find(x => x.id === s.id); if (!v) return;
   v.items = JSON.parse(s.items); if (s.hidden) v.hidden = JSON.parse(s.hidden);
+  if (s.exc && s.exc !== JSON.stringify(excSerialize())) { excNormalize(JSON.parse(s.exc)); if (DIMV.excSel && !excFind(DIMV.excSel.id) && !excPile(DIMV.excSel.id)) DIMV.excSel = null; excTerrainStencil(); excChanged(); }
   if (s.sk) { v.sketches = JSON.parse(s.sk); if (DIMV.skSel && !skFind(v, DIMV.skSel)) DIMV.skSel = null; DIMV.sk = null; skRefreshPanel(); }
   if (s.cables) {
     DIMV.doc.cables = JSON.parse(s.cables);
@@ -9845,6 +10561,7 @@ function dvEditText(it) {
 function dvToolClick(x, y) {
   const v = dvActive(), sc = dvScreen(v), t = DIMV.tool, P = DIMV.pending, step = P ? P.step : 0;
   if (skIsTool(t)) { skClick(x, y); return; }
+  if (excIsTool(t)) { excClick(x, y); return; }
   if (t === 'cable') { dvPolyClick(x, y); return; }
   if (t === 'secpick') {
     const sp = dvSnap(x, y); v.section.depth = dvSecBase(v).dot(sp.p);
@@ -9962,6 +10679,7 @@ function dvDrawOverlay() {
     sg.tris.forEach(tr => { h += `<polygon class="dv-seca" points="${tr.map(q => P(q[0], q[1]).join(',')).join(' ')}"/>`; });
     sg.texts.forEach(tx => { const q = P(tx.x, tx.y); h += `<text class="dv-sectx" x="${q[0]}" y="${q[1]}" text-anchor="${tx.anchor}">${tx.str}</text>`; });
   }
+  h += excSVG(sc, v);
   h += skSVG(sc, v);
   if (v.showCables !== false) h += dvCablesSVG(sc);
   v.items.forEach(it => { h += dvItemSVG(it, sc, S, it.id === DIMV.selId ? 'sel' : ''); });
@@ -9982,7 +10700,7 @@ function dvDrawOverlay() {
   h += dvCedSVG(sc);
   if (DIMV.stroke && DIMV.stroke.pts.length > 1)
     h += `<polyline class="dv-stroke" stroke="${DIMV.stroke.color}" points="${DIMV.stroke.pts.map(q => dvF1(q[0]) + ',' + dvF1(q[1])).join(' ')}"/>`;
-  if (DIMV.hover && (dvStepNeedsSnap() || (DIMV.ced && DIMV.ced.drag) || (DIMV.down && DIMV.down.mode === 'skpt' && DIMV.down.moved))) h += dvSnapSVG(DIMV.hover, sc);
+  if (DIMV.hover && (dvStepNeedsSnap() || (DIMV.ced && DIMV.ced.drag) || (DIMV.down && (DIMV.down.mode === 'skpt' || DIMV.down.mode === 'excpt') && DIMV.down.moved))) h += dvSnapSVG(DIMV.hover, sc);
   if (DIMV.assist && DIMV.cursor) {   // dedo + punto de precisión
     const a = DIMV.assist, c = DIMV.cursor.map(dvF1);
     h += `<circle class="dv-finger" cx="${dvF1(a.fx)}" cy="${dvF1(a.fy)}" r="24"/>
@@ -10014,6 +10732,7 @@ function dvUpdateStatus() {
   else if (DIMV.readonly) s = 'Arrastrar: desplazar · Rueda o pellizco: zoom · F: encuadrar · Esc: cerrar';
   else if (!dvActive()) s = 'Crea una vista con «＋ Nueva vista…» para empezar.';
   else if (skIsTool(DIMV.tool)) s = skHint();
+  else if (excIsTool(DIMV.tool)) s = excHint();
   else if (DIMV.tool === 'nav' && DIMV.skSel) s = skSelHint();
   else if (DIMV.tool === 'nav' && DIMV.selId) {
     const it = dvFindItem(DIMV.selId), v = dvActive();
@@ -10034,6 +10753,8 @@ function dvUpdateCoords() {
 }
 window.dvSetTool = function (t) {
   if (DIMV.sk && t !== DIMV.tool) skEnd();
+  if (DIMV.excDraw && t !== DIMV.tool) excFinishPoly(false);
+  if (excIsTool(t) && dvActive() && dvActive().kind !== 'plan') { dvFlash('Las excavaciones se definen en una vista en planta'); t = 'nav'; }
   if (t !== 'nav') DIMV.skSel = null;
   if (skIsTool(t) && !DIMV.skBar) skToggleBar(true);
   if (DIMV.poly && t !== 'cable') dvPolyFinish();
@@ -10044,7 +10765,7 @@ window.dvSetTool = function (t) {
   document.querySelectorAll('#dv-cable-modes [data-cm]').forEach(b => b.classList.toggle('active', b.dataset.cm === DIMV.cableMode));
   document.querySelectorAll('#dv-tools [data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
   DIMV.stage.classList.toggle('drawing', t !== 'nav');
-  DIMV.hoverReq = true; DIMV.ovDirty = true; dvUpdateStatus(); skRefreshPanel();
+  DIMV.hoverReq = true; DIMV.ovDirty = true; dvUpdateStatus(); skRefreshPanel(); excDvPanel();
 };
 window.dvToggleSnap = function (k) {
   DIMV.snaps[k] = !DIMV.snaps[k];
@@ -10217,7 +10938,7 @@ function dvRefreshSettings() {
   document.getElementById('dv-model').textContent = DIMV.doc.model;
 }
 function dvRefreshUI() {
-  dvRefreshList(); dvRefreshProps(); dvRefreshHidden(); skRefreshPanel(); dvRefreshCables(); dvRefreshSettings(); dvUpdateStatus(); skSyncBar();
+  dvRefreshList(); dvRefreshProps(); dvRefreshHidden(); excDvPanel(); skRefreshPanel(); dvRefreshCables(); dvRefreshSettings(); dvUpdateStatus(); skSyncBar();
   const tb = document.getElementById('dv-touch-btn');
   if (tb) { tb.style.display = dvTouchDevice() && !DIMV.readonly ? '' : 'none'; tb.classList.toggle('active', !!DIMV.touchAssist); }
   document.getElementById('dv-empty').style.display = dvActive() ? 'none' : 'flex';
@@ -10279,7 +11000,7 @@ window.dvNewView = function (kind) {
 window.dvSelectView = function (id) {
   if (id === DIMV.activeId) return;
   if (DIMV.ced) dvCedFinish();
-  DIMV.activeId = id; DIMV.selId = null; DIMV.pending = null; DIMV.hover = null; DIMV.sk = null; DIMV.skSel = null;
+  DIMV.activeId = id; DIMV.selId = null; DIMV.pending = null; DIMV.hover = null; DIMV.sk = null; DIMV.skSel = null; DIMV.excDraw = null;
   dvCollect(); DIMV.dirty = true; dvRefreshUI();
 };
 window.dvDupView = function (id) {
@@ -10463,6 +11184,8 @@ function dvPdfPage(doc, v, idx, total, aspect) {
     (ci && ci.strings.length ? ci.P : dvCablePath(cb)).forEach(q => { const p2 = to(...dvTo2(B, q)); if (prev) doc.line(prev[0], prev[1], p2[0], p2[1]); prev = p2; });
     if (ci) insPdf(doc, ci, B, to);
   });
+  excPdf(doc, v, B, to, A);
+  doc.setLineDashPattern([], 0);
   skList(v).forEach(s => { if (s.vis !== false) s.items.forEach(it => skPdf(doc, it, B, to)); });
   doc.setLineDashPattern([], 0);
   const sgp = dvSectionGeom(v, B, Sz);
@@ -12237,7 +12960,7 @@ window.openDimViews = function (opts) {
 window.closeDimViews = function () {
   if (!DIMV.open) return;
   DIMV.open = false; window.__dimOpen = false; cancelAnimationFrame(DIMV.raf);
-  DIMV.pending = null; DIMV.down = null; DIMV.hover = null; DIMV.hlNode = null; dvCtxClose(); DIMV.ced = null; DIMV.poly = null; DIMV.sk = null; DIMV.skSel = null;
+  DIMV.pending = null; DIMV.down = null; DIMV.hover = null; DIMV.hlNode = null; dvCtxClose(); DIMV.ced = null; DIMV.poly = null; DIMV.sk = null; DIMV.skSel = null; DIMV.excDraw = null;
   document.getElementById('dv-modal').classList.remove('open');
   if (DIMV.edgeGroup && DIMV.edgeGroup.parent) scene.remove(DIMV.edgeGroup);
   renderer.clippingPlanes = [];
@@ -12295,6 +13018,19 @@ window.closeDimViews = function () {
       try { st.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault(); return;
     }
+    if (e.button === 0 && DIMV.tool === 'nav' && !DIMV.readonly && !DIMV.ced && excViewOn(dvActive())) {   // excavación: vértice o mover
+      const hi = excHandleAt(x, y, e.pointerType === 'mouse' ? 9 : 22);
+      const exEl = hi < 0 && e.target.closest ? e.target.closest('[data-exc]') : null;
+      if (hi >= 0 || exEl) {
+        if (exEl) { DIMV.excSel = { id:exEl.getAttribute('data-exc') }; DIMV.skSel = null; DIMV.selId = null; }
+        const it = excFind(DIMV.excSel.id), pl = excPile(DIMV.excSel.id);
+        DIMV.down.mode = hi >= 0 ? 'excpt' : 'excmove'; DIMV.down.excIdx = hi; DIMV.down.excId = DIMV.excSel.id;
+        DIMV.down.orig = it ? it.pts.map(q => q.slice()) : pl ? [[pl.x, pl.z]] : [];
+        DIMV.ovDirty = true; excDvPanel();
+        try { st.setPointerCapture(e.pointerId); } catch (_) {}
+        e.preventDefault(); return;
+      }
+    }
     if (e.button === 0 && DIMV.tool === 'nav' && !DIMV.readonly && !DIMV.ced) {   // croquis: punto de control, o mover la figura
       const hi = DIMV.skSel ? skHandleAt(x, y, e.pointerType === 'mouse' ? 9 : 22) : -1;
       const skEl = hi < 0 && e.target.closest ? e.target.closest('[data-sk]') : null;
@@ -12346,7 +13082,7 @@ window.closeDimViews = function () {
       if (!d.moved && Math.hypot(x - d.x, y - d.y) > 4) {
         d.moved = true;
         if (!d.mode) d.mode = (d.shift && d.btn === 0 && dvCanOrbit(v)) ? 'orbit' : 'pan';
-        if (d.mode === 'item' || d.mode === 'skmove' || d.mode === 'skpt') dvPushUndo();
+        if (d.mode === 'item' || d.mode === 'skmove' || d.mode === 'skpt' || d.mode === 'excmove' || d.mode === 'excpt') dvPushUndo();
         st.classList.add('panning');
       }
       if (d.moved) {
@@ -12362,6 +13098,8 @@ window.closeDimViews = function () {
           v.dir = dvArr(dir.normalize()); v.up = [0, 1, 0]; DIMV.dirty = true;
         } else if (d.mode === 'skmove' || d.mode === 'skpt') {
           skDrag(d, x, y, e.shiftKey, e.altKey);
+        } else if (d.mode === 'excmove' || d.mode === 'excpt') {
+          excDrag(d, x, y);
         } else if (d.mode === 'item') {
           const it = dvFindItem(d.itemId);
           if (it) {
@@ -12399,8 +13137,9 @@ window.closeDimViews = function () {
     const d = DIMV.down; DIMV.down = null; st.classList.remove('panning');
     try { st.releasePointerCapture(e.pointerId); } catch (_) {}
     if (!d || !dvActive()) return;
+    if (d.moved && (d.mode === 'excmove' || d.mode === 'excpt')) { DIMV.hover = null; excChanged(); DIMV.hoverReq = true; return; }
     if (d.moved) { const ch = d.mode === 'item' || d.mode === 'skmove' || d.mode === 'skpt'; if (d.mode === 'skpt') { DIMV.hover = null; } dvChanged(ch); if (ch) skRefreshPanel(); DIMV.hoverReq = true; return; }
-    if (d.skId) return;   // clic sobre una figura del croquis: ya quedó seleccionada
+    if (d.skId || d.excId) return;   // clic sobre una figura del croquis o una excavación: ya quedó seleccionada
     if (d.noClick) return;
     if (DIMV.ced && d.btn === 0) {   // durante la edición un clic no dibuja: fuera del cable termina la edición
       const h = dvCableAtScreen(d.x, d.y, 10); if (!h || h.cable.id !== DIMV.ced.id) dvCedFinish(); return;
@@ -12413,11 +13152,13 @@ window.closeDimViews = function () {
     }
     if (d.btn === 2 && DIMV.poly) { dvPolyFinish(); return; }
     if (d.btn === 2 && DIMV.sk) { skEnd(true); return; }
+    if (d.btn === 2 && DIMV.excDraw) { excFinishPoly(true); return; }
     if (d.btn === 2) { if (DIMV.pending) { DIMV.pending = null; DIMV.ovDirty = true; dvUpdateStatus(); } else if (!DIMV.readonly) dvCtxOpen(e.clientX, e.clientY, d.x, d.y); return; }
     if (d.btn !== 0) return;
     if (DIMV.tool === 'nav') {
       if (!d.itemId && DIMV.selId) { DIMV.selId = null; DIMV.ovDirty = true; dvUpdateStatus(); }
       if (DIMV.skSel) { DIMV.skSel = null; DIMV.ovDirty = true; skRefreshPanel(); dvUpdateStatus(); }
+      if (DIMV.excSel) { DIMV.excSel = null; DIMV.ovDirty = true; excDvPanel(); }
       return;
     }
     dvToolClick(d.x, d.y);
@@ -12429,6 +13170,7 @@ window.closeDimViews = function () {
   st.addEventListener('dblclick', e => {
     if (DIMV.readonly) return;
     if (skIsTool(DIMV.tool)) { skEnd(true); return; }
+    if (DIMV.tool === 'exc-poly') { excFinishPoly(true); return; }
     if (DIMV.tool === 'nav' && DIMV.skSel) { const f = skFind(dvActive(), DIMV.skSel); if (f && f.it.t === 'text') { skEditText(f.it); return; } }
     if ((DIMV.tool === 'nav' || DIMV.tool === 'cable') && !DIMV.stroke) {
       if (DIMV.tool === 'cable' && DIMV.poly) { if (DIMV.poly.pts.length > 1) return; DIMV.poly = null; }   // doble clic que termina una recta/spline
@@ -12467,6 +13209,9 @@ window.closeDimViews = function () {
     if (k === 'Escape' && dvCtxIsOpen()) { e.preventDefault(); dvCtxClose(); return; }
     if (DIMV.ced && k === 'Escape') { e.preventDefault(); dvCedFinish(); return; }
     if (DIMV.ced && (k === 'Delete' || k === 'Backspace') && DIMV.ced.sel >= 0) { e.preventDefault(); dvCedDeleteNode(); return; }
+    if (DIMV.excDraw && (k === 'Enter' || k === 'Escape')) { e.preventDefault(); excFinishPoly(k === 'Enter'); return; }
+    if (k === 'Escape' && DIMV.excSel) { e.preventDefault(); DIMV.excSel = null; DIMV.ovDirty = true; excDvPanel(); return; }
+    if ((k === 'Delete' || k === 'Backspace') && DIMV.excSel && DIMV.tool === 'nav' && !e.target.closest?.('input,select,textarea')) { e.preventDefault(); excDelete(DIMV.excSel.id); return; }
     if (DIMV.sk && (k === 'Enter' || k === 'Escape')) { e.preventDefault(); skEnd(k === 'Enter' || DIMV.sk.t === 'spline' || DIMV.sk.t === 'line'); return; }
     if (k === 'Escape' && DIMV.skSel) { e.preventDefault(); DIMV.skSel = null; DIMV.ovDirty = true; skRefreshPanel(); dvUpdateStatus(); return; }
     if (DIMV.poly && (k === 'Enter' || k === 'Escape')) { e.preventDefault(); if (k === 'Enter') dvPolyFinish(); else { DIMV.poly = null; DIMV.ovDirty = true; dvUpdateStatus(); } return; }
@@ -12752,6 +13497,15 @@ animate();
     </div>
   </div>
 
+  <!-- Block F: avance de excavación -->
+  <div id="ce-exc-wrap" style="display:none;flex-direction:column;gap:6px;">
+    <div class="ce-field">
+      <div class="ce-label">⛏ Avance al final del chip (%)</div>
+      <input class="ce-input" id="ce-exc-pct" type="number" min="1" max="100" step="5" value="100">
+    </div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">La excavación avanza desde donde quedó hasta este porcentaje; puedes repartirla en varios chips o días.</div>
+  </div>
+
   <!-- Block D: camera editor -->
   <div id="ce-cam-wrap" style="display:none;flex-direction:column;gap:8px;">
     <div class="ce-field">
@@ -12860,6 +13614,29 @@ animate();
   <div id="cap-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
 </div>
 
+<!-- ═══════════ BLOCK F: EXCAVACIONES ═══════════ -->
+<div id="block-f-panel">
+  <div class="bap-header" style="border-bottom-color:rgba(176,132,98,.2);">
+    <span class="bap-logo" style="color:#d7a77f;">⛏ BLOQUE F · EXCAVACIONES</span>
+    <span class="bap-badge" id="bf-count">0</span>
+    <button class="bap-close" onclick="toggleBlockF()">✕</button>
+  </div>
+  <div class="bap-section">
+    <div class="bap-section-title" style="color:#d7a77f;">Definición</div>
+    <div style="display:flex;gap:5px;">
+      <button class="bap-btn" style="flex:1;border-color:rgba(176,132,98,.4);color:#d7a77f;" onclick="excOpenPlan('exc-rect')" title="Abre la vista en planta para dibujar áreas de excavación y acopios">📐 Definir en planta</button>
+      <button class="bap-btn" style="flex:1;" onclick="excOpenPlan()" title="Plano con todas las excavaciones, acopios y cuadro de cantidades (exporta a PDF)">📄 Plano</button>
+    </div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 8px;align-items:center;margin-top:8px;font-family:var(--mono);font-size:8.5px;color:var(--text2);">
+      <span title="Nivel por defecto para áreas sin terreno debajo">NTP general (Y)</span><input class="bf-in" id="bf-ntp" type="number" step="0.01" onchange="excSetGlobal('ntp',this.value)">
+      <span title="Cómo se ven las excavaciones cuando no se reproduce la simulación">Sin simular</span><select class="bf-in" id="bf-preview" onchange="excSetGlobal('preview',this.value)"><option value="done">Terminadas</option><option value="none">Sin excavar</option></select>
+      <span title="Malla del terreno que se recorta para ver el hueco">Terreno</span><select class="bf-in" id="bf-terrain" onchange="excSetGlobal('terrain',this.value)"></select>
+    </div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px;line-height:1.45;">En la línea de tiempo, cada chip del <b style="color:#d7a77f;">Bloque F</b> enlaza una excavación y la avanza hasta el % indicado. La retroexcavadora trabaja durante el chip y el acopio crece con el material suelto.</div>
+  </div>
+  <div id="bf-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
+</div>
+
 <!-- CAPSULE EDITOR WINDOW (detailed) -->
 <div id="capsule-editor">
   <div class="ce-win-header">
@@ -12903,6 +13680,7 @@ animate();
     <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
     <button class="tl-btn" onclick="toggleBlockC()" id="btn-block-c" title="Estados de visibilidad" style="color:#4fd1c5;border-color:rgba(79,209,197,.3);">👁 Bloque C</button>
     <button class="tl-btn" onclick="toggleBlockE()" id="btn-block-e" title="Secuencias de grúa" style="color:#f6ad55;border-color:rgba(246,173,85,.3);">🏗 Bloque E</button>
+    <button class="tl-btn" onclick="toggleBlockF()" id="btn-block-f" title="Excavaciones y acopios" style="color:#d7a77f;border-color:rgba(176,132,98,.35);">⛏ Bloque F</button>
 
     <div class="tl-sep"></div>
 
