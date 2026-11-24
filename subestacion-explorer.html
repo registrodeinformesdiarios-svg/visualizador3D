@@ -1113,6 +1113,50 @@
     transition: transform .25s cubic-bezier(.4,0,.2,1);
   }
   #block-c-panel.open { transform: translateX(0); }
+  #block-c-panel { width: 340px; }
+  .vs-seg { display:flex; gap:4px; } .vs-seg button { flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:9.5px; padding:6px; border-radius:6px; cursor:pointer; }
+  .vs-seg button.on { border-color:#4fd1c5; color:#4fd1c5; background:rgba(79,209,197,.1); }
+  .vs-note, .vs-empty { font-family:var(--mono); font-size:8.5px; color:var(--text3); line-height:1.45; margin-top:5px; }
+  .vs-note b { color:#4fd1c5; }
+  .vs-chk { display:flex; gap:6px; align-items:center; font-family:var(--mono); font-size:9px; color:var(--text2); margin-top:5px; cursor:pointer; }
+  .vs-chk input { accent-color:#4fd1c5; }
+  .vs-card { border:1px solid var(--border); border-radius:8px; padding:6px 7px; margin:6px 0; background:rgba(255,255,255,.015); }
+  .vs-card.edit { border-color:rgba(79,209,197,.55); background:rgba(79,209,197,.05); }
+  .vs-head { display:flex; align-items:center; gap:5px; }
+  .vs-mode { border:1px solid var(--border); background:var(--bg3); border-radius:5px; font-family:var(--mono); font-size:9px; padding:3px 6px; cursor:pointer; white-space:nowrap; }
+  .vs-mode.show { color:#68d391; border-color:rgba(104,211,145,.45); } .vs-mode.hide { color:#fc8181; border-color:rgba(252,129,129,.45); }
+  .vs-nm-in { flex:1; min-width:0; background:transparent; border:1px solid transparent; border-radius:4px; color:var(--text); font-family:var(--mono); font-size:10px; padding:3px 4px; outline:none; }
+  .vs-nm-in:focus, .vs-nm-in:hover { border-color:var(--border); background:var(--bg3); }
+  .vs-nm { flex:1; font-family:var(--mono); font-size:10px; color:var(--text); } .vs-ic { font-size:11px; }
+  .vs-ct { font-family:var(--mono); font-size:8.5px; color:#4fd1c5; border:1px solid rgba(79,209,197,.3); border-radius:9px; padding:1px 6px; white-space:nowrap; }
+  .vs-mini { background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:9px; padding:3px 7px; border-radius:5px; cursor:pointer; white-space:nowrap; }
+  .vs-mini.on { color:#4fd1c5; border-color:#4fd1c5; }
+  .vs-warn { font-family:var(--mono); font-size:8px; color:var(--warn); margin-top:4px; }
+  .vs-tgs { max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:5px; padding:3px; background:var(--bg3); margin:6px 0; }
+  .vs-tg { display:flex; align-items:center; gap:5px; padding:2px 3px; font-family:var(--mono); font-size:9px; border-radius:3px; }
+  .vs-tg:hover { background:rgba(255,213,79,.1); } .vs-tg.miss { color:var(--warn); }
+  .vs-tg span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .vs-tg small { color:var(--text3); }
+  .vs-tg button { border:none; background:none; color:var(--danger); cursor:pointer; font-size:10px; }
+  .vs-rm { border:1px solid var(--border); background:var(--bg2); border-radius:4px; font-family:var(--mono); font-size:8.5px; padding:1px 4px; cursor:pointer; white-space:nowrap; color:var(--text) !important; }
+  .vs-rm.hide { border-color:rgba(252,129,129,.45); } .vs-rm.show { border-color:rgba(104,211,145,.45); }
+  #btn-vs-all.active { background:rgba(255,213,79,.15); border-color:#ffd54f !important; }
+  .vs-row { display:flex; gap:4px; margin-top:4px; } .vs-row .bap-btn { flex:1; }
+  .vs-tr { gap:4px; }
+  .vs-cb { width:13px; height:13px; flex-shrink:0; border:1px solid var(--text3); border-radius:3px; font-size:9px; line-height:12px; text-align:center; color:#0b0d12; cursor:pointer; }
+  .vs-cb.on { background:#4fd1c5; border-color:#4fd1c5; } .vs-cb.inh { background:rgba(79,209,197,.35); border-color:rgba(79,209,197,.5); cursor:default; }
+  .vs-cb.part { color:#4fd1c5; border-color:#4fd1c5; }
+  .vs-pz { font-family:var(--mono); font-size:8px; color:var(--text3); }
+  #vs-pick-menu { position:fixed; z-index:700; min-width:240px; max-width:320px; background:rgba(10,13,18,.97); border:1px solid rgba(79,209,197,.45); border-radius:8px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.5); font-family:var(--mono); }
+  .vs-pm-t { font-size:8.5px; color:var(--text3); padding:3px 6px 5px; letter-spacing:.5px; text-transform:uppercase; }
+  .vs-pm-i { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:5px; cursor:pointer; font-size:9.5px; color:var(--text); }
+  .vs-pm-i:hover { background:rgba(255,213,79,.12); } .vs-pm-i.on b { color:#4fd1c5; }
+  #vs-pick-menu.fd { border-color:rgba(79,195,247,.5); } #vs-pick-menu.fd .vs-pm-k, #vs-pick-menu.fd .vs-pm-i.on b { color:var(--sim-blue, #4fc3f7); }
+  .vs-pm-all { border:1px solid rgba(79,195,247,.45); background:rgba(79,195,247,.08); color:#4fc3f7; border-radius:4px; font-family:var(--mono); font-size:8px; padding:1px 5px; cursor:pointer; white-space:nowrap; }
+  .vs-pm-all:hover { background:rgba(79,195,247,.2); }
+  .fd-name { flex:1; min-width:0; background:transparent; border:1px solid transparent; border-radius:4px; color:var(--text); font-family:var(--mono); font-size:10px; padding:2px 4px; outline:none; }
+  .fd-name:hover, .fd-name:focus { border-color:var(--border); background:var(--bg3); }
+  .bap-item.flash { box-shadow:0 0 0 2px #ffd54f inset; }
+  .vs-pm-k { color:#4fd1c5; font-size:8.5px; min-width:66px; } .vs-pm-n { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .vs-pm-i small { color:var(--text3); font-size:8px; }
 
 
   /* ── VIDEO RECORDING UI ── */
@@ -1209,6 +1253,11 @@
 
 
   /* Block F (excavaciones) */
+  .ce-exc-mode { flex:1; background:var(--bg3); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:10px; padding:6px; border-radius:6px; cursor:pointer; }
+  .ce-exc-mode.on { border-color:#d7a77f; color:#d7a77f; background:rgba(176,132,98,.12); }
+  .chip-g { background: rgba(144,202,249,.16); border-color: rgba(144,202,249,.5); color: #90caf9; }
+  .gv-opt { display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:9.5px; color:var(--text2); cursor:pointer; padding:3px 0; }
+  .gv-opt input { accent-color:#90caf9; }
   .chip-f { background: rgba(176,132,98,.18); border-color: rgba(176,132,98,.5); color: #d7a77f; }
   #block-f-panel {
     position: fixed; top: 58px; left: 652px; z-index: 125;
@@ -3877,6 +3926,7 @@ function onModelReady(gltf,name){
   state.modelLoaded=true;
   rebuildLppTreeIfOpen();
   if (blockCOpen) buildVisTree();
+  if (typeof vsApplyBase === 'function') { _vsControlled = false; vsApplyBase(); }   // reglas «siempre oculto»
   document.getElementById('model-name').textContent=name;
   document.getElementById('hud-status').textContent='EXPLORANDO';
   const toFlex=['controls-legend','speed-badge','cam-toggle','compass','minimap-wrap','toolbar','joystick-wrap','height-panel'];
@@ -4991,15 +5041,29 @@ function makeDefaultRows() {
     { id: 'camera',  label: 'Cámara 1',    color: '#f687b3', block: 'D' },
     { id: 'crane',   label: 'Grúas 1',     color: '#f6ad55', block: 'E' },
     { id: 'excav',   label: 'Excavaciones 1', color: '#d7a77f', block: 'F' },
+    { id: 'mview',   label: 'Vista modelo',   color: '#90caf9', block: 'G' },
   ];
 }
 
+// Id de día que no exista ya (al cargar, el contador puede quedar por debajo de los ids guardados)
+function simNewDayId() {
+  const used = new Set(SIM.days.map(d => d.id));
+  do { SIM.dayCounter = (SIM.dayCounter||0) + 1; } while (used.has('day_' + SIM.dayCounter));
+  return 'day_' + SIM.dayCounter;
+}
+// Repara ids repetidos (JSON guardados con el error anterior) y sincroniza el contador
+function simFixDayIds() {
+  const seen = new Set();
+  SIM.dayCounter = Math.max(SIM.dayCounter || 0, ...SIM.days.map(d => parseInt(String(d.id).replace(/\D/g, '')) || 0));
+  SIM.days.forEach(d => { if (!d.id || seen.has(d.id)) d.id = simNewDayId(); seen.add(d.id); });
+  if (!SIM.days.some(d => d.id === SIM.activeDayId)) SIM.activeDayId = SIM.days[0]?.id || null;
+}
 function makeDay(date, label) {
-  SIM.dayCounter = (SIM.dayCounter||0) + 1;
+  const id = simNewDayId();
   return {
-    id: 'day_' + SIM.dayCounter,
+    id,
     date: date,                       // 'YYYY-MM-DD'
-    label: label || ('Día ' + SIM.dayCounter),
+    label: label || ('Día ' + (SIM.days.length + 1)),
     speed: 1.0,                        // playback speed multiplier (1 = default smooth)
     durationHours: 24,                 // editable span of the day's mini-timeline
     rows: makeDefaultRows(),
@@ -5050,8 +5114,9 @@ const BLOCK_META = {
   D:     { name: 'Cámara',      color: '#f687b3' },
   E:     { name: 'Grúas',       color: '#f6ad55' },
   F:     { name: 'Excavaciones', color: '#d7a77f' },
+  G:     { name: 'Vista del modelo', color: '#90caf9' },
 };
-const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D', 'E', 'F'];
+const BLOCK_ORDER = ['title', 'A', 'B', 'C', 'D', 'E', 'F', 'G'];
 function rowBlock(rowId) {
   const r = SIM.rows.find(r => r.id === rowId);
   return r ? r.block : null;
@@ -5116,8 +5181,7 @@ window.toggleTimeline = function() {
 // ── TIME HELPERS (now HOURS within the active day) ───────────────────────────
 function dayDuration() { const d = activeDay(); return d ? (d.durationHours || 24) : 24; }
 function fmtHour(h) {
-  const hh = Math.floor(h);
-  const mm = Math.round((h - hh) * 60);
+  const tm = Math.round(h * 60), hh = Math.floor(tm / 60), mm = tm % 60;   // evita «20:60»
   return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
 }
 function parseHourStr(s) {
@@ -5215,6 +5279,7 @@ window.tlSetDayDuration = function(dayId, val) {
 
 // Render the master day strip
 function renderDayStrip() {
+  if (new Set(SIM.days.map(d => d.id)).size !== SIM.days.length) simFixDayIds();   // datos ya cargados con ids repetidos
   const strip = document.getElementById('tl-day-strip');
   if (!strip) return;
   strip.innerHTML = '';
@@ -5528,6 +5593,7 @@ function chipEditorPopulateLinks(chip) {
   const capWrap = document.getElementById('ce-cap-wrap');
   if (capWrap) capWrap.style.display = 'none';
   const excWrap = document.getElementById('ce-exc-wrap'); if (excWrap) excWrap.style.display = 'none';
+  const gvWrap = document.getElementById('ce-gv-wrap'); if (gvWrap) gvWrap.style.display = 'none';
 
   const block = rowBlock(chip.rowId);
 
@@ -5537,7 +5603,7 @@ function chipEditorPopulateLinks(chip) {
     foundations.forEach((f, key) => {
       const opt = document.createElement('option');
       opt.value = key;
-      opt.textContent = f.name.replace(/_/g,' ');
+      opt.textContent = fdLabel(f);
       if (chip.blockData?.foundationKey === key) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -5566,6 +5632,11 @@ function chipEditorPopulateLinks(chip) {
   } else if (block === 'F') {
     wrap.style.display = 'flex';
     ceRenderExcEditor(chip);
+  } else if (block === 'G') {
+    wrap.style.display = 'none';
+    document.getElementById('ce-gv-wrap').style.display = 'flex';
+    const o = Object.assign({ found:true, exc:true, cab:false, all:false, crane:false }, chip.blockData?.gv || {});
+    ['found', 'exc', 'cab', 'all', 'crane'].forEach(k => { document.getElementById('gv-' + k).checked = !!o[k]; });
   } else {
     // titles row — no link
     wrap.style.display = 'none';
@@ -5701,7 +5772,7 @@ window.chipEditorSave = function() {
   if (block === 'A') {
     if (linkKey) {
       chip.blockData.foundationKey = linkKey;
-      if (foundations.has(linkKey)) chip.blockData.foundationName = foundations.get(linkKey).name;
+      if (foundations.has(linkKey)) { chip.blockData.foundationName = foundations.get(linkKey).name; chip.blockData.foundationPath = foundations.get(linkKey).path ?? null; }
       const stageVal = document.getElementById('ce-stage').value;
       if (stageVal !== '') chip.blockData.stageIndex = parseInt(stageVal);
       else delete chip.blockData.stageIndex;
@@ -5730,10 +5801,13 @@ window.chipEditorSave = function() {
     }
   } else if (block === 'D') {
     if (_ceCam) chip.blockData.cam = JSON.parse(JSON.stringify(_ceCam));
+  } else if (block === 'G') {
+    chip.blockData.gv = {}; ['found', 'exc', 'cab', 'all', 'crane'].forEach(k => { chip.blockData.gv[k] = document.getElementById('gv-' + k).checked; });
   } else if (block === 'F') {
     if (linkKey && excFind(linkKey)) { chip.blockData.excKey = linkKey; chip.blockData.excName = excFind(linkKey).name; }
     else { delete chip.blockData.excKey; delete chip.blockData.excName; }
     chip.blockData.toPct = Math.max(1, Math.min(100, parseFloat(document.getElementById('ce-exc-pct').value) || 100));
+    if (_ceExcMode === 'fill') chip.blockData.mode = 'fill'; else delete chip.blockData.mode;
   } else if (block === 'E') {
     const capId = document.getElementById('ce-cap-state').value;
     if (capId && craneCapsules.has(capId)) {
@@ -5766,7 +5840,7 @@ function excId(p) { EXC.cnt++; return p + '_' + Date.now().toString(36) + '_' + 
 function excFind(id) { return EXC.items.find(i => i.id === id) || null; }
 function excPile(id) { return EXC.piles.find(p => p.id === id) || null; }
 function excSerialize() {
-  return { ntp:EXC.ntp, terrain:EXC.terrain, preview:EXC.preview,
+  return { ntp:EXC.ntp, terrain:EXC.terrain, preview:EXC.preview, hold:{ ...EXC_HOLD },
     items:EXC.items.map(i => ({ id:i.id, name:i.name, pts:i.pts.map(p => [+p[0].toFixed(4), +p[1].toFixed(4)]), ntp:i.ntp, depth:i.depth, slope:i.slope, swell:i.swell, pile:i.pile || null })),
     piles:EXC.piles.map(p => ({ id:p.id, name:p.name, x:p.x, z:p.z, ntp:p.ntp, phi:p.phi })) };
 }
@@ -5775,6 +5849,7 @@ function excNormalize(o) {
   EXC.ntp = isFinite(+o.ntp) ? +o.ntp : 0;
   EXC.terrain = Array.isArray(o.terrain) && o.terrain.length ? o.terrain.slice() : null;
   EXC.preview = o.preview === 'none' ? 'none' : 'done';
+  if (o.hold) { EXC_HOLD.on = o.hold.on !== false; EXC_HOLD.hours = +o.hold.hours || 1.5; }
   EXC.items = (o.items || []).filter(i => i && Array.isArray(i.pts) && i.pts.length >= 3).map((i, k) => ({
     id:i.id || excId('exc'), name:i.name || ('Excavación ' + (k + 1)), pts:i.pts.map(p => [+p[0], +p[1]]),
     ntp:isFinite(+i.ntp) ? +i.ntp : EXC.ntp, depth:Math.max(0.05, +i.depth || 1.5), slope:Math.max(0, +i.slope || 0), swell:Math.max(1, +i.swell || 1.25), pile:i.pile || null }));
@@ -6046,26 +6121,77 @@ function excIK(ex, tx, ty, phi) {   // pasador del cucharón en (tx, ty) del mar
   excSetCyl(ex, ex.cylB, new THREE.Vector3(0.9, 1.05, 0.25), ex.house, new THREE.Vector3(EXC_L1 * 0.4, 0.15, 0), ex.boom);
   excSetCyl(ex, ex.cylS, new THREE.Vector3(EXC_L1 * 0.52, 1.05, 0), ex.boom, new THREE.Vector3(-0.45, 0.5, 0), ex.stick);
 }
-function excStation(it, level) {   // dónde se para la máquina: fuera del talud, del lado del acopio (o el más largo)
-  const P = it.pts, n = P.length, s = Math.sign(excArea(P)) || 1, pile = excPile(it.pile), C = excCentroid(P);
-  const off = it.slope * it.depth + 2.7, cands = [];
-  function dzOut(a, b, s, L) { return [(b[1] - a[1]) / L * s, -(b[0] - a[0]) / L * s]; }   // normal exterior
+// ── Ubicación automática de la retroexcavadora ──
+// Candidatos alrededor del hueco (fuera del talud, a varias distancias); se descartan los que chocan con
+// objetos VISIBLES del modelo (rayos verticales sobre la huella de la máquina y su radio de giro),
+// con otras excavaciones o con los acopios. Entre los libres: alcance al hueco, cercanía al acopio y,
+// en zanjas largas, avance a lo largo del borde. Se recalcula si cambia la visibilidad (Bloque C).
+const _excStCache = new Map();
+const EXC_CLEAR_H = 4.3;   // altura revisada sobre el NTP (cabina + contrapeso girando)
+function excObstacles(it, R) {   // mallas visibles cerca del hueco (sin terreno), con su caja
+  const [cx, cz] = excCentroid(it.pts), ter = new Set(excTerrainMeshes()), out = [], bb = new THREE.Box3();
+  vsAllMeshes().forEach(m => {
+    if (ter.has(m) || m.userData.__fdOverlay) return;
+    for (let o = m; o; o = o.parent) if (!o.visible) return;
+    bb.setFromObject(m);
+    if (bb.max.y < it.ntp + 0.25 || bb.min.y > it.ntp + EXC_CLEAR_H) return;   // a ras de suelo o muy por encima
+    if (bb.max.x < cx - R || bb.min.x > cx + R || bb.max.z < cz - R || bb.min.z > cz + R) return;
+    out.push(m);
+  });
+  return out;
+}
+function excVisSig() { return (_vsMode === 'sim' ? _vsSig : 'base') + '|' + VS.rev + '|' + VS.showAll + '|' + (_vsControlled ? 1 : 0); }   // cambia cuando cambia la visibilidad
+function excStationFree(x, z, dir, it, obs, rc) {   // nº de puntos de la huella bloqueados (0 = libre)
+  const c = Math.cos(dir), s = Math.sin(dir), pts = [[0, 0]];
+  [[2.2, 1.4], [2.2, -1.4], [-2.2, 1.4], [-2.2, -1.4], [2.2, 0], [-2.2, 0], [0, 1.4], [0, -1.4]].forEach(p => pts.push(p));
+  for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; pts.push([2.6 * Math.cos(a), 2.6 * Math.sin(a)]); }   // giro del contrapeso
+  let bad = 0;
+  for (const [lx, lz] of pts) {
+    const wx = x + lx * c + lz * s, wz = z - lx * s + lz * c;   // local (+X adelante) → mundo
+    if (EXC.items.some(o => excInPoly([wx, wz], excInsetRaw(o.pts, o === it ? -0.6 : -(o.slope * o.depth + 0.6))))) { bad++; continue; }
+    if (EXC.piles.some(p => { const r = excPileR(p, Math.max(1, excPileVol(p.id))) + 0.5; return Math.hypot(wx - p.x, wz - p.z) < r; })) { bad++; continue; }
+    if (obs.length) { rc.set(new THREE.Vector3(wx, it.ntp + EXC_CLEAR_H, wz), new THREE.Vector3(0, -1, 0)); rc.far = EXC_CLEAR_H - 0.2; if (rc.intersectObjects(obs, false).length) bad++; }
+  }
+  return bad;
+}
+function excStation(it, level) {
+  const slideStep = Math.round(Math.min(1, level) * 4);   // en zanjas largas avanza por tramos
+  const key = it.id, sig = JSON.stringify([it.pts, it.depth, it.slope, it.pile, slideStep, EXC.piles.map(p => [p.x, p.z]), excVisSig()]);
+  const hit = _excStCache.get(key); if (hit && hit.sig === sig) return hit.st;
+  const P = it.pts, n = P.length, sg = Math.sign(excArea(P)) || 1, pile = excPile(it.pile), C = excCentroid(P);
+  const base = it.slope * it.depth + 2.7, obs = excObstacles(it, 40), rc = new THREE.Raycaster();
+  const cands = [];
   for (let i = 0; i < n; i++) {
     const a = P[i], b = P[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.5) continue;
-    const nx = dzOut(a, b, s, L), m = [(a[0] + b[0]) / 2 + nx[0] * off, (a[1] + b[1]) / 2 + nx[1] * off];
-    let score = pile ? -Math.hypot(m[0] - pile.x, m[1] - pile.z) : L;
-    if (EXC.items.some(o => o !== it && excInPoly(m, o.pts))) score -= 1e6;   // no pararse dentro de otra excavación
-    cands.push({ a, b, L, n:nx, score });
+    const nx = [(b[1] - a[1]) / L * sg, -(b[0] - a[0]) / L * sg];   // normal exterior
+    const ts = L > 3 ? [0.15, 0.3, 0.5, 0.7, 0.85] : [0.5];
+    ts.forEach(t => [0, 1.2, 2.5, 4].forEach(extra => {
+      const off = base + extra, x = a[0] + (b[0] - a[0]) * t + nx[0] * off, z = a[1] + (b[1] - a[1]) * t + nx[1] * off;
+      cands.push({ x, z, t, extra, L, edge:i });
+    }));
   }
-  const best = cands.sort((x, y) => y.score - x.score)[0];
-  const t = best.L > 7 ? 0.25 + 0.5 * Math.min(1, level) : 0.5;
-  const x = best.a[0] + (best.b[0] - best.a[0]) * t + best.n[0] * off, z = best.a[1] + (best.b[1] - best.a[1]) * t + best.n[1] * off;
-  const C2 = [C[0] + (x - C[0]) * 0.15, C[1] + (z - C[1]) * 0.15];
-  return { x, z, dir:Math.atan2(-(C2[1] - z), C2[0] - x), reachC:Math.hypot(C[0] - x, C[1] - z) };
+  P.forEach((q, i) => {   // esquinas (en diagonal)
+    const dx = q[0] - C[0], dz = q[1] - C[1], l = Math.hypot(dx, dz) || 1;
+    [0, 1.5, 3].forEach(extra => cands.push({ x:q[0] + dx / l * (base + extra), z:q[1] + dz / l * (base + extra), t:0.5, extra:extra + 0.5, L:0, edge:-1 }));
+  });
+  const want = 0.25 + 0.5 * Math.min(1, slideStep / 4);
+  cands.forEach(c => {
+    c.dir = Math.atan2(-(C[1] - c.z), C[0] - c.x);
+    c.reach = Math.hypot(C[0] - c.x, C[1] - c.z);
+    c.bad = excStationFree(c.x, c.z, c.dir, it, obs, rc);
+    c.score = -c.bad * 1000 - c.extra * 3 - Math.max(0, c.reach - 7.5) * 6
+      + (pile ? -Math.hypot(c.x - pile.x, c.z - pile.z) * 0.6 : 0)
+      + (c.L > 7 ? -Math.abs(c.t - want) * 12 : -Math.abs(c.t - 0.5) * 2) + c.L * 0.05;
+  });
+  const best = cands.sort((p, q) => q.score - p.score)[0];
+  const gy = excGroundY(best.x, best.z);
+  const st = { x:best.x, z:best.z, y:gy !== null && Math.abs(gy - it.ntp) < 1.2 ? gy : it.ntp, dir:best.dir, reachC:best.reach, blocked:best.bad };
+  _excStCache.set(key, { sig, st });
+  return st;
 }
 const _ease = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
-function excPoseExcavator(ex, it, level, phase) {
-  const st = excStation(it, level), y = it.ntp;
+function excPoseExcavator(ex, it, level, phase, mode) {
+  const st = excStation(it, level), y = st.y;
   ex.root.position.set(st.x, y, st.z); ex.root.rotation.y = st.dir;
   const k = Math.floor(phase), u = phase - k, sway = (((k * 0.618) % 1) - 0.5) * 0.55;
   const d = level * it.depth, rDig = Math.max(3.4, Math.min(7.6, st.reachC * (0.6 + 0.35 * (((k * 0.37) % 1)))));
@@ -6073,10 +6199,23 @@ function excPoseExcavator(ex, it, level, phase) {
   const pile = excPile(it.pile);
   if (pile) { const ang = Math.atan2(-(pile.z - st.z), pile.x - st.x) - st.dir, a = Math.atan2(Math.sin(ang), Math.cos(ang));
     if (Math.hypot(pile.x - st.x, pile.z - st.z) < 14 && Math.abs(a) > 1.0) sDump = a; }
-  const Pd = [5.2, 2.9], Pu = [rDig, 2.6], P0 = [rDig, -d + 0.85], P1 = [Math.max(3.0, rDig - 1.7), -d + 0.6], Pr = [Math.max(3.2, rDig - 1.3), 3.1];
   const L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], R = Math.PI / 180;
   let p, phi, sw, soil = false;
   const seg = (a, b) => _ease((u - a) / (b - a));
+  if (mode === 'fill') {   // relleno: carga en el costado (material del acopio) y descarga sobre el hueco
+    const Sd = [5.4, 2.7], S0 = [5.8, 0.95], S1 = [4.3, 0.75], Sr = [4.5, 3.0], Pp = [rDig, Math.max(1.4, 2.2 - 0.0 * d)];
+    if (u < 0.22)      { const t = seg(0, 0.22);    p = L(Pp, Sd, t); phi = (-115 + 55 * t) * R; sw = sway + (sDump - sway) * t; }
+    else if (u < 0.40) { const t = seg(0.22, 0.4); p = L(Sd, S0, t); phi = (-60 - 15 * t) * R; sw = sDump; }
+    else if (u < 0.58) { const t = seg(0.4, 0.58); p = L(S0, S1, t); phi = (-75 + 105 * t) * R; sw = sDump; soil = t > 0.55; }
+    else if (u < 0.72) { const t = seg(0.58, 0.72); p = L(S1, Sr, t); phi = 30 * R; sw = sDump; soil = true; }
+    else if (u < 0.86) { const t = seg(0.72, 0.86); p = L(Sr, Pp, t); phi = (30 - 10 * t) * R; sw = sDump + (sway - sDump) * t; soil = true; }
+    else if (u < 0.95) { const t = seg(0.86, 0.95); p = Pp; phi = (20 - 135 * t) * R; sw = sway; soil = t < 0.45; }
+    else { p = Pp; phi = -115 * R; sw = sway; }
+    ex.house.rotation.y = sw; ex.soil.visible = soil;
+    excIK(ex, p[0], p[1], phi);
+    return;
+  }
+  const Pd = [5.2, 2.9], Pu = [rDig, 2.6], P0 = [rDig, -d + 0.85], P1 = [Math.max(3.0, rDig - 1.7), -d + 0.6], Pr = [Math.max(3.2, rDig - 1.3), 3.1];
   if (u < 0.22)      { const t = seg(0, 0.22);    p = L(Pd, Pu, t); phi = (-115 + 55 * t) * R; sw = sDump + (sway - sDump) * t; }
   else if (u < 0.40) { const t = seg(0.22, 0.4); p = L(Pu, P0, t); phi = (-60 - 15 * t) * R; sw = sway; }
   else if (u < 0.58) { const t = seg(0.4, 0.58); p = L(P0, P1, t); phi = (-75 + 105 * t) * R; sw = sway; soil = t > 0.55; }
@@ -6097,12 +6236,13 @@ function excApplyLevels(levels, active) {
     let ex = R.exs.get(a.it.id);
     if (!ex) { ex = excBuildExcavator(); R.exs.set(a.it.id, ex); R.g.add(ex.root); }
     ex.root.visible = true; on.add(a.it.id);
-    excPoseExcavator(ex, a.it, levels[a.it.id] || 0, a.phase);
+    excPoseExcavator(ex, a.it, levels[a.it.id] || 0, a.phase, a.mode);
   });
   R.exs.forEach((ex, id) => { if (!on.has(id)) ex.root.visible = false; });
 }
 function excApplyStatic(force) {   // fuera de la simulación: terminadas o sin excavar
   excRT();
+  if (EXC.rt.fx) EXC.rt.fx.forEach(f => { f.g.visible = false; });
   const lv = {}; EXC.items.forEach(it => { lv[it.id] = EXC.preview === 'done' ? 1 : 0; EXC.rt.lvl[it.id] = lv[it.id]; });
   if (force) EXC.rt.pits.forEach(p => { p.d = -1; });
   [...EXC.rt.pits.keys()].forEach(id => { if (!excFind(id)) { excDisposePit(EXC.rt.pits.get(id)); EXC.rt.pits.delete(id); } });
@@ -6113,23 +6253,75 @@ function excApplyStatic(force) {   // fuera de la simulación: terminadas o sin 
 function excResetSim() { if (!EXC.rt) return; EXC.items.forEach(it => { EXC.rt.base[it.id] = 0; EXC.rt.lvl[it.id] = 0; }); excApplyLevels(EXC.rt.lvl, []); }
 function excDayStart() { if (!EXC.rt) excRT(); EXC.items.forEach(it => { EXC.rt.base[it.id] = EXC.rt.lvl[it.id] || 0; }); }
 const EXC_CYCLE_SEC = 3.6;   // segundos reales por ciclo del cucharón
+// ── Al terminar un chip de excavación o relleno: pausa para ver el nivel alcanzado ──
+// Contorno brillante del fondo + plano traslúcido + rótulo con la profundidad. La línea de tiempo
+// del día se alarga EXC_HOLD.hours después del último chip del Bloque F para que se alcance a ver.
+const EXC_HOLD = { on:true, hours:1.5 };
+function excLabelTex(lines) {
+  const c = document.createElement('canvas'), g = c.getContext('2d'); c.width = 512; c.height = 128;
+  g.fillStyle = 'rgba(12,14,18,.82)'; g.beginPath(); g.roundRect ? g.roundRect(2, 2, 508, 124, 18) : g.rect(2, 2, 508, 124); g.fill();
+  g.strokeStyle = '#ffca28'; g.lineWidth = 3; g.stroke();
+  const fit = (txt, size, w) => { let s = size; g.font = `600 ${s}px IBM Plex Mono, monospace`; while (g.measureText(txt).width > 472 && s > 14) { s -= 2; g.font = `${w} ${s}px IBM Plex Mono, monospace`; } };
+  g.textAlign = 'center';
+  fit(lines[0], 40, 600); g.fillStyle = '#ffca28'; g.fillText(lines[0], 256, 54);
+  fit(lines[1], 30, 500); g.fillStyle = '#ffffff'; g.fillText(lines[1], 256, 100);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function excFinishFx(it, level, t, fill) {
+  const R = excRT(); R.fx = R.fx || new Map();
+  let fx = R.fx.get(it.id);
+  if (t < 0) { if (fx) fx.g.visible = false; return; }
+  const d = level * it.depth, key = d.toFixed(3) + (fill ? 'f' : 'd');
+  if (!fx || fx.key !== key) {
+    if (fx) { R.g.remove(fx.g); fx.g.traverse(o => { o.geometry?.dispose(); o.material?.map?.dispose(); o.material?.dispose(); }); }
+    const g = new THREE.Group(), yb = it.ntp - d + 0.03, Q = d > 0.005 ? excInset(it.pts, it.slope * d) : it.pts;
+    const loop = Q.map(q => new THREE.Vector3(q[0], yb, q[1])); loop.push(loop[0].clone());
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(loop), new THREE.LineBasicMaterial({ color:0xffca28, transparent:true, depthTest:false }));
+    line.renderOrder = 1001; g.add(line);
+    const sh = new THREE.Shape(Q.map(q => new THREE.Vector2(q[0], -q[1])));
+    const plane = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color:0xffca28, transparent:true, opacity:0.25, depthWrite:false, side:THREE.DoubleSide }));
+    plane.rotation.x = -Math.PI / 2; plane.position.y = yb; plane.renderOrder = 1000; g.add(plane);
+    const c = excCentroid(it.pts), pct = Math.round(level * 100);
+    const lines = fill ? [(pct <= 0 ? '⬆ Relleno completo' : '⬆ Relleno · falta ' + d.toFixed(2) + ' m'), it.name + ' · nivel Y ' + (it.ntp - d).toFixed(2)]
+                       : ['⛏ Fondo −' + d.toFixed(2) + ' m (' + pct + ' %)', it.name + ' · nivel Y ' + (it.ntp - d).toFixed(2)];
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:excLabelTex(lines), transparent:true, depthTest:false, sizeAttenuation:false }));
+    sp.scale.set(0.2, 0.05, 1); sp.position.set(c[0], it.ntp + 1.8, c[1]); sp.renderOrder = 1002; g.add(sp);
+    // regla vertical del NTP al fondo
+    if (d > 0.005) {
+      const q0 = it.pts[0], q1 = Q[0];
+      const rule = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(q0[0], it.ntp + 0.03, q0[1]), new THREE.Vector3(q1[0], yb, q1[1])]),
+        new THREE.LineDashedMaterial({ color:0xffffff, dashSize:0.15, gapSize:0.1, transparent:true, depthTest:false }));
+      rule.computeLineDistances(); rule.renderOrder = 1001; g.add(rule);
+    }
+    R.g.add(g); fx = { g, key, line, plane, sp }; R.fx.set(it.id, fx);
+  }
+  fx.g.visible = true;
+  const fadeIn = Math.min(1, t / 0.12), fadeOut = Math.min(1, (1 - t) / 0.15), a = Math.max(0, Math.min(fadeIn, fadeOut));
+  const pulse = 0.65 + 0.35 * Math.sin(t * Math.PI * 6);
+  fx.line.material.opacity = a; fx.plane.material.opacity = 0.28 * a * pulse; fx.sp.material.opacity = a;
+  fx.g.children.forEach(o => { if (o.isLine && o !== fx.line) o.material.opacity = 0.8 * a; });
+}
+window.excHoldSet = function (k, v) { if (k === 'on') EXC_HOLD.on = !!v; else EXC_HOLD.hours = Math.max(0.1, Math.min(12, parseFloat(v) || 1.5)); excSave(); };
 function excFrame(hour) {
   if (!EXC.items.length) return;
   const R = excRT(), now = performance.now(), dt = R.lastTs ? Math.min(0.1, (now - R.lastTs) / 1000) : 0; R.lastTs = now;
   const levels = {}, active = [];
   EXC.items.forEach(it => {
     const chips = SIM.chips.filter(c => rowBlock(c.rowId) === 'F' && c.blockData?.excKey === it.id).sort((a, b) => a.startH - b.startH);
-    let level = R.base[it.id] || 0, on = false;
+    let level = R.base[it.id] || 0, on = false, mode = 'dig', done = null;
     for (const c of chips) {
-      const to = Math.max(0, Math.min(1, (c.blockData.toPct ?? 100) / 100));
+      const fill = c.blockData.mode === 'fill', pct = Math.max(0, Math.min(1, (c.blockData.toPct ?? 100) / 100));
+      const to = fill ? 1 - pct : pct;   // nivel abierto (profundidad excavada) al final del chip
       if (hour < c.startH) break;
-      if (hour >= c.endH) { level = Math.max(level, to); continue; }
+      if (hour >= c.endH) { level = fill ? Math.min(level, to) : Math.max(level, to); done = { endH:c.endH, fill }; continue; }
       const t = (hour - c.startH) / Math.max(0.001, c.endH - c.startH), L0 = level;
-      if (to > L0) { level = L0 + (to - L0) * t; on = true; }
+      if (fill ? to < L0 : to > L0) { level = L0 + (to - L0) * t; on = true; mode = fill ? 'fill' : 'dig'; }
       break;
     }
-    levels[it.id] = Math.min(1, level); R.lvl[it.id] = levels[it.id];
-    if (on) { if (SIM.playing || (typeof REC !== 'undefined' && REC.recording)) R.phase[it.id] = (R.phase[it.id] || 0) + dt / EXC_CYCLE_SEC; active.push({ it, phase:R.phase[it.id] || 0 }); }
+    levels[it.id] = Math.max(0, Math.min(1, level)); R.lvl[it.id] = levels[it.id];
+    const tHold = done && !on && EXC_HOLD.on ? (hour - done.endH) / Math.max(0.01, EXC_HOLD.hours) : -1;
+    excFinishFx(it, levels[it.id], tHold >= 0 && tHold <= 1 ? tHold : -1, done && done.fill);
+    if (on) { if (SIM.playing || (typeof REC !== 'undefined' && REC.recording)) R.phase[it.id] = (R.phase[it.id] || 0) + dt / EXC_CYCLE_SEC; active.push({ it, phase:R.phase[it.id] || 0, mode }); }
   });
   excApplyLevels(levels, active);
 }
@@ -6164,6 +6356,7 @@ function excRefreshUI() {
   }
   const nt = document.getElementById('bf-ntp'); if (nt && document.activeElement !== nt) nt.value = EXC.ntp;
   const pv = document.getElementById('bf-preview'); if (pv) pv.value = EXC.preview;
+  const ho = document.getElementById('bf-hold-on'), hh = document.getElementById('bf-hold-h'); if (ho) ho.checked = EXC_HOLD.on; if (hh && document.activeElement !== hh) hh.value = EXC_HOLD.hours;
   const tr = document.getElementById('bf-terrain');
   if (tr && document.activeElement !== tr) {
     const cands = excTerrainCandidates().slice(0, 14), auto = EXC.terrain ? null : excTerrainMeshes().map(o => o.name || o.parent?.name).join(', ');
@@ -6226,7 +6419,17 @@ function ceRenderExcEditor(chip) {
   if (!EXC.items.length) sel.innerHTML = '<option value="">⚠ No hay excavaciones — defínelas en Bloque F</option>';
   document.getElementById('ce-exc-wrap').style.display = 'flex';
   document.getElementById('ce-exc-pct').value = chip.blockData?.toPct ?? 100;
+  ceExcMode(chip.blockData?.mode === 'fill' ? 'fill' : 'dig');
 }
+let _ceExcMode = 'dig';
+window.ceExcMode = function (m) {
+  _ceExcMode = m === 'fill' ? 'fill' : 'dig';
+  document.querySelectorAll('.ce-exc-mode').forEach(b => b.classList.toggle('on', b.dataset.m === _ceExcMode));
+  document.getElementById('ce-exc-pct-l').textContent = _ceExcMode === 'fill' ? '⬆ Relleno al final del chip (% de la profundidad)' : '⛏ Avance de la excavación al final del chip (%)';
+  document.getElementById('ce-exc-note').textContent = _ceExcMode === 'fill'
+    ? 'Rellena desde el nivel en que quedó la excavación (100 % = hasta el NTP). El material sale del acopio asignado, que se va reduciendo.'
+    : 'La excavación avanza desde donde quedó hasta este porcentaje; puedes repartirla en varios chips o días.';
+};
 
 // ═══ EXCAVACIONES EN VISTAS Y COTAS (definición en planta + plano) ═══
 const EXC_STEPS = { 'exc-rect':['Excavación: clic en la primera esquina', 'Clic en la esquina opuesta · Shift: cuadrado'],
@@ -7241,18 +7444,7 @@ window.releaseSimCamera = releaseSimCamera;
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 // ── VISIBILITY (Block C) ─────────────────────────────────────────────────────
-// Resolve a target {name} to a scene object and set its visibility.
-function setObjectVisibilityByName(name, visible) {
-  let obj = null;
-  scene.traverse(o => { if (!obj && o.name === name) obj = o; });
-  if (obj) obj.visible = visible;
-}
-// Reset all Block-C-controlled objects to visible (called on reset)
-function resetVisibility() {
-  const names = new Set();
-  visStates.forEach(s => s.targets.forEach(t => names.add(t.name)));
-  names.forEach(n => setObjectVisibilityByName(n, true));
-}
+// (Block C: resolución y aplicación en el módulo BLOCK C — vsApplyAt / resetVisibility.)
 
 // (Visibility picking is now handled per-state in the Block C panel.)
 let _ceVisPicking = false;   // kept for the editor-close guard; never set true now
@@ -7267,7 +7459,12 @@ let _playAllMode = false;   // true while playing every day back-to-back
 // block is reached instead of running through empty time.
 function dayLastEventHour(day) {
   if (!day || !day.chips || !day.chips.length) return 0;
-  return day.chips.reduce((mx, c) => Math.max(mx, c.endH || 0), 0);
+  // los cimientos que terminan necesitan el fundido de vuelta a su aspecto original
+  const blk = c => (day.rows || []).find(r => r.id === c.rowId)?.block;
+  const extra = c => (typeof FOUND_RESTORE !== 'undefined' && FOUND_RESTORE.on && blk(c) === 'A') ? FOUND_RESTORE.hours
+    : (typeof EXC_HOLD !== 'undefined' && EXC_HOLD.on && blk(c) === 'F') ? EXC_HOLD.hours : 0;
+  const mx = day.chips.reduce((m, c) => Math.max(m, (c.endH || 0) + extra(c)), 0);
+  return Math.min(mx, day.durationHours || 24);
 }
 
 // First hour at which something happens in a day (start of its earliest chip).
@@ -7303,6 +7500,7 @@ function formatPrettyDate(iso) {
 
 window.simPlay = function() {
   if (SIM.playing) { simPause(); return; }
+  if (VS.showAll) vsToggleShowAll(false);
   SIM.userCam = false;
   if (!activeDay()) return;
   _playAllMode = false;
@@ -7343,7 +7541,7 @@ function startDayPlayback(onDayEnd, resetFirst) {
     SIM.currentHour += dtSec * hoursPerSec;
     if (SIM.currentHour >= endHour) {
       SIM.currentHour = endHour;
-      updatePlayhead(); applySimFrame(SIM.currentHour); updateDateBanner();
+      _simFinalFrame = true; updatePlayhead(); applySimFrame(SIM.currentHour); _simFinalFrame = false; updateDateBanner();
       if (typeof onDayEnd === 'function') { onDayEnd(); return; }
       simPause();
       return;
@@ -7359,6 +7557,7 @@ function startDayPlayback(onDayEnd, resetFirst) {
 // ── PLAY ALL DAYS continuously ───────────────────────────────────────────────
 window.simPlayAll = function() {
   if (SIM.playing) { simPause(); return; }
+  if (VS.showAll) vsToggleShowAll(false);
   SIM.userCam = false;
   if (!SIM.days.length) return;
   _playAllMode = true;
@@ -7416,7 +7615,9 @@ function applySimFrame(hour) {
   else hideScreenTitle();
 
   // ── Block A: foundations, stage-aware ──
+  const gvFound = gvOpts(hour).found;   // Bloque G: cimientos con su aspecto original
   foundations.forEach((f, key) => {
+    if (gvFound) { foundationRestoreFx(key, 1); return; }
     const chips = SIM.chips
       .filter(c => rowBlock(c.rowId)==='A' && c.blockData?.foundationKey===key)
       .sort((a,b) => a.startH - b.startH);
@@ -7426,6 +7627,7 @@ function applySimFrame(hour) {
     // "play all" accumulates instead of resetting to 0). simBaseLevel is only
     // updated at day boundaries, never mid-frame, so scrubbing stays correct.
     let level = (typeof f.simBaseLevel === 'number') ? f.simBaseLevel : 0;
+    let doneAt = level >= 0.999 ? -Infinity : null;   // hora en que llegó al 100 % (días anteriores: ya terminado)
     for (const chip of chips) {
       let fromLvl = 0, toLvl = 1;
       if (typeof chip.blockData.stageIndex === 'number' && f.stages[chip.blockData.stageIndex]) {
@@ -7437,13 +7639,17 @@ function applySimFrame(hour) {
         break;
       } else if (hour >= chip.endH) {
         level = Math.max(level, toLvl);
+        if (level >= 0.999 && doneAt === null) doneAt = chip.endH;
       } else {
         const t = (hour - chip.startH) / Math.max(0.001, (chip.endH - chip.startH));
         level = Math.max(level, fromLvl + (toLvl - fromLvl) * easeInOut(t));
         break;
       }
     }
-    applyFoundationProgress(key, Math.min(1, Math.max(0, level)));
+    if (FOUND_RESTORE.on && doneAt !== null && level >= 0.999) {
+      foundationRestoreFx(key, doneAt === -Infinity || _simFinalFrame ? 1 : (hour - doneAt) / Math.max(0.01, FOUND_RESTORE.hours));
+      f.pourLevel = 1;
+    } else applyFoundationProgress(key, Math.min(1, Math.max(0, level)));
   });
 
   // ── Block B: piece movement (keyframe interpolation, eased) ──
@@ -7472,18 +7678,9 @@ function applySimFrame(hour) {
 
   // ── Block C: visibility — apply the last visibility chip that has started ──
   // Each chip references a named visibility STATE (set of targets + show/hide).
-  const visByName = {};   // target name -> {hour, visible}
-  SIM.chips.filter(c => rowBlock(c.rowId)==='C' && c.startH <= hour)
-    .forEach(c => {
-      const st = chipVisState(c);
-      if (!st) return;
-      st.targets.forEach(t => {
-        if (!visByName[t.name] || c.startH >= visByName[t.name].hour) {
-          visByName[t.name] = { hour: c.startH, visible: !!st.visible };
-        }
-      });
-    });
-  Object.keys(visByName).forEach(name => setObjectVisibilityByName(name, visByName[name].visible));
+  // Se aplica pieza por pieza: el estado inicial (todo visible / todo oculto) y luego cada chip
+  // en orden de hora; un ensamble oculto puede volver a mostrar solo algunas de sus piezas.
+  vsApplyAt(hour);
 
   // ── Block D: camera — interpolate between the surrounding camera keyframes ──
   const camChips = SIM.chips.filter(c => rowBlock(c.rowId)==='D' && c.blockData?.cam)
@@ -7524,6 +7721,40 @@ function applySimFrame(hour) {
 
   // ── Block F: excavaciones (hueco, retroexcavadora, acopios) ──
   excFrame(hour);
+
+  // ── Block G: vista del modelo original (se aplica al final: tiene prioridad) ──
+  gvFrame(hour);
+}
+
+// Durante un chip del Bloque G se muestra el modelo como es: cimientos con sus materiales, sin
+// excavaciones/acopios y, opcionalmente, sin cables, con todo visible y sin grúas ni personaje.
+let _gvState = null;   // lo que se ocultó, para restaurarlo al terminar
+function gvOpts(hour) {
+  const act = SIM.chips.filter(c => rowBlock(c.rowId) === 'G' && hour >= c.startH && hour < c.endH);
+  const o = { found:false, exc:false, cab:false, all:false, crane:false, any:act.length > 0 };
+  act.forEach(c => { const g = Object.assign({ found:true, exc:true, cab:false, all:false, crane:false }, c.blockData?.gv || {}); for (const k in g) o[k] = o[k] || !!g[k]; });
+  return o;
+}
+function gvFrame(hour) {
+  const o = gvOpts(hour), any = o.any;
+  if (!any && !_gvState) return;
+  if (!_gvState) _gvState = { char:charGroup.visible, cranes:new Map() };
+  if (EXC.rt) EXC.rt.g.visible = !o.exc;
+  const cab = scene.getObjectByName('__cables__'); if (cab) cab.visible = !o.cab;
+  if (o.all) { vsApplyBase(true); _vsSig = null; }
+  else if (_gvState.all) { _vsSig = null; vsApplyAt(hour); }
+  _gvState.all = o.all;
+  if (o.crane) { cranes.forEach(cr => { if (!_gvState.cranes.has(cr)) _gvState.cranes.set(cr, cr.object.visible); cr.object.visible = false; }); charGroup.visible = false; }
+  else { _gvState.cranes.forEach((v, cr) => { cr.object.visible = v; }); _gvState.cranes.clear(); charGroup.visible = _gvState.char; }
+  if (!any) {   // fin del chip: los cimientos sin chips del Bloque A vuelven a su vista de edición
+    foundations.forEach((f, key) => { if (!SIM.chips.some(c => rowBlock(c.rowId) === 'A' && c.blockData?.foundationKey === key)) applyFoundationProgress(key, f.pourLevel || 0); });
+    _gvState = null;
+  }
+}
+function gvReset() {   // al reiniciar / detener la simulación
+  if (EXC.rt) EXC.rt.g.visible = true;
+  const cab = scene.getObjectByName('__cables__'); if (cab) cab.visible = true;
+  if (_gvState) { _gvState.cranes.forEach((v, cr) => { cr.object.visible = v; }); charGroup.visible = _gvState.char; _gvState = null; }
 }
 
 // Linear interpolation between two poses
@@ -7564,10 +7795,13 @@ function resetToInitialState() {
   });
   resetVisibility();   // all Block-C targets back to visible
   excResetSim();
+  gvReset();
 }
 
 function restoreSimState() {
   hideScreenTitle();
+  gvReset();
+  resetVisibility();
   if (EXC.rt) EXC.rt.lastTs = 0;
   excApplyStatic();
   foundations.forEach((f, key) => applyFoundationProgress(key, f.pourLevel));
@@ -7604,10 +7838,10 @@ function collectBlockDefs() {
     poses: cfg.poses || [],
   }));
   const foundData = [];
-  foundations.forEach((f) => foundData.push({name:f.name,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
+  foundations.forEach((f) => foundData.push({name:f.name,path:f.path??null,label:f.label||null,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
   // visibility states (shared, like foundations)
   const visData = [];
-  visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(t=>({name:t.name})) }));
+  visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(t => (t.path !== undefined && t.path !== null ? { name:t.name, path:t.path } : { name:t.name })) }));
   // crane capsules (shared)
   const capData = [];
   craneCapsules.forEach((cap, id) => capData.push({
@@ -7640,18 +7874,26 @@ function importVisStatesData(entries) {
   let maxN = 0;
   entries.forEach(e => {
     const id = e.id || ('vis_' + (++visStateCounter));
-    visStates.set(id, { name: e.name||'Estado', visible: !!e.visible, targets: (e.targets||[]).map(t=>({name:t.name})) });
+    visStates.set(id, { name: e.name||'Estado', visible: !!e.visible, targets: (e.targets||[]).map(t => ({ name:t.name || '', path:t.path ?? null })) });
     const m = (id.match(/vis_(\d+)/)||[])[1]; if (m) maxN = Math.max(maxN, parseInt(m));
   });
   visStateCounter = Math.max(visStateCounter, maxN);
-  renderVisStateList();
+  vsChanged(); renderVisStateList(); buildVisTree();
+}
+function vsSettingsOut() { return { init:VS.init, keepTerrain:VS.keepTerrain, keepFound:VS.keepFound, rules:VS.rules.map(r => ({ name:r.name, path:r.path ?? null, mode:r.mode, on:r.on !== false })) }; }
+function vsSettingsIn(o) {
+  if (!o) return;
+  VS.init = o.init === 'none' ? 'none' : 'all'; VS.keepTerrain = o.keepTerrain !== false; VS.keepFound = o.keepFound !== false;
+  VS.rules = (o.rules || []).map(r => ({ name:r.name || '', path:r.path ?? null, mode:r.mode === 'show' ? 'show' : 'hide', on:r.on !== false }))
+    .concat((o.always || []).map(t => ({ name:t.name || '', path:t.path ?? null, mode:'show', on:true })));   // versión anterior
+  vsChanged(); renderVisStateList();
 }
 
 // Serialize a day: chips with links stored by NAME (portable)
 function serializeDay(day) {
   const chipsOut = (day.chips||[]).map(c => {
     const bd = Object.assign({}, c.blockData);
-    if (bd.foundationKey && foundations.has(bd.foundationKey)) bd.foundationName = foundations.get(bd.foundationKey).name;
+    if (bd.foundationKey && foundations.has(bd.foundationKey)) { const ff = foundations.get(bd.foundationKey); bd.foundationName = ff.name; bd.foundationPath = ff.path ?? null; }
     if (bd.liftPositionKey && liftPositions.has(bd.liftPositionKey)) bd.liftPositionName = liftPositions.get(bd.liftPositionKey).name;
     if (bd.excKey && excFind(bd.excKey)) bd.excName = excFind(bd.excKey).name;
     delete bd.foundationKey; delete bd.liftPositionKey; delete bd.excKey;
@@ -7837,9 +8079,9 @@ function buildMasterPayload() {
   return {
     version: SIM.version, kind: 'master', exportDate: new Date().toISOString(),
     days: SIM.days.map(serializeDay),
-    blockA: { foundations: defs.foundations },
+    blockA: { foundations: defs.foundations, restore: { ...FOUND_RESTORE } },
     blockB: { liftPositions: defs.liftPositions },
-    blockC: { visStates: defs.visStates },
+    blockC: { visStates: defs.visStates, settings: vsSettingsOut() },
     blockE: { capsules: defs.capsules },
     blockF: excSerialize(),
   };
@@ -7859,9 +8101,9 @@ window.exportDayJSON = function(dayId) {
     version: SIM.version, kind: 'day', exportDate: new Date().toISOString(),
     day: serializeDay(day),
     // include element defs so the day file is self-contained for solo editing
-    blockA: { foundations: collectBlockDefs().foundations },
+    blockA: { foundations: collectBlockDefs().foundations, restore: { ...FOUND_RESTORE } },
     blockB: { liftPositions: collectBlockDefs().liftPositions },
-    blockC: { visStates: collectBlockDefs().visStates },
+    blockC: { visStates: collectBlockDefs().visStates, settings: vsSettingsOut() },
     blockE: { capsules: collectBlockDefs().capsules },
     blockF: excSerialize(),
   };
@@ -7873,13 +8115,14 @@ window.exportDayJSON = function(dayId) {
 
 // Re-resolve chip links from stored names → uuid, scoped to a list of chips
 function relinkChips(chips) {
-  const foundByName = {}; foundations.forEach((f, key) => foundByName[f.name] = key);
+  const foundByName = {}, foundByPath = {}; foundations.forEach((f, key) => { if (!(f.name in foundByName)) foundByName[f.name] = key; if (f.path != null) foundByPath[f.path] = key; });
   const liftByName  = {}; liftPositions.forEach((cfg, key) => liftByName[cfg.name] = key);
   const visByName   = {}; visStates.forEach((s, key) => visByName[s.name] = key);
   const capByName   = {}; craneCapsules.forEach((cap, key) => capByName[cap.name] = key);
   (chips||[]).forEach(c => {
     if (!c.blockData) return;
-    if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
+    if (c.blockData.foundationPath != null && foundByPath[c.blockData.foundationPath]) c.blockData.foundationKey = foundByPath[c.blockData.foundationPath];
+    else if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
     if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
     if (c.blockData.visStateName && visByName[c.blockData.visStateName]) c.blockData.visStateKey = visByName[c.blockData.visStateName];
     if (c.blockData.capsuleName && capByName[c.blockData.capsuleName]) c.blockData.capsuleKey = capByName[c.blockData.capsuleName];
@@ -7913,7 +8156,9 @@ function normalizeDay(d) {
 function loadSimObject(p) {
   // element defs (shared) load first so objects exist
   if (p.blockA?.foundations) importFoundationsData(p.blockA.foundations);
+  if (p.blockA?.restore) { FOUND_RESTORE.on = p.blockA.restore.on !== false; FOUND_RESTORE.hours = +p.blockA.restore.hours || 1.5; fdRestoreUI(); }
   if (p.blockC?.visStates) importVisStatesData(p.blockC.visStates);
+  if (p.blockC?.settings) vsSettingsIn(p.blockC.settings);
   if (p.blockE?.capsules) importCapsulesData(p.blockE.capsules);
   if (p.blockF) importExcData(p.blockF);
   if (p.blockB?.liftPositions) importLiftPositionsData(p.blockB.liftPositions);
@@ -7922,8 +8167,9 @@ function loadSimObject(p) {
     importSingleDay(p.day);
   } else if (p.days) {
     SIM.days = p.days.map(d => normalizeDay(d));
-    SIM.dayCounter = SIM.days.length;
+    SIM.dayCounter = 0;
     SIM.activeDayId = SIM.days[0]?.id || null;
+    simFixDayIds();
     SIM.days.forEach(d => relinkChips(d.chips));
   } else if (p.simulation) {
     const day = normalizeDay({
@@ -7957,8 +8203,7 @@ function importSingleDay(dayObj) {
   const d = normalizeDay(dayObj);
   const existingIdx = SIM.days.findIndex(x => x.date === d.date);
   // give it a fresh id to avoid collisions
-  SIM.dayCounter = (SIM.dayCounter||0) + 1;
-  d.id = 'day_' + SIM.dayCounter;
+  d.id = simNewDayId();
   relinkChips(d.chips);
   if (existingIdx >= 0) {
     if (confirm('Ya existe un día con la fecha '+d.date+'. ¿Reemplazarlo?')) {
@@ -8385,189 +8630,342 @@ window.addCapsuleToTimeline = function(id) {
 // ══════════════════════════════════════════════════════
 // BLOCK C — VISIBILITY STATES (named, reusable, like foundations)
 // ══════════════════════════════════════════════════════
-// visStates: id -> { name, visible, targets:[{name}] }
+// visStates: id -> { name, visible, targets:[{name, path}] }
+// path = índices de hijos desde __model__ ("0/3/2"): identifica la pieza aunque haya nombres repetidos.
+// La visibilidad se aplica a las PIEZAS (mallas) de cada objetivo, así un ensamble oculto
+// puede volver a mostrar solo una de sus partes; los grupos quedan siempre visibles.
 const visStates = new Map();
 let visStateCounter = 0;
 let blockCOpen = false;
-let _vsEditingId = null;      // which state's tree-pick is active
+let _vsEditingId = null;      // estado en edición ('__rules' = reglas permanentes)
 let _vsTreeFilter = '';
+const VS = { init:'all', keepTerrain:true, keepFound:true, rules:[], ruleMode:'hide', showAll:false, rev:0 };
+// rules: [{name, path, mode:'hide'|'show', on}] — reglas permanentes (también fuera de la simulación)
+let vsPick3D = false;
 
 window.toggleBlockC = function() {
   blockCOpen = !blockCOpen;
   document.getElementById('block-c-panel').classList.toggle('open', blockCOpen);
   document.getElementById('btn-block-c')?.classList.toggle('active', blockCOpen);
-  if (blockCOpen) { renderVisStateList(); buildVisTree(); }
+  if (blockCOpen) { renderVisStateList(); buildVisTree(); } else { vsPickDone(); vsHighlight(null); }
 };
 
+// ── resolución de objetivos ──
+let _vsCache = { root:null, nodes:new Map(), meshes:new Map(), all:null };
+function vsModel() { return scene.getObjectByName('__model__'); }
+function vsC() { const m = vsModel(); if (_vsCache.root !== m) _vsCache = { root:m, nodes:new Map(), meshes:new Map(), all:null }; return _vsCache; }
+function vsPath(obj) {
+  const m = vsModel(), p = []; let o = obj;
+  while (o && o !== m) { const par = o.parent; if (!par) return null; p.unshift(par.children.indexOf(o)); o = par; }
+  return o === m ? p.join('/') : null;
+}
+function vsTargetOf(obj) { return { name:obj.name || '', path:vsPath(obj) }; }
+function vsSameTarget(a, b) { return a.path && b.path ? a.path === b.path : a.name === b.name; }
+function vsNodeAt(path) { let o = vsModel(); if (!o || path === null || path === undefined) return null; if (path === '') return o; for (const i of String(path).split('/')) { o = o && o.children[+i]; } return o || null; }
+function vsResolve(t) {
+  const C = vsC(), key = (t.path ?? '') + '|' + t.name;
+  if (C.nodes.has(key)) return C.nodes.get(key);
+  let out = [];
+  if (t.path !== undefined && t.path !== null) { const n = vsNodeAt(t.path); if (n && (!t.name || n.name === t.name)) out = [n]; }
+  if (!out.length && t.name && C.root) C.root.traverse(o => { if (o.name === t.name) out.push(o); });   // JSON antiguos: por nombre (todas las coincidencias)
+  C.nodes.set(key, out); return out;
+}
+function vsSkip(o) { return o.name === '__char__' || (o.name || '').startsWith('crane_') || !!o.userData.__fdOverlay; }
+function vsMeshesOf(node) {
+  const C = vsC(); if (C.meshes.has(node)) return C.meshes.get(node);
+  const out = []; node.traverse(o => { if (o.isMesh && !vsSkip(o)) out.push(o); });
+  C.meshes.set(node, out); return out;
+}
+function vsAllMeshes() { const C = vsC(); if (!C.all) C.all = C.root ? vsMeshesOf(C.root) : []; return C.all; }
+function vsDepth(n) { let d = 0; for (let o = n; o && o !== _vsCache.root; o = o.parent) d++; return d; }
+function vsChanged() { VS.rev++; _vsSig = null; vsRefreshView(); }
+function vsRuleNodes(mode) { const out = []; VS.rules.forEach(r => { if (r.on !== false && r.mode === mode) vsResolve(r).forEach(n => out.push(n)); }); return out; }
+// Chips del Bloque C de los días anteriores (continuidad) + del día activo hasta «hour», en orden.
+function vsStartedChips(hour) {
+  const days = SIM.days.map((d, i) => ({ d, i })).sort((a, b) => (a.d.date || '').localeCompare(b.d.date || '') || a.i - b.i).map(x => x.d);
+  const cur = days.indexOf(activeDay()), out = [];
+  days.forEach((d, k) => {
+    if (cur >= 0 && k > cur) return;
+    const blk = c => (d.rows || []).find(r => r.id === c.rowId)?.block;
+    (d.chips || []).forEach(c => { if (blk(c) === 'C' && chipVisState(c) && (k < cur || c.startH <= hour)) out.push({ c, k }); });
+  });
+  out.sort((a, b) => a.k - b.k || a.c.startH - b.c.startH);
+  return out.map(x => x.c);
+}
+
+// ── aplicación durante la simulación ──
+let _vsSig = null, _vsControlled = false, _vsMode = 'base', _vsHour = 0;
+function vsApplyAt(hour) {
+  if (!vsModel()) return;
+  _vsMode = 'sim'; _vsHour = hour;
+  if (VS.showAll) { vsApplyBase(true); _vsMode = 'sim'; return; }
+  const started = vsStartedChips(hour);
+  const sig = VS.init + '|' + VS.rev + '|' + SIM.activeDayId + '|' + started.map(c => c.id + ':' + c.startH + ':' + (c.blockData.visStateKey || c.blockData.visStateName)).join(',');
+  if (sig === _vsSig) return; _vsSig = sig;
+  const all = vsAllMeshes(), vis = new Map(), def = VS.init !== 'none';
+  all.forEach(m => vis.set(m, def));
+  if (!def) {
+    const keep = n => vsMeshesOf(n).forEach(m => vis.set(m, true));
+    if (VS.keepTerrain && typeof excTerrainMeshes === 'function') excTerrainMeshes().forEach(m => vis.set(m, true));
+    if (VS.keepFound) foundations.forEach(f => { if (f.object) keep(f.object); });
+  }
+  started.forEach(c => {
+    const st = chipVisState(c);
+    const nodes = []; st.targets.forEach(t => vsResolve(t).forEach(n => nodes.push(n)));
+    nodes.sort((a, b) => vsDepth(a) - vsDepth(b));   // lo más específico gana dentro del mismo estado
+    nodes.forEach(n => vsMeshesOf(n).forEach(m => vis.set(m, !!st.visible)));
+  });
+  vsRuleNodes('show').forEach(n => vsMeshesOf(n).forEach(m => vis.set(m, true)));    // reglas: siempre visibles
+  vsRuleNodes('hide').forEach(n => vsMeshesOf(n).forEach(m => vis.set(m, false)));   // reglas: siempre ocultos (ganan)
+  vsTakeControl();
+  all.forEach(m => { m.visible = vis.get(m); });
+}
+// Vista normal (fuera de la simulación): todo visible salvo las reglas «siempre oculto».
+// showAll / ignoreRules: absolutamente todo visible.
+function vsApplyBase(ignoreRules) {
+  _vsMode = 'base'; _vsSig = null;
+  const hide = ignoreRules || VS.showAll ? [] : vsRuleNodes('hide');
+  if (!hide.length && !_vsControlled) return;
+  vsTakeControl();
+  vsAllMeshes().forEach(m => { m.visible = true; });
+  hide.forEach(n => vsMeshesOf(n).forEach(m => { m.visible = false; }));
+  if (!hide.length) { _vsControlled = false; const r = vsModel(); if (r) r.traverse(o => { if (!vsSkip(o)) o.visible = true; }); }
+}
+function vsRefreshView() { if (!vsModel()) return; if (_vsMode === 'sim' && !VS.showAll) { _vsSig = null; vsApplyAt(_vsHour); } else vsApplyBase(); vsSyncShowAll(); }
+window.vsToggleShowAll = function (force) {
+  VS.showAll = force === undefined ? !VS.showAll : !!force;
+  _vsSig = null;
+  if (VS.showAll) vsApplyBase(true); else if (_vsMode === 'sim') vsApplyAt(_vsHour); else vsApplyBase();
+  vsSyncShowAll(); renderVisStateList();
+};
+function vsSyncShowAll() {
+  const b = document.getElementById('btn-vs-all');
+  if (b) { b.classList.toggle('active', VS.showAll); b.textContent = VS.showAll ? '👁 Todo ✓' : '👁 Todo'; }
+}
+function vsTakeControl() {   // los grupos (ensambles) quedan visibles: la visibilidad la llevan las piezas
+  if (_vsControlled) return; _vsControlled = true;
+  const r = vsModel(); if (r) r.traverse(o => { if (!o.isMesh && !vsSkip(o)) o.visible = true; });
+}
+function resetVisibility() {   // vista normal (al reiniciar o detener): todo visible salvo las reglas «siempre oculto»
+  _vsSig = null;
+  if (VS.rules.some(r => r.on !== false && r.mode === 'hide') && !VS.showAll) { vsApplyBase(); return; }
+  _vsMode = 'base';
+  if (!_vsControlled) {   // compatibilidad: estados aplicados a grupos por la versión anterior
+    visStates.forEach(s => s.targets.forEach(t => vsResolve(t).forEach(n => { n.visible = true; })));
+    return;
+  }
+  _vsControlled = false;
+  const r = vsModel(); if (r) r.traverse(o => { if (!vsSkip(o)) o.visible = true; });
+}
+
+// ── estados ──
 window.addVisState = function() {
   visStateCounter++;
   const id = 'vis_' + visStateCounter;
-  visStates.set(id, { name: 'Estado ' + visStateCounter, visible: false, targets: [] });
-  renderVisStateList();
+  visStates.set(id, { name: 'Estado ' + visStateCounter, visible: true, targets: [] });
+  vsChanged(); vsPickForState(id);
 };
-
 window.removeVisState = function(id) {
   if (!confirm('¿Eliminar este estado de visibilidad?')) return;
-  visStates.delete(id);
-  // unlink chips referencing it
-  SIM.days.forEach(d => (d.chips||[]).forEach(c => {
-    if (c.blockData?.visStateName && visStates.get(c.blockData.visStateKey)?.name !== c.blockData.visStateName) {}
-  }));
-  renderVisStateList();
+  visStates.delete(id); if (_vsEditingId === id) vsPickDone();
+  vsChanged(); renderVisStateList(); buildVisTree();
 };
-
 window.renameVisState = function(id, val) { const s = visStates.get(id); if (s) s.name = val; };
-window.setVisStateVisible = function(id, v) {
-  const s = visStates.get(id); if (!s) return;
-  s.visible = v; renderVisStateList();
-};
+window.setVisStateVisible = function(id, v) { const s = visStates.get(id); if (!s) return; s.visible = v; vsChanged(); renderVisStateList(); };
 window.removeVisTarget = function(id, idx) {
-  const s = visStates.get(id); if (!s) return;
-  s.targets.splice(idx, 1); renderVisStateList();
+  const s = id === '__rules' ? { targets:VS.rules } : visStates.get(id); if (!s) return;
+  s.targets.splice(idx, 1); vsChanged(); vsHighlight(null); renderVisStateList(); buildVisTree();
 };
-
-// Activate tree picking for a given state
+function vsEditTargets() { return _vsEditingId === '__rules' ? VS.rules : visStates.get(_vsEditingId)?.targets; }
 window.vsPickForState = function(id) {
-  _vsEditingId = id;
-  document.getElementById('vs-pick-banner').style.display = 'block';
-  document.getElementById('vs-pick-banner').textContent = '👁 Selecciona elementos en el árbol o haz clic en 3D para "'+ (visStates.get(id)?.name||'') +'". Pulsa aquí para terminar.';
+  _vsEditingId = _vsEditingId === id ? null : id;
+  if (!_vsEditingId) vsPickDone(); else { renderVisStateList(); buildVisTree(); }
 };
 window.vsPickDone = function() {
-  _vsEditingId = null;
-  document.getElementById('vs-pick-banner').style.display = 'none';
+  _vsEditingId = null; vsHighlight(null); vsMenuClose();
   if (vsPick3D) { vsPick3D = false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); }
+  renderVisStateList(); buildVisTree();
 };
-
-// add a target (by object) to the state being edited
-function vsAddTargetToState(obj) {
-  if (!_vsEditingId) return;
-  const s = visStates.get(_vsEditingId); if (!s) return;
-  const name = obj.name || obj.uuid.slice(0,8);
-  if (!s.targets.some(t => t.name === name)) s.targets.push({ name });
-  renderVisStateList();
+function vsToggleTarget(obj) {   // añade o quita el objeto del estado en edición
+  const T = vsEditTargets(); if (!T) return;
+  const t = vsTargetOf(obj), i = T.findIndex(x => vsSameTarget(x, t));
+  if (i >= 0) T.splice(i, 1); else T.push(_vsEditingId === '__rules' ? Object.assign(t, { mode:VS.ruleMode, on:true }) : t);
+  vsChanged(); renderVisStateList(); buildVisTree();
 }
+window.vsRuleSet = function(i, k, v) {
+  const r = VS.rules[i]; if (!r) return;
+  if (k === 'on') r.on = !!v; else if (k === 'mode') r.mode = r.mode === 'hide' ? 'show' : 'hide';
+  vsChanged(); renderVisStateList(); buildVisTree();
+};
+window.vsRuleMode = function(m) { VS.ruleMode = m === 'show' ? 'show' : 'hide'; renderVisStateList(); };
+window.vsSetInit = function(k, v) {
+  if (k === 'init') VS.init = v === 'none' ? 'none' : 'all';
+  if (k === 'terrain') VS.keepTerrain = !!v;
+  if (k === 'found') VS.keepFound = !!v;
+  vsChanged(); renderVisStateList();
+};
+// vista previa: aplica el estado (sobre el estado inicial) sin reproducir
+window.vsPreview = function(id) {
+  if (SIM.playing) return;
+  const st = visStates.get(id); if (!st) return;
+  _vsSig = null;
+  const all = vsAllMeshes(), def = VS.init !== 'none';
+  vsTakeControl(); all.forEach(m => { m.visible = def; });
+  if (!def) { if (VS.keepTerrain && typeof excTerrainMeshes === 'function') excTerrainMeshes().forEach(m => m.visible = true); if (VS.keepFound) foundations.forEach(f => f.object && vsMeshesOf(f.object).forEach(m => m.visible = true)); }
+  st.targets.forEach(t => vsResolve(t).forEach(n => vsMeshesOf(n).forEach(m => m.visible = !!st.visible)));
+  vsRuleNodes('show').forEach(n => vsMeshesOf(n).forEach(m => m.visible = true));
+  vsRuleNodes('hide').forEach(n => vsMeshesOf(n).forEach(m => m.visible = false));
+  const b = document.getElementById('vs-prev-banner'); if (b) { b.style.display = 'block'; b.textContent = '👁 Vista previa de «' + st.name + '» — clic aquí para volver a ver todo'; }
+};
+window.vsPreviewEnd = function() { resetVisibility(); const b = document.getElementById('vs-prev-banner'); if (b) b.style.display = 'none'; };
 
-// 3D pick mode for visibility
-let vsPick3D = false;
-window.vsActivate3DPick = function() {
-  if (!_vsEditingId) { alert('Primero pulsa "Seleccionar" en un estado.'); return; }
+// ── resaltado 3D (caja) ──
+let _vsBox = null;
+function vsHighlight(objs) {
+  if (!_vsBox) { _vsBox = new THREE.Box3Helper(new THREE.Box3(), 0xffd54f); _vsBox.userData.__helper = true; _vsBox.material.depthTest = false; _vsBox.renderOrder = 999; _vsBox.visible = false; scene.add(_vsBox); }
+  if (!_vsBox.parent) scene.add(_vsBox);
+  const list = (Array.isArray(objs) ? objs : objs ? [objs] : []).filter(Boolean);
+  if (!list.length) { _vsBox.visible = false; return; }
+  const b = new THREE.Box3(); list.forEach(o => { o.updateMatrixWorld(true); b.union(new THREE.Box3().setFromObject(o)); });
+  if (b.isEmpty()) { _vsBox.visible = false; return; }
+  _vsBox.box.copy(b); _vsBox.visible = true;
+}
+window.vsHlTarget = function(id, i) { const T = id === '__rules' ? VS.rules : visStates.get(id)?.targets; vsHighlight(T && T[i] ? vsResolve(T[i]) : null); };
+
+// ── selección en 3D: menú con los niveles (pieza, ensamble 1, 2…) ──
+window.vsActivate3DPick = function(id) {
+  if (id) { _vsEditingId = id; }
+  if (!_vsEditingId) { alert('Primero elige el estado que vas a editar.'); return; }
   vsPick3D = true;
   document.getElementById('pick-overlay').classList.add('active');
   canvas.classList.add('pick-mode');
-  document.getElementById('pick-label').innerHTML = '<b>👁 Clic en piezas para añadirlas</b><br><small style="opacity:.6">ESC o el banner para terminar</small>';
+  const nm = _vsEditingId === '__rules' ? 'Reglas permanentes' : visStates.get(_vsEditingId)?.name;
+  document.getElementById('pick-label').innerHTML = '<b>👁 Clic en una pieza → elige el nivel (pieza o ensamble) para «' + nm + '»</b><br><small style="opacity:.6">Clic de nuevo en algo ya incluido para quitarlo · ESC para terminar</small>';
+  renderVisStateList(); buildVisTree();
 };
+function vsHitAt(cx, cy) {
+  const rect = canvas.getBoundingClientRect();
+  raycaster.setFromCamera(new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1), camera);
+  const meshes = vsAllMeshes().filter(m => { for (let o = m; o; o = o.parent) if (!o.visible) return false; return true; });
+  return raycaster.intersectObjects(meshes, false)[0]?.object || null;
+}
+function vsMenuClose() { document.getElementById('vs-pick-menu')?.remove(); }
+function vsOpenLevelMenu(mesh, x, y) {
+  vsMenuClose();
+  const m = vsModel(), levels = [];
+  for (let o = mesh; o && o !== m; o = o.parent) levels.push(o);
+  const T = vsEditTargets() || [];
+  const menu = document.createElement('div'); menu.id = 'vs-pick-menu';
+  menu.style.left = Math.min(x + 8, innerWidth - 300) + 'px'; menu.style.top = Math.min(y + 8, innerHeight - 40 - levels.length * 30) + 'px';
+  menu.innerHTML = '<div class="vs-pm-t">Añadir / quitar del estado</div>' + levels.map((o, i) => {
+    const inc = T.some(t => vsSameTarget(t, vsTargetOf(o))), n = vsMeshesOf(o).length;
+    return `<div class="vs-pm-i${inc ? ' on' : ''}" data-i="${i}"><span class="vs-pm-k">${i === 0 ? 'Pieza' : 'Ensamble ' + i}</span><span class="vs-pm-n">${(o.name || '(sin nombre)').replace(/[<>&]/g, '')}</span><small>${n} pz</small><b>${inc ? '✓' : '+'}</b></div>`;
+  }).join('');
+  menu.addEventListener('mousemove', e => { const it = e.target.closest('.vs-pm-i'); vsHighlight(it ? levels[+it.dataset.i] : null); });
+  menu.addEventListener('mouseleave', () => vsHighlight(null));
+  menu.addEventListener('click', e => { const it = e.target.closest('.vs-pm-i'); if (!it) return; e.stopPropagation(); vsToggleTarget(levels[+it.dataset.i]); vsMenuClose(); vsHighlight(null); });
+  document.body.appendChild(menu);
+}
 
-// Render the list of visibility states in the panel
+// ── panel ──
+function vsTargetsHTML(id, T) {
+  return T.length ? T.map((t, i) => {
+    const n = vsResolve(t), miss = !n.length;
+    return `<div class="vs-tg${miss ? ' miss' : ''}" onmouseenter="vsHlTarget('${id}',${i})" onmouseleave="vsHighlight(null)" title="${miss ? 'No se encontró en el modelo cargado' : (t.path ? 'Ruta ' + t.path : 'Por nombre')}">
+      <span>${(t.name || '(sin nombre)').replace(/_/g, ' ').replace(/[<>&]/g, '')}</span><small>${miss ? '⚠' : n.reduce((s, o) => s + vsMeshesOf(o).length, 0) + ' pz'}</small>
+      <button onclick="removeVisTarget('${id}',${i})" title="Quitar">✕</button></div>`;
+  }).join('') : '<div class="vs-empty">Sin elementos. Usa 🖱 Elegir en 3D o marca en el árbol.</div>';
+}
 function renderVisStateList() {
   const list = document.getElementById('vs-list');
   if (!list) return;
   document.getElementById('vs-count').textContent = visStates.size + ' estados';
-  if (visStates.size === 0) {
-    list.innerHTML = '<div style="color:var(--text3);font-size:11px;text-align:center;padding:16px;">Crea un estado de visibilidad con el botón de arriba</div>';
-    return;
-  }
+  const init = document.getElementById('vs-init');
+  if (init) init.innerHTML = `
+    <button class="bap-btn${VS.showAll ? ' active' : ''}" style="width:100%;margin-bottom:6px;${VS.showAll ? 'border-color:#ffd54f;color:#ffd54f;' : ''}" onclick="vsToggleShowAll()" title="Muestra absolutamente todo (ignora estados y reglas) para trabajar en otros ajustes. Se desactiva al reproducir.">${VS.showAll ? '👁 Viendo todo — clic para volver a la simulación' : '👁 Ver todo el modelo'}</button>
+    <div class="vs-seg"><button class="${VS.init === 'all' ? 'on' : ''}" onclick="vsSetInit('init','all')">👁 Todo visible</button><button class="${VS.init === 'none' ? 'on' : ''}" onclick="vsSetInit('init','none')">🚫 Todo oculto</button></div>
+    <div class="vs-note">${VS.init === 'none' ? 'Al iniciar, todo el modelo se oculta y cada estado <b>👁 Mostrar</b> lo va revelando en su hora.' : 'Al iniciar, todo es visible; los estados ocultan o muestran en su hora.'}</div>
+    ${VS.init === 'none' ? `<label class="vs-chk"><input type="checkbox"${VS.keepTerrain ? ' checked' : ''} onchange="vsSetInit('terrain',this.checked)"> Terreno siempre visible</label>
+    <label class="vs-chk"><input type="checkbox"${VS.keepFound ? ' checked' : ''} onchange="vsSetInit('found',this.checked)"> Cimientos del Bloque A siempre visibles</label>
+    ` : ''}
+    <div class="vs-card${_vsEditingId === '__rules' ? ' edit' : ''}"><div class="vs-head"><span class="vs-ic">📋</span><span class="vs-nm">Reglas permanentes</span><span class="vs-ct" title="activas / total">${VS.rules.filter(r => r.on !== false).length}/${VS.rules.length}</span>
+      <button class="vs-mini${_vsEditingId === '__rules' ? ' on' : ''}" onclick="vsPickForState('__rules')">${_vsEditingId === '__rules' ? '✓ Listo' : '✎ Editar'}</button></div>
+      <div class="vs-note" style="margin-top:3px;">Se aplican siempre: en la simulación (todos los días) y en la vista normal. «Siempre oculto» gana sobre todo.</div>
+      ${VS.rules.length ? `<div class="vs-tgs">${VS.rules.map((r, i) => { const n = vsResolve(r);
+        return `<div class="vs-tg${n.length ? '' : ' miss'}" style="${r.on === false ? 'opacity:.45' : ''}" onmouseenter="vsHlTarget('__rules',${i})" onmouseleave="vsHighlight(null)">
+          <input type="checkbox"${r.on !== false ? ' checked' : ''} onchange="vsRuleSet(${i},'on',this.checked)" title="Activar / desactivar la regla" style="accent-color:#4fd1c5;">
+          <button class="vs-rm ${r.mode}" onclick="vsRuleSet(${i},'mode')" title="Cambiar">${r.mode === 'hide' ? '🚫 oculto' : '📌 visible'}</button>
+          <span>${(r.name || '(sin nombre)').replace(/_/g, ' ').replace(/[<>&]/g, '')}</span><small>${n.length ? n.reduce((s, o) => s + vsMeshesOf(o).length, 0) + ' pz' : '⚠'}</small>
+          <button onclick="removeVisTarget('__rules',${i})" title="Quitar regla">✕</button></div>`; }).join('')}</div>` : ''}
+      ${_vsEditingId === '__rules' ? `<div class="vs-seg" style="margin-top:4px;"><button class="${VS.ruleMode === 'hide' ? 'on' : ''}" onclick="vsRuleMode('hide')">Nuevas: 🚫 Siempre oculto</button><button class="${VS.ruleMode === 'show' ? 'on' : ''}" onclick="vsRuleMode('show')">📌 Siempre visible</button></div>
+        <div class="vs-row"><button class="bap-btn${vsPick3D ? ' active' : ''}" onclick="vsActivate3DPick('__rules')">🖱 Agregar desde 3D</button></div>` : ''}</div>`;
+  if (visStates.size === 0) { list.innerHTML = '<div class="vs-empty" style="text-align:center;padding:14px;">Crea un estado con «＋ Nuevo estado». Luego, en la línea de tiempo, un chip del Bloque C lo aplica a su hora.</div>'; return; }
   list.innerHTML = '';
   visStates.forEach((s, id) => {
+    const ed = _vsEditingId === id, n = s.targets.reduce((a, t) => a + vsResolve(t).reduce((b, o) => b + vsMeshesOf(o).length, 0), 0);
+    const used = SIM.days.some(d => (d.chips || []).some(c => c.blockData?.visStateKey === id || c.blockData?.visStateName === s.name)) || SIM.chips.some(c => c.blockData?.visStateKey === id);
     const item = document.createElement('div');
-    item.className = 'bap-item';
-    const targetsHtml = s.targets.length
-      ? s.targets.map((t,i) => '<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-family:var(--mono);font-size:9px;">'
-          + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t.name.replace(/_/g,' ')+'</span>'
-          + '<button onclick="removeVisTarget(\''+id+'\','+i+')" style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:10px;">✕</button>'
-          + '</div>').join('')
-      : '<div style="color:var(--text3);font-size:9px;padding:3px 0;">Sin elementos</div>';
-    item.innerHTML =
-      '<div class="bap-item-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
-      + '<span class="bap-item-icon">'+(s.visible?'👁':'🚫')+'</span>'
-      + '<input class="rl-name-input" style="flex:1;font-size:10px;" value="'+s.name+'" onclick="event.stopPropagation()" oninput="renameVisState(\''+id+'\',this.value)">'
-      + '<span class="bap-item-pct" style="border-color:rgba(79,209,197,.3);color:#4fd1c5;">'+s.targets.length+'</span>'
-      + '<span style="color:var(--text3);font-size:10px;">▾</span>'
-      + '</div>'
-      + '<div class="bap-item-body">'
-      + '<div class="bap-section-title" style="margin-bottom:5px;">Estado</div>'
-      + '<div style="display:flex;gap:4px;margin-bottom:8px;">'
-      + '<button class="bap-btn'+(s.visible?'':' danger')+'" onclick="setVisStateVisible(\''+id+'\',true)">👁 Mostrar</button>'
-      + '<button class="bap-btn'+(s.visible?' danger':'')+'" onclick="setVisStateVisible(\''+id+'\',false)">🚫 Ocultar</button>'
-      + '</div>'
-      + '<div class="bap-section-title" style="margin-bottom:5px;">Elementos ('+s.targets.length+')</div>'
-      + '<div style="max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:5px;padding:4px;background:var(--bg3);margin-bottom:6px;">'+targetsHtml+'</div>'
-      + '<div style="display:flex;gap:4px;">'
-      + '<button class="bap-btn" onclick="vsPickForState(\''+id+'\')">🌳 Seleccionar del árbol</button>'
-      + '<button class="bap-btn" onclick="vsPickForState(\''+id+'\');vsActivate3DPick()">🖱 Clic 3D</button>'
-      + '</div>'
-      + '<button class="bap-btn danger" style="width:100%;margin-top:6px;" onclick="removeVisState(\''+id+'\')">✕ Eliminar estado</button>'
-      + '</div>';
+    item.className = 'vs-card' + (ed ? ' edit' : '');
+    item.innerHTML = `<div class="vs-head">
+        <button class="vs-mode ${s.visible ? 'show' : 'hide'}" onclick="setVisStateVisible('${id}',${!s.visible})" title="Cambiar entre mostrar y ocultar">${s.visible ? '👁 Mostrar' : '🚫 Ocultar'}</button>
+        <input class="vs-nm-in" value="${s.name.replace(/"/g, '&quot;')}" oninput="renameVisState('${id}',this.value)">
+        <span class="vs-ct" title="Elementos · piezas">${s.targets.length}·${n}</span>
+        <button class="vs-mini${ed ? ' on' : ''}" onclick="vsPickForState('${id}')" title="Editar los elementos de este estado">${ed ? '✓ Listo' : '✎ Editar'}</button>
+      </div>
+      ${used ? '' : '<div class="vs-warn">Sin chip en la línea de tiempo</div>'}
+      ${ed ? `<div class="vs-tgs">${vsTargetsHTML(id, s.targets)}</div>
+      <div class="vs-row"><button class="bap-btn${vsPick3D ? ' active' : ''}" onclick="vsActivate3DPick('${id}')">🖱 Elegir en 3D</button><button class="bap-btn" onclick="vsPreview('${id}')" title="Muestra cómo queda la escena con este estado">👁 Vista previa</button></div>
+      <div class="vs-row"><button class="bap-btn danger" onclick="removeVisState('${id}')">✕ Eliminar estado</button></div>` : ''}`;
     list.appendChild(item);
   });
 }
 
-// Build the model tree for visibility selection
+// ── árbol del modelo: casillas del estado en edición ──
+const _vsOpen = new Set();   // rutas expandidas
 function buildVisTree() {
   const wrap = document.getElementById('vs-tree-wrap');
   if (!wrap) return;
-  const model = scene.getObjectByName('__model__');
-  if (!model) { wrap.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">Sin modelo cargado</div>'; return; }
-  wrap.innerHTML = '';
-  model.children.forEach(child => {
-    const node = buildVisTreeNode(child, 0);
-    if (node) wrap.appendChild(node);
-  });
+  const model = vsModel();
+  const hint = document.getElementById('vs-tree-hint');
+  if (hint) hint.textContent = _vsEditingId ? (_vsEditingId === '__rules' ? '☑ Marca para crear una regla «' + (VS.ruleMode === 'hide' ? 'siempre oculto' : 'siempre visible') + '»' : '☑ Marca para incluir en «' + (visStates.get(_vsEditingId)?.name || '') + '»') : 'Pulsa ✎ Editar en un estado o en las reglas para marcar elementos';
+  if (!model) { wrap.innerHTML = '<div class="vs-empty" style="text-align:center;">Sin modelo cargado</div>'; return; }
+  const T = vsEditTargets(), inc = new Set();
+  if (T) T.forEach(t => vsResolve(t).forEach(n => inc.add(n)));
+  const st = wrap.scrollTop; wrap.innerHTML = '';
+  model.children.forEach(child => { const node = buildVisTreeNode(child, 0, inc, false); if (node) wrap.appendChild(node); });
+  wrap.scrollTop = st;
 }
-
-function buildVisTreeNode(obj, depth) {
-  if (obj.name && (obj.name.startsWith('crane_') || obj.name === '__char__')) return null;
-  const isGroup = !obj.isMesh;
-  const hasChildren = obj.children && obj.children.length > 0;
-  const name = obj.name || (isGroup ? '(grupo)' : '(mesh)');
-  if (_vsTreeFilter && !name.toLowerCase().includes(_vsTreeFilter.toLowerCase())) {
-    if (!hasDescendantMatch(obj, _vsTreeFilter)) return null;
-  }
-  const node = document.createElement('div');
-  node.className = 'tree-node';
-  const row = document.createElement('div');
-  row.className = 'tree-row';
-  const toggle = document.createElement('span');
-  toggle.className = 'tree-toggle' + (hasChildren && isGroup ? '' : ' leaf');
-  toggle.textContent = '▶';
-  const icon = document.createElement('span');
-  icon.className = 'tree-icon';
-  icon.textContent = isGroup ? '📁' : '▪';
-  const label = document.createElement('span');
-  label.className = 'tree-label ' + (isGroup ? 'group' : 'mesh');
-  label.textContent = name.replace(/_/g, ' ');
-  label.title = name;
-  const addBtn = document.createElement('button');
-  addBtn.className = 'tree-add-btn';
-  addBtn.textContent = '+';
-  addBtn.title = 'Añadir al estado en edición';
-  row.appendChild(toggle); row.appendChild(icon); row.appendChild(label); row.appendChild(addBtn);
+function vsHasInc(obj, inc) { let f = false; obj.traverse(o => { if (!f && o !== obj && inc.has(o)) f = true; }); return f; }
+function buildVisTreeNode(obj, depth, inc, inherited) {
+  if (vsSkip(obj)) return null;
+  const isGroup = !obj.isMesh, hasChildren = obj.children && obj.children.some(c => !vsSkip(c));
+  const name = obj.name || (isGroup ? '(grupo)' : '(pieza)');
+  if (_vsTreeFilter && !name.toLowerCase().includes(_vsTreeFilter.toLowerCase()) && !hasDescendantMatch(obj, _vsTreeFilter)) return null;
+  const path = vsPath(obj), on = inc.has(obj), part = !on && !inherited && inc.size && vsHasInc(obj, inc);
+  const node = document.createElement('div'); node.className = 'tree-node';
+  const row = document.createElement('div'); row.className = 'tree-row vs-tr';
+  const open = _vsOpen.has(path) || (!!_vsTreeFilter && depth < 6);
+  row.innerHTML = `<span class="tree-toggle${hasChildren ? (open ? ' open' : '') : ' leaf'}">▶</span>`
+    + (_vsEditingId ? `<span class="vs-cb${on ? ' on' : inherited ? ' inh' : part ? ' part' : ''}" title="${on ? 'Incluido (clic para quitar)' : inherited ? 'Incluido por su ensamble' : 'Incluir'}">${on || inherited ? '✓' : part ? '–' : ''}</span>` : '')
+    + `<span class="tree-icon">${isGroup ? '📁' : '▪'}</span><span class="tree-label ${isGroup ? 'group' : 'mesh'}" title="${name.replace(/"/g, '&quot;')}">${name.replace(/_/g, ' ').replace(/[<>&]/g, '')}</span>`
+    + (isGroup ? `<small class="vs-pz">${vsMeshesOf(obj).length}</small>` : '');
   node.appendChild(row);
-
-  let childWrap = null, expanded = false;
-  if (hasChildren && isGroup) {
-    childWrap = document.createElement('div');
-    childWrap.className = 'tree-children';
-    childWrap.style.display = 'none';
-    node.appendChild(childWrap);
-    toggle.style.cursor = 'pointer';
-    const expand = () => {
-      expanded = !expanded;
-      childWrap.style.display = expanded ? 'block' : 'none';
-      toggle.classList.toggle('open', expanded);
-      if (expanded && childWrap.children.length === 0) {
-        obj.children.forEach(child => { const cn = buildVisTreeNode(child, depth+1); if (cn) childWrap.appendChild(cn); });
-      }
-    };
-    toggle.addEventListener('click', e => { e.stopPropagation(); expand(); });
-    row.addEventListener('click', e => { if (e.target === addBtn) return; expand(); });
+  let childWrap = null;
+  if (hasChildren) {
+    childWrap = document.createElement('div'); childWrap.className = 'tree-children'; childWrap.style.display = open ? 'block' : 'none'; node.appendChild(childWrap);
+    const fill = () => { if (!childWrap.children.length) obj.children.forEach(c => { const cn = buildVisTreeNode(c, depth + 1, inc, inherited || on); if (cn) childWrap.appendChild(cn); }); };
+    if (open) fill();
+    row.querySelector('.tree-toggle').addEventListener('click', e => {
+      e.stopPropagation(); const o = childWrap.style.display === 'none';
+      childWrap.style.display = o ? 'block' : 'none'; e.target.classList.toggle('open', o);
+      if (o) { _vsOpen.add(path); fill(); } else _vsOpen.delete(path);
+    });
   }
-  addBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    if (!_vsEditingId) { alert('Primero pulsa "Seleccionar del árbol" en un estado.'); return; }
-    vsAddTargetToState(obj);
-    addBtn.textContent = '✓';
-    addBtn.style.color = '#4fd1c5';
-  });
+  row.addEventListener('mouseenter', () => vsHighlight(obj));
+  row.addEventListener('mouseleave', () => vsHighlight(null));
+  const cb = row.querySelector('.vs-cb');
+  if (cb) cb.addEventListener('click', e => { e.stopPropagation(); if (inherited && !on) return; vsToggleTarget(obj); });
+  row.addEventListener('click', e => { if (e.target.closest('.vs-cb') || e.target.closest('.tree-toggle')) return; row.querySelector('.tree-toggle:not(.leaf)')?.click(); });
   return node;
 }
 
@@ -8597,59 +8995,176 @@ window.toggleBlockA = function() {
   document.getElementById('btn-block-a')?.classList.toggle('active', blockAOpen);
 };
 
+// Selección 3D: al hacer clic aparece el menú de niveles (pieza, ensamble 1, 2…) y se elige
+// exactamente cuál es el cimiento. El modo sigue activo para agregar varios (Esc termina).
 window.activateFoundationPick = function(type) {
-  foundPickType = type;
+  foundPickType = type || 'assembly';
   foundPick = true;
   document.getElementById('pick-overlay').classList.add('active');
   canvas.classList.add('pick-mode');
   document.getElementById('pick-label').innerHTML =
-    '<b>🏛 Selecciona el '+(type==='assembly'?'ensamble':'pieza')+' de cimiento</b><br><small style="opacity:.6">ESC para cancelar</small>';
+    '<b>🏛 Clic en un cimiento → elige el nivel (pieza o ensamble)</b><br><small style="opacity:.6">Puedes agregar varios seguidos · ESC para terminar</small>';
   document.getElementById('bap-pick-status').textContent = '⏳ Haz clic en la escena…';
 };
 
-window.setFoundationFromTree = function() { alert('Usa selección 3D o clic en el árbol del modelo.'); };
+window.setFoundationFromTree = function() {
+  const w = document.getElementById('bap-tree-box'); if (!w) return;
+  const open = w.style.display === 'none'; w.style.display = open ? 'block' : 'none';
+  document.getElementById('bap-tree-btn')?.classList.toggle('active', open);
+  if (open) fdBuildTree();
+};
 
 document.getElementById('pick-overlay').addEventListener('click', e => {
   if (!foundPick || !state.modelLoaded) return;
   e.stopPropagation();
-  const rect = canvas.getBoundingClientRect();
-  const ndx = ((e.clientX-rect.left)/rect.width)*2-1;
-  const ndy = -((e.clientY-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(new THREE.Vector2(ndx,ndy), camera);
-  const meshes = [];
-  scene.traverse(o => { if (o.isMesh && o.name!=='__char__') meshes.push(o); });
-  const hits = raycaster.intersectObjects(meshes, false);
-  if (!hits.length) { document.getElementById('bap-pick-status').textContent='⚠ Sin intersección'; return; }
-  const target = foundPickType==='assembly' ? getAssemblyRoot(hits[0].object) : hits[0].object;
-  registerFoundation(target);
-  cancelFoundationPick();
+  const m = vsHitAt(e.clientX, e.clientY);
+  if (!m) { document.getElementById('bap-pick-status').textContent = '⚠ Sin intersección'; vsMenuClose(); return; }
+  fdOpenLevelMenu(m, e.clientX, e.clientY);
+});
+let _fdHoverT = 0;
+document.getElementById('pick-overlay').addEventListener('mousemove', e => {
+  if (!foundPick || document.getElementById('vs-pick-menu')) return;
+  const now = performance.now(); if (now - _fdHoverT < 60) return; _fdHoverT = now;
+  vsHighlight(vsHitAt(e.clientX, e.clientY));
 });
 
 function cancelFoundationPick() {
-  foundPick = false;
+  foundPick = false; vsMenuClose(); vsHighlight(null);
   document.getElementById('pick-overlay').classList.remove('active');
   canvas.classList.remove('pick-mode');
   document.getElementById('bap-pick-status').textContent='';
 }
 
-window.addEventListener('keydown', e => { if (e.code==='Escape' && foundPick) cancelFoundationPick(); });
+window.addEventListener('keydown', e => { if (e.code==='Escape' && foundPick) { if (document.getElementById('vs-pick-menu')) vsMenuClose(); else cancelFoundationPick(); } });
 
-// Block C visibility 3D picker — uses the same pick overlay (per-state)
+// ── identidad de cada cimiento: ruta en el árbol (los nombres pueden repetirse) ──
+function fdKeyOf(obj) { for (const [k, f] of foundations) if (f.object === obj) return k; return null; }
+function fdOverlap(obj) {   // cimiento ya registrado que contiene a obj o está dentro de él
+  for (const [k, f] of foundations) {
+    if (!f.object || f.object === obj) continue;
+    for (let p = obj.parent; p; p = p.parent) if (p === f.object) return { k, f, rel:'dentro' };
+    for (let p = f.object.parent; p; p = p.parent) if (p === obj) return { k, f, rel:'contiene' };
+  }
+  return null;
+}
+function fdSiblingsSame(obj) {   // otros nodos con el mismo nombre y a la misma profundidad (cimientos iguales)
+  if (!obj.name) return [];
+  const d = vsDepth(obj), out = [];
+  vsModel()?.traverse(o => { if (o !== obj && o.name === obj.name && o.isMesh === obj.isMesh && vsDepth(o) === d) out.push(o); });
+  return out;
+}
+function fdLabel(f) {
+  if (f.label) return f.label;
+  const same = [...foundations.values()].filter(g => g.name === f.name);
+  if (same.length < 2) return f.name.replace(/_/g, ' ');
+  const par = f.object?.parent && f.object.parent.name !== '__model__' ? f.object.parent.name : '';
+  return f.name.replace(/_/g, ' ') + ' #' + (same.indexOf(f) + 1) + (par ? ' · ' + par.replace(/_/g, ' ') : '');
+}
+function fdAdd(obj, quiet) {
+  const ov = fdOverlap(obj);
+  if (ov) {
+    const msg = ov.rel === 'dentro' ? `«${obj.name}» está dentro del cimiento «${fdLabel(ov.f)}».` : `«${obj.name}» contiene al cimiento «${fdLabel(ov.f)}».`;
+    if (quiet) return false;
+    if (!confirm(msg + '\n\n¿Reemplazar ese cimiento por este?')) return false;
+    restoreFoundationMaterials(ov.k); foundations.delete(ov.k);
+  }
+  if (fdKeyOf(obj)) return false;
+  registerFoundation(obj);
+  return true;
+}
+function fdOpenLevelMenu(mesh, x, y) {
+  vsMenuClose();
+  const m = vsModel(), levels = [];
+  for (let o = mesh; o && o !== m; o = o.parent) levels.push(o);
+  const menu = document.createElement('div'); menu.id = 'vs-pick-menu'; menu.classList.add('fd');
+  menu.style.left = Math.min(x + 8, innerWidth - 330) + 'px'; menu.style.top = Math.min(y + 8, innerHeight - 50 - levels.length * 32) + 'px';
+  menu.innerHTML = '<div class="vs-pm-t">¿Cuál es el cimiento?</div>' + levels.map((o, i) => {
+    const k = fdKeyOf(o), ov = k ? null : fdOverlap(o), sib = fdSiblingsSame(o).filter(s => !fdKeyOf(s) && !fdOverlap(s));
+    return `<div class="vs-pm-i${k ? ' on' : ''}" data-i="${i}"><span class="vs-pm-k">${i === 0 ? 'Pieza' : 'Ensamble ' + i}</span><span class="vs-pm-n">${(o.name || '(sin nombre)').replace(/[<>&]/g, '')}</span>`
+      + (k ? '<b title="Ya es cimiento">✓</b>' : ov ? `<b title="${ov.rel === 'dentro' ? 'Está dentro de un cimiento' : 'Contiene un cimiento'}" style="color:var(--warn)">⚠</b>` : '<b>+</b>')
+      + (sib.length && !k ? `<button class="vs-pm-all" data-all="${i}" title="Agregar este y los ${sib.length} iguales (mismo nombre y nivel)">+${sib.length + 1} iguales</button>` : '') + '</div>';
+  }).join('');
+  menu.addEventListener('mousemove', e => { const it = e.target.closest('.vs-pm-i'); if (!it) return vsHighlight(null);
+    const o = levels[+it.dataset.i]; vsHighlight(e.target.closest('.vs-pm-all') ? [o, ...fdSiblingsSame(o)] : o); });
+  menu.addEventListener('mouseleave', () => vsHighlight(null));
+  menu.addEventListener('click', e => {
+    const it = e.target.closest('.vs-pm-i'); if (!it) return; e.stopPropagation();
+    const o = levels[+it.dataset.i], st = document.getElementById('bap-pick-status');
+    if (e.target.closest('.vs-pm-all')) {
+      let n = fdAdd(o, true) ? 1 : 0; fdSiblingsSame(o).forEach(s => { if (fdAdd(s, true)) n++; });
+      st.textContent = `✓ ${n} cimientos «${o.name}» agregados`;
+    } else if (fdKeyOf(o)) {
+      fdFocus(fdKeyOf(o)); st.textContent = `«${o.name}» ya es cimiento`;
+    } else if (fdAdd(o)) st.textContent = `✓ «${o.name}» agregado (${foundations.size} en total) · sigue eligiendo o ESC`;
+    vsMenuClose(); vsHighlight(null); renderFoundationList(); fdBuildTree();
+  });
+  document.body.appendChild(menu);
+}
+function fdFocus(key) {   // abre y resalta su tarjeta en la lista
+  const el = document.querySelector(`#bap-list .bap-item[data-key="${key}"]`); if (!el) return;
+  el.querySelector('.bap-item-body')?.classList.add('open'); el.scrollIntoView({ block:'nearest' });
+  el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200);
+}
+window.fdHl = function (key) { const f = foundations.get(key); vsHighlight(f ? f.object : null); };
+window.fdRename = function (key, v) { const f = foundations.get(key); if (f) { f.label = String(v).trim() || null; } };
+// ── árbol para elegir cimientos ──
+let _fdTreeFilter = '';
+const _fdOpen = new Set();
+window.fdFilterTree = function (v) { _fdTreeFilter = v; fdBuildTree(); };
+function fdBuildTree() {
+  const wrap = document.getElementById('bap-tree'); if (!wrap || wrap.parentElement.style.display === 'none') return;
+  const model = vsModel(); if (!model) { wrap.innerHTML = '<div class="vs-empty" style="text-align:center;">Sin modelo cargado</div>'; return; }
+  const st = wrap.scrollTop; wrap.innerHTML = '';
+  model.children.forEach(c => { const n = fdTreeNode(c, 0, false); if (n) wrap.appendChild(n); });
+  wrap.scrollTop = st;
+}
+function fdTreeNode(obj, depth, inside) {
+  if (vsSkip(obj)) return null;
+  const isGroup = !obj.isMesh, hasChildren = obj.children.some(c => !vsSkip(c)), name = obj.name || (isGroup ? '(grupo)' : '(pieza)');
+  if (_fdTreeFilter && !name.toLowerCase().includes(_fdTreeFilter.toLowerCase()) && !hasDescendantMatch(obj, _fdTreeFilter)) return null;
+  const path = vsPath(obj), on = !!fdKeyOf(obj), part = !on && !inside && [...foundations.values()].some(f => { for (let p = f.object?.parent; p; p = p.parent) if (p === obj) return true; return false; });
+  const open = _fdOpen.has(path) || (!!_fdTreeFilter && depth < 6);
+  const node = document.createElement('div'); node.className = 'tree-node';
+  const row = document.createElement('div'); row.className = 'tree-row vs-tr';
+  row.innerHTML = `<span class="tree-toggle${hasChildren ? (open ? ' open' : '') : ' leaf'}">▶</span>`
+    + `<span class="vs-cb${on ? ' on' : inside ? ' inh' : part ? ' part' : ''}" title="${on ? 'Es cimiento (clic para quitar)' : inside ? 'Dentro de un cimiento' : part ? 'Contiene cimientos' : 'Marcar como cimiento'}">${on || inside ? '✓' : part ? '–' : ''}</span>`
+    + `<span class="tree-icon">${isGroup ? '📁' : '▪'}</span><span class="tree-label ${isGroup ? 'group' : 'mesh'}" title="${name.replace(/"/g, '&quot;')}">${name.replace(/_/g, ' ').replace(/[<>&]/g, '')}</span>`
+    + (isGroup ? `<small class="vs-pz">${vsMeshesOf(obj).length}</small>` : '');
+  node.appendChild(row);
+  if (hasChildren) {
+    const cw = document.createElement('div'); cw.className = 'tree-children'; cw.style.display = open ? 'block' : 'none'; node.appendChild(cw);
+    const fill = () => { if (!cw.children.length) obj.children.forEach(c => { const n = fdTreeNode(c, depth + 1, inside || on); if (n) cw.appendChild(n); }); };
+    if (open) fill();
+    row.querySelector('.tree-toggle').addEventListener('click', e => { e.stopPropagation(); const o = cw.style.display === 'none'; cw.style.display = o ? 'block' : 'none'; e.target.classList.toggle('open', o); if (o) { _fdOpen.add(path); fill(); } else _fdOpen.delete(path); });
+  }
+  row.addEventListener('mouseenter', () => vsHighlight(obj)); row.addEventListener('mouseleave', () => vsHighlight(null));
+  row.querySelector('.vs-cb').addEventListener('click', e => {
+    e.stopPropagation(); if (inside && !on) return;
+    const k = fdKeyOf(obj);
+    if (k) { if (!confirm(`¿Quitar «${fdLabel(foundations.get(k))}» de los cimientos?`)) return; removeFoundation(k); }
+    else fdAdd(obj);
+    renderFoundationList(); fdBuildTree();
+  });
+  row.addEventListener('click', e => { if (e.target.closest('.vs-cb') || e.target.closest('.tree-toggle')) return; row.querySelector('.tree-toggle:not(.leaf)')?.click(); });
+  return node;
+}
+
+// Block C visibility 3D picker — clic: menú de niveles (pieza / ensambles); mover: resalta la pieza
 document.getElementById('pick-overlay').addEventListener('click', e => {
   if (vsPick3D && _vsEditingId && state.modelLoaded) {
     e.stopPropagation();
-    const rect = canvas.getBoundingClientRect();
-    const ndx = ((e.clientX-rect.left)/rect.width)*2-1;
-    const ndy = -((e.clientY-rect.top)/rect.height)*2+1;
-    raycaster.setFromCamera(new THREE.Vector2(ndx,ndy), camera);
-    const meshes = [];
-    scene.traverse(o => { if (o.isMesh && o.name!=='__char__') meshes.push(o); });
-    const hits = raycaster.intersectObjects(meshes, false);
-    if (hits.length) vsAddTargetToState(getAssemblyRoot(hits[0].object));
+    const m = vsHitAt(e.clientX, e.clientY);
+    if (m) vsOpenLevelMenu(m, e.clientX, e.clientY); else vsMenuClose();
   }
 });
+let _vsHoverT = 0;
+document.getElementById('pick-overlay').addEventListener('mousemove', e => {
+  if (!vsPick3D || document.getElementById('vs-pick-menu')) return;
+  const now = performance.now(); if (now - _vsHoverT < 60) return; _vsHoverT = now;
+  vsHighlight(vsHitAt(e.clientX, e.clientY));
+});
 window.addEventListener('keydown', e => {
-  if (vsPick3D && e.code === 'Escape') { e.preventDefault(); vsPickDone(); }
+  if (vsPick3D && e.code === 'Escape') { e.preventDefault(); if (document.getElementById('vs-pick-menu')) vsMenuClose(); else { vsPick3D = false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); vsHighlight(null); renderVisStateList(); } }
 });
 
 function registerFoundation(obj) {
@@ -8667,6 +9182,8 @@ function registerFoundation(obj) {
   });
   foundations.set(key, {
     name: obj.name || obj.uuid.slice(0,8),
+    path: vsPath(obj),
+    label: null,
     object: obj,
     totalH,
     bottomY: box.min.y,
@@ -8785,25 +9302,66 @@ function applyFoundationProgress(key, level) {
   const glassAlpha = upperOpacity;
 
   addFoundationEdges(f);   // crisp edges (added once)
+  (f._edgeLines || []).forEach(l => { l.material.opacity = 0.55; });
 
+  fdClearFx(f);
+  const py = level <= 0 ? f.bottomY - 9999 : level >= 1 ? f.bottomY + f.totalH + 9999 : pourWorldY;
   f.object.traverse(child => {
-    if (!child.isMesh) return;
+    if (!child.isMesh || child.userData.__fdOverlay) return;
     if (!child.userData._foundKey) child.userData._foundKey = key;
-
-    let m;
-    if (level <= 0) {
-      m = makeFoundationShaderMat(f.bottomY - 9999, 1.0, glassAlpha);   // all glass
-    } else if (level >= 1) {
-      m = makeFoundationShaderMat(f.bottomY + f.totalH + 9999, 1.0, glassAlpha); // all solid
-    } else {
-      m = makeFoundationShaderMat(pourWorldY, 1.0, glassAlpha);
-    }
+    let m = child.userData._foundMat;
+    if (!m) { m = child.userData._foundMat = makeFoundationShaderMat(py, 1.0, glassAlpha); }
+    m.uniforms.pourY.value = py; m.uniforms.glassAlpha.value = glassAlpha;
     child.material = m;
   });
 }
 
+// ── Al completar el 100 %: el cimiento vuelve a su aspecto original con un fundido ──
+// t: 0 → recién terminado (azul), 1 → materiales originales. Capa azul aditiva que se desvanece
+// y un destello breve al inicio; los bordes azules se apagan con ella.
+const FOUND_RESTORE = { on:true, hours:1.5 };
+let _simFinalFrame = false;   // último cuadro de la reproducción del día: los fundidos terminan
+function fdClearFx(f) {
+  if (!f._fxOverlays) return;
+  f._fxOverlays.forEach(o => { o.parent?.remove(o); o.material.dispose(); });
+  f._fxOverlays = null;
+}
+function foundationRestoreFx(key, t) {
+  const f = foundations.get(key); if (!f || !f.object) return;
+  t = Math.max(0, Math.min(1, t));
+  f.object.traverse(child => {   // materiales originales
+    if (!child.isMesh || child.userData.__fdOverlay) return;
+    const orig = f.originalMats.get(child.uuid);
+    if (orig) child.material = orig.length === 1 ? orig[0] : orig;
+  });
+  if (t >= 1) { fdClearFx(f); removeFoundationEdges(f); return; }
+  addFoundationEdges(f);
+  if (!f._fxOverlays) {
+    f._fxOverlays = [];
+    f.object.traverse(child => {
+      if (!child.isMesh || child.userData.__fdOverlay || !child.geometry) return;
+      const m = new THREE.MeshBasicMaterial({ color:FOUND_POURED_COLOR, transparent:true, opacity:1, depthWrite:false,
+        polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1 });
+      const o = new THREE.Mesh(child.geometry, m); o.userData.__fdOverlay = true; o.renderOrder = 3; o.raycast = () => {};
+      child.add(o); f._fxOverlays.push(o);
+    });
+  }
+  const flash = Math.max(0, 1 - t / 0.18), k = Math.pow(1 - t, 1.6);   // destello al inicio + fundido
+  const col = new THREE.Color(FOUND_POURED_COLOR).lerp(new THREE.Color(0xffffff), 0.65 * flash);
+  f._fxOverlays.forEach(o => { o.material.color.copy(col); o.material.opacity = Math.min(1, 0.92 * k + 0.25 * flash); });
+  (f._edgeLines || []).forEach(l => { l.material.opacity = 0.55 * k; });
+}
+window.fdRestoreSet = function (k, v) {
+  if (k === 'on') FOUND_RESTORE.on = !!v; else FOUND_RESTORE.hours = Math.max(0.05, Math.min(24, parseFloat(v) || 1.5));
+};
+function fdRestoreUI() {
+  const a = document.getElementById('bap-restore-on'), b = document.getElementById('bap-restore-h');
+  if (a) a.checked = FOUND_RESTORE.on; if (b) b.value = FOUND_RESTORE.hours;
+}
+
 function restoreFoundationMaterials(key) {
   const f = foundations.get(key); if (!f) return;
+  fdClearFx(f);
   removeFoundationEdges(f);
   f.object.traverse(child => {
     if (!child.isMesh) return;
@@ -8824,10 +9382,12 @@ function renderFoundationList() {
     const pct = Math.round(f.pourLevel*100);
     const item = document.createElement('div');
     item.className = 'bap-item';
+    item.dataset.key = key;
+    item.setAttribute('onmouseenter', "fdHl('"+key+"')"); item.setAttribute('onmouseleave', 'vsHighlight(null)');
     item.innerHTML =
-      '<div class="bap-item-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
+      '<div class="bap-item-header" onclick="this.nextElementSibling.classList.toggle(\'open\')" title="'+(f.name+(f.path?' · ruta '+f.path:'')).replace(/"/g,'&quot;')+'">'
       + '<span class="bap-item-icon">🏛</span>'
-      + '<span class="bap-item-name">'+f.name.replace(/_/g,' ')+'</span>'
+      + '<input class="bap-item-name fd-name" value="'+fdLabel(f).replace(/"/g,'&quot;')+'" onclick="event.stopPropagation()" onchange="fdRename(\''+key+'\',this.value);renderFoundationList()" title="Nombre para mostrar (no cambia el modelo)">'
       + '<span class="bap-item-pct" id="bap-pct-'+key+'">'+pct+'%</span>'
       + '<span style="color:var(--text3);font-size:10px;">▾</span>'
       + '</div>'
@@ -8884,7 +9444,7 @@ window.toggleFoundStage = function(key, idx, checked) {
   renderFoundationList();
 };
 
-window.removeFoundation = function(key) { restoreFoundationMaterials(key); foundations.delete(key); renderFoundationList(); };
+window.removeFoundation = function(key) { restoreFoundationMaterials(key); foundations.delete(key); vsHighlight(null); renderFoundationList(); fdBuildTree(); };
 window.updateGlobalStages = function(val) { globalStages = Math.max(1, Math.min(10, parseInt(val)||2)); };
 window.updateUpperOpacity = function(val) { upperOpacity = Math.max(0, Math.min(1, parseFloat(val)||0.1)); foundations.forEach((_,k)=>applyFoundationProgress(k, foundations.get(k).pourLevel)); };
 
@@ -8915,11 +9475,11 @@ window.addFoundationToTimeline = function(key) {
     SIM.chipCounter++;
     SIM.chips.push({
       id:'chip_'+SIM.chipCounter, rowId,
-      label: f.name.replace(/_/g,' '),
+      label: fdLabel(f),
       desc: 'Choreo · '+stage.label,
       startH: cursor,
       endH: cursor + stageH,
-      blockData: { foundationKey: key, foundationName: f.name, stageIndex: i }
+      blockData: { foundationKey: key, foundationName: f.name, foundationPath: f.path ?? null, stageIndex: i }
     });
     cursor += stageH;
   });
@@ -8928,23 +9488,29 @@ window.addFoundationToTimeline = function(key) {
 
 window.exportFoundations = function() {
   if (!foundations.size) { alert('Sin cimientos'); return; }
-  const data=[]; foundations.forEach(f => data.push({name:f.name,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
+  const data=[]; foundations.forEach(f => data.push({name:f.name,path:f.path??null,label:f.label||null,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
   const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify({foundations:data},null,2)],{type:'application/json'})),download:'cimientos.json'}); a.click();
 };
 window.importFoundations = function(input) {
   const f=input.files[0]; if(!f) return;
   const r=new FileReader(); r.onload=e=>{ try { importFoundationsData(JSON.parse(e.target.result).foundations||[]); } catch(err){alert(err.message);} input.value=''; }; r.readAsText(f);
 };
+// Resuelve por ruta (exacta aunque haya nombres repetidos); si no, por nombre sin repetir objetos.
 function importFoundationsData(entries) {
+  const used = new Set([...foundations.values()].map(f => f.object));
   entries.forEach(entry => {
-    let found=null; scene.traverse(o=>{ if(!found&&o.name===entry.name) found=o; });
+    let found = null;
+    if (entry.path !== undefined && entry.path !== null) { const n = vsNodeAt(entry.path); if (n && n.name === entry.name) found = n; }
+    if (!found) { const m = vsModel(); if (m) m.traverse(o => { if (!found && o.name === entry.name && !used.has(o)) found = o; }); }
     if (!found) return;
+    used.add(found);
     registerFoundation(found);
-    const f=foundations.get(found.uuid); if(!f) return;
+    const f = foundations.get(found.uuid); if (!f) return;
+    f.label = entry.label || null;
     f.pourLevel=entry.pourLevel??0; f.stageCount=entry.stageCount??2; f.stages=entry.stages??buildDefaultStages(f.stageCount,f.totalH);
     applyFoundationProgress(found.uuid, f.pourLevel);
   });
-  renderFoundationList();
+  renderFoundationList(); fdBuildTree();
 }
 function importLiftPositionsData(entries) {
   entries.forEach(entry => {
@@ -13497,13 +14063,31 @@ animate();
     </div>
   </div>
 
+  <!-- Block G: vista del modelo original -->
+  <div id="ce-gv-wrap" style="display:none;flex-direction:column;gap:2px;">
+    <div class="ce-label">👁 Durante este chip se muestra el modelo original</div>
+    <label class="gv-opt"><input type="checkbox" id="gv-found" checked> Cimientos con su aspecto original (sin azul ni vidrio)</label>
+    <label class="gv-opt"><input type="checkbox" id="gv-exc" checked> Ocultar excavaciones, acopios y retroexcavadoras</label>
+    <label class="gv-opt"><input type="checkbox" id="gv-cab"> Ocultar cables, aisladores y radios de aislamiento</label>
+    <label class="gv-opt"><input type="checkbox" id="gv-all"> Mostrar todo el modelo (ignora la visibilidad del Bloque C)</label>
+    <label class="gv-opt"><input type="checkbox" id="gv-crane"> Ocultar grúas y personaje</label>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;margin-top:4px;">Al terminar el chip todo vuelve al estado de la simulación en esa hora.</div>
+  </div>
+
   <!-- Block F: avance de excavación -->
   <div id="ce-exc-wrap" style="display:none;flex-direction:column;gap:6px;">
     <div class="ce-field">
-      <div class="ce-label">⛏ Avance al final del chip (%)</div>
+      <div class="ce-label">Proceso</div>
+      <div style="display:flex;gap:4px;">
+        <button type="button" class="ce-exc-mode" data-m="dig" onclick="ceExcMode('dig')">⛏ Excavar</button>
+        <button type="button" class="ce-exc-mode" data-m="fill" onclick="ceExcMode('fill')">⬆ Rellenar</button>
+      </div>
+    </div>
+    <div class="ce-field">
+      <div class="ce-label" id="ce-exc-pct-l">⛏ Avance al final del chip (%)</div>
       <input class="ce-input" id="ce-exc-pct" type="number" min="1" max="100" step="5" value="100">
     </div>
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">La excavación avanza desde donde quedó hasta este porcentaje; puedes repartirla en varios chips o días.</div>
+    <div id="ce-exc-note" style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;"></div>
   </div>
 
   <!-- Block D: camera editor -->
@@ -13537,11 +14121,14 @@ animate();
   <div class="bap-section">
     <div class="bap-section-title">Agregar cimiento</div>
     <div class="bap-pick-row">
-      <button class="bap-btn" onclick="activateFoundationPick('single')">🖱 Pieza</button>
-      <button class="bap-btn" onclick="activateFoundationPick('assembly')">📦 Ensamble</button>
-      <button class="bap-btn" onclick="setFoundationFromTree()">🌳 Árbol</button>
+      <button class="bap-btn" onclick="activateFoundationPick()" title="Clic en el modelo y elige el nivel exacto (pieza o ensamble). Puedes agregar varios seguidos.">🖱 Elegir en 3D</button>
+      <button class="bap-btn" id="bap-tree-btn" onclick="setFoundationFromTree()" title="Marcar cimientos en el árbol del modelo">🌳 Árbol</button>
     </div>
     <div id="bap-pick-status" style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:5px;min-height:12px;"></div>
+    <div id="bap-tree-box" style="display:none;margin-top:6px;">
+      <input placeholder="🔍 Filtrar por nombre…" oninput="fdFilterTree(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 7px;outline:none;margin-bottom:5px;">
+      <div id="bap-tree" style="height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px;background:var(--bg2);resize:vertical;"></div>
+    </div>
   </div>
 
   <!-- Total height reference -->
@@ -13556,6 +14143,14 @@ animate();
         <div class="bap-height-field">
           <div class="bap-height-label">Opacidad restante</div>
           <input class="bap-height-input" id="bap-upper-opacity" type="number" min="0" max="1" step="0.05" value="0.1" placeholder="0.1" oninput="updateUpperOpacity(this.value)">
+        </div>
+      </div>
+      <div class="bap-height-row" style="align-items:flex-end;">
+        <label class="bap-height-field" style="flex-direction:row;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:8.5px;color:var(--text2);" title="En la animación, al llegar al 100 % el cimiento vuelve a su color y textura originales">
+          <input type="checkbox" id="bap-restore-on" checked onchange="fdRestoreSet('on',this.checked)" style="accent-color:var(--sim-blue);"> Al 100 %: volver al aspecto original</label>
+        <div class="bap-height-field">
+          <div class="bap-height-label">Duración del fundido (h)</div>
+          <input class="bap-height-input" id="bap-restore-h" type="number" min="0.05" max="24" step="0.25" value="1.5" onchange="fdRestoreSet('h',this.value)">
         </div>
       </div>
     </div>
@@ -13581,19 +14176,26 @@ animate();
   </div>
 
   <div class="bap-section">
-    <div class="bap-section-title" style="color:#4fd1c5;">Estados de visibilidad</div>
-    <button class="bap-btn" style="width:100%;border-color:rgba(79,209,197,.3);color:#4fd1c5;" onclick="addVisState()">＋ Nuevo estado</button>
-    <div id="vs-pick-banner" onclick="vsPickDone()" style="display:none;margin-top:6px;padding:6px 8px;border-radius:5px;background:rgba(79,209,197,.1);border:1px solid rgba(79,209,197,.3);color:#4fd1c5;font-family:var(--mono);font-size:8px;cursor:pointer;line-height:1.4;"></div>
+    <div class="bap-section-title" style="color:#4fd1c5;">Al iniciar la simulación</div>
+    <div id="vs-init"></div>
+    <div id="vs-prev-banner" onclick="vsPreviewEnd()" style="display:none;margin-top:6px;padding:6px 8px;border-radius:5px;background:rgba(255,213,79,.1);border:1px solid rgba(255,213,79,.35);color:#ffd54f;font-family:var(--mono);font-size:8.5px;cursor:pointer;line-height:1.4;"></div>
+  </div>
+  <div class="bap-section" style="padding-bottom:6px;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="bap-section-title" style="color:#4fd1c5;flex:1;margin:0;">Estados</div>
+      <button class="bap-btn" style="border-color:rgba(79,209,197,.3);color:#4fd1c5;" onclick="addVisState()">＋ Nuevo estado</button>
+    </div>
   </div>
 
   <!-- list of states -->
-  <div id="vs-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
+  <div id="vs-list" style="flex:1 1 auto;overflow-y:auto;padding:6px 14px;min-height:60px;"></div>
 
   <!-- model tree for picking -->
   <div class="bap-section" style="border-top:1px solid rgba(255,255,255,.05);">
     <div class="bap-section-title" style="color:#4fd1c5;">🌳 Árbol del modelo</div>
+    <div id="vs-tree-hint" style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px;"></div>
     <input id="vs-tree-search" placeholder="🔍 Filtrar por nombre…" oninput="filterVisTree(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 7px;outline:none;margin-bottom:6px;">
-    <div id="vs-tree-wrap" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px;background:var(--bg2);"></div>
+    <div id="vs-tree-wrap" style="height:230px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px;background:var(--bg2);resize:vertical;"></div>
   </div>
 </div>
 
@@ -13631,8 +14233,10 @@ animate();
       <span title="Nivel por defecto para áreas sin terreno debajo">NTP general (Y)</span><input class="bf-in" id="bf-ntp" type="number" step="0.01" onchange="excSetGlobal('ntp',this.value)">
       <span title="Cómo se ven las excavaciones cuando no se reproduce la simulación">Sin simular</span><select class="bf-in" id="bf-preview" onchange="excSetGlobal('preview',this.value)"><option value="done">Terminadas</option><option value="none">Sin excavar</option></select>
       <span title="Malla del terreno que se recorta para ver el hueco">Terreno</span><select class="bf-in" id="bf-terrain" onchange="excSetGlobal('terrain',this.value)"></select>
+      <label title="Al terminar un chip de excavación o relleno, se marca el nivel alcanzado y la animación espera" style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="bf-hold-on" checked onchange="excHoldSet('on',this.checked)" style="accent-color:#d7a77f;"> Pausa final (h)</label>
+      <input class="bf-in" id="bf-hold-h" type="number" min="0.1" max="12" step="0.25" value="1.5" onchange="excHoldSet('h',this.value)">
     </div>
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px;line-height:1.45;">En la línea de tiempo, cada chip del <b style="color:#d7a77f;">Bloque F</b> enlaza una excavación y la avanza hasta el % indicado. La retroexcavadora trabaja durante el chip y el acopio crece con el material suelto.</div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px;line-height:1.45;">En la línea de tiempo, cada chip del <b style="color:#d7a77f;">Bloque F</b> enlaza una excavación y la <b>excava</b> o la <b>rellena</b> hasta el % indicado. La retroexcavadora trabaja durante el chip; el acopio crece al excavar y se reduce al rellenar.</div>
   </div>
   <div id="bf-list" style="flex:1;overflow-y:auto;padding:8px 14px;min-height:0;"></div>
 </div>
@@ -13680,6 +14284,7 @@ animate();
     <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
     <button class="tl-btn" onclick="toggleBlockC()" id="btn-block-c" title="Estados de visibilidad" style="color:#4fd1c5;border-color:rgba(79,209,197,.3);">👁 Bloque C</button>
     <button class="tl-btn" onclick="toggleBlockE()" id="btn-block-e" title="Secuencias de grúa" style="color:#f6ad55;border-color:rgba(246,173,85,.3);">🏗 Bloque E</button>
+    <button class="tl-btn" onclick="vsToggleShowAll()" id="btn-vs-all" title="Ver todo el modelo (ignora la visibilidad de la simulación y las reglas). Se desactiva al reproducir." style="color:#ffd54f;border-color:rgba(255,213,79,.3);">👁 Todo</button>
     <button class="tl-btn" onclick="toggleBlockF()" id="btn-block-f" title="Excavaciones y acopios" style="color:#d7a77f;border-color:rgba(176,132,98,.35);">⛏ Bloque F</button>
 
     <div class="tl-sep"></div>
