@@ -1150,6 +1150,9 @@
   .vs-pm-t { font-size:8.5px; color:var(--text3); padding:3px 6px 5px; letter-spacing:.5px; text-transform:uppercase; }
   .vs-pm-i { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:5px; cursor:pointer; font-size:9.5px; color:var(--text); }
   .vs-pm-i:hover { background:rgba(255,213,79,.12); } .vs-pm-i.on b { color:#4fd1c5; }
+  #vs-pick-menu.lp { border-color:rgba(167,139,250,.55); } #vs-pick-menu.lp .vs-pm-k, #vs-pick-menu.lp .vs-pm-i.on b { color:#a78bfa; }
+  #vs-pick-menu.lp .vs-pm-all { border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.1); color:#a78bfa; }
+  .lpp-item.flash { box-shadow:0 0 0 2px #a78bfa; transition:box-shadow .3s; }
   #vs-pick-menu.fd { border-color:rgba(79,195,247,.5); } #vs-pick-menu.fd .vs-pm-k, #vs-pick-menu.fd .vs-pm-i.on b { color:var(--sim-blue, #4fc3f7); }
   .vs-pm-all { border:1px solid rgba(79,195,247,.45); background:rgba(79,195,247,.08); color:#4fc3f7; border-radius:4px; font-family:var(--mono); font-size:8px; padding:1px 5px; cursor:pointer; white-space:nowrap; }
   .vs-pm-all:hover { background:rgba(79,195,247,.2); }
@@ -1755,6 +1758,186 @@
   .ce-hint { color:var(--text3); font-size:9.5px; }
   .dv-frame { fill:none; stroke:#ef5350; stroke-width:1; stroke-dasharray:8 5; opacity:.7; }
   .dv-frame-t { font:600 10px 'IBM Plex Mono', monospace; fill:#ef5350; opacity:.85; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+
+  /* paneles flotantes: no tapar la línea de tiempo abierta */
+  body.tl-open #block-a-panel, body.tl-open #block-c-panel, body.tl-open #block-e-panel, body.tl-open #block-f-panel,
+  body.tl-open #lift-pos-panel, body.tl-open #capsule-editor, body.tl-open #record-panel, body.tl-open #cloud-panel { max-height:calc(100vh - 72px - var(--tlh, 270px)) !important; }
+  /* ══════════ LÍNEA DE TIEMPO v2 ══════════ */
+  #sim-timeline { max-height:none; --tl-lw:170px; }
+  #tl-header { gap:6px; padding:0 10px; flex-wrap:nowrap; overflow:hidden; height:40px; }
+  #tl-header .tl-btn { height:26px; padding:0 8px; white-space:nowrap; flex-shrink:0; }
+  .tl-spacer { flex:1; min-width:4px; }
+  .tl-ibtn { width:22px; height:26px; border-radius:5px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font-size:9px; cursor:pointer; flex-shrink:0; padding:0; }
+  .tl-ibtn:hover { color:var(--sim-purple); border-color:var(--sim-purple); }
+  .tl-daynav { display:flex; gap:3px; align-items:center; flex-shrink:0; }
+  #tl-day-btn { min-width:150px; max-width:230px; justify-content:space-between; color:var(--text); }
+  #tl-day-name { overflow:hidden; text-overflow:ellipsis; }
+  .tl-dd.open { border-color:var(--sim-purple) !important; color:var(--sim-purple) !important; background:rgba(167,139,250,.12) !important; }
+  .tl-zoom { display:flex; align-items:center; gap:5px; flex-shrink:0; font-size:10px; color:var(--text3); }
+  #tl-zoom { width:86px; accent-color:var(--sim-purple); }
+  .tl-btn.tl-warn { border-color:rgba(239,83,80,.55); color:#ff8a80; background:rgba(239,83,80,.12); font-weight:600; }
+  .tl-btn.tl-warn:hover { background:rgba(239,83,80,.22); color:#fff; border-color:#ef5350; }
+  #tl-time-display { min-width:56px; font-size:12px; font-weight:600; flex-shrink:0; }
+  .tl-size-group { flex-shrink:0; }
+  #tl-hide { margin-left:0; }
+
+  #tl-minimap { position:relative; height:17px; flex-shrink:0; margin-left:var(--tl-lw); border-bottom:1px solid var(--border); background:rgba(255,255,255,.02); cursor:pointer; overflow:hidden; }
+  #tl-minimap > i { position:absolute; height:1.6px; border-radius:1px; opacity:.9; pointer-events:none; }
+  #tl-mm-view { position:absolute; top:0; bottom:0; border:1px solid rgba(167,139,250,.85); background:rgba(167,139,250,.13); border-radius:2px; pointer-events:none; box-sizing:border-box; min-width:3px; }
+  #tl-mm-ph { position:absolute; top:0; bottom:0; width:1px; background:var(--sim-red); pointer-events:none; }
+  #sim-timeline.ov #tl-minimap { visibility:hidden; }
+
+  #tl-main { flex:1; min-height:0; display:flex; position:relative; }
+  #tl-body { flex:1; min-width:0; overflow:auto; position:relative; display:block; }
+  #sim-timeline.ov #tl-body { display:none; }
+  #tl-overview { display:none; flex:1; min-width:0; overflow:auto; }
+  #sim-timeline.ov #tl-overview { display:block; }
+  #tl-grid { position:relative; min-width:100%; padding-bottom:12px; }
+  #tl-ruler-row { position:sticky; top:0; z-index:30; display:flex; height:24px; background:#0b0e13; border-bottom:1px solid var(--border); }
+  #tl-corner { position:sticky; left:0; z-index:32; width:var(--tl-lw); flex-shrink:0; display:flex; align-items:center; gap:3px; padding:0 6px; background:#0b0e13; border-right:1px solid var(--border); box-sizing:border-box; }
+  .tl-cb { height:18px; min-width:20px; border-radius:4px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-size:10px; cursor:pointer; padding:0 3px; }
+  .tl-cb:hover, .tl-cb.active { color:var(--sim-purple); border-color:var(--sim-purple); background:rgba(167,139,250,.12); }
+  .tl-help { margin-left:auto; width:16px; height:16px; border-radius:50%; border:1px solid var(--border); color:var(--text3); font:600 10px/14px var(--mono); text-align:center; cursor:help; box-sizing:border-box; }
+  .tl-help:hover { color:#fff; border-color:#fff; }
+  #tl-lw-h { position:absolute; right:-3px; top:0; height:24px; width:6px; cursor:col-resize; z-index:2; }
+  #tl-lw-h:hover { background:rgba(167,139,250,.5); }
+  #tl-ruler { position:relative; height:24px; flex-shrink:0; cursor:ew-resize; background:transparent; border:none; top:auto; }
+  #tl-ruler:hover { background:rgba(167,139,250,.06); }
+  #tl-ruler > b { position:absolute; top:0; height:24px; border-left:1px solid rgba(255,255,255,.22); padding:4px 0 0 4px; font:500 9px var(--mono); color:var(--text2); pointer-events:none; white-space:nowrap; box-sizing:border-box; }
+  #tl-ruler > i { position:absolute; bottom:0; height:5px; border-left:1px solid rgba(255,255,255,.14); pointer-events:none; }
+  #tl-ph-head { position:absolute; top:3px; transform:translateX(-50%); background:var(--sim-red); color:#fff; font:600 9px var(--mono); padding:2px 5px; border-radius:3px; pointer-events:none; z-index:2; white-space:nowrap; box-shadow:0 1px 4px rgba(0,0,0,.5); }
+  #tl-playhead { position:absolute; top:24px; bottom:0; width:2px; margin-left:-1px; background:var(--sim-red); z-index:15; pointer-events:none !important; box-shadow:0 0 6px rgba(239,83,80,.55); }
+  #tl-playhead::before { display:none; }
+  #tl-guide { position:absolute; top:0; bottom:0; width:0; border-left:1px dashed #ffd54f; z-index:16; pointer-events:none; display:none; }
+  #tl-marquee { position:absolute; display:none; border:1px dashed var(--sim-purple); background:rgba(167,139,250,.12); z-index:40; pointer-events:none; }
+  #tl-deps { position:absolute; left:0; top:0; pointer-events:none; z-index:7; overflow:visible; }
+  #tl-deps path { fill:none; stroke:#ffd54f; stroke-width:1.5; stroke-dasharray:4 3; opacity:.9; }
+  #tl-deps path.bad { stroke:#ef5350; }
+
+  .tl-r { display:flex; height:28px; }
+  .tl-r.blk { border-top:1px solid rgba(255,255,255,.1); }
+  .tl-r.col { height:22px; }
+  .tl-lab { position:sticky; left:0; z-index:20; width:var(--tl-lw); flex-shrink:0; box-sizing:border-box; display:flex; align-items:center; gap:4px; padding:0 4px 0 6px;
+    background:#0b0e13; border-right:1px solid var(--border); border-bottom:1px solid rgba(255,255,255,.04); box-shadow:inset 3px 0 0 var(--bc); font-family:var(--mono); font-size:10px; color:var(--text2); }
+  .tl-r:hover .tl-lab { background:#10141b; }
+  .tl-car { width:16px; height:16px; border:none; background:none; color:var(--text2); cursor:pointer; font-size:10px; padding:0; flex-shrink:0; }
+  .tl-car:hover { color:#fff; }
+  .tl-bdg { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:3px; color:#0b0e13; font:700 9px var(--mono); flex-shrink:0; }
+  .tl-ind { width:35px; flex-shrink:0; }
+  .tl-bn { color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+  .tl-rn { flex:1; min-width:0; background:transparent; border:1px solid transparent; border-radius:3px; color:var(--text); font:500 10px var(--mono); padding:2px 3px; outline:none; text-overflow:ellipsis; }
+  .tl-rn:hover { border-color:var(--border); }
+  .tl-rn:focus { border-color:var(--sim-purple); background:var(--bg3); }
+  .tl-cnt { font:9px var(--mono); color:var(--text3); flex-shrink:0; white-space:nowrap; }
+  .tl-ra { display:none; gap:2px; flex-shrink:0; }
+  .tl-lab:hover .tl-ra { display:flex; }
+  .tl-lab:hover .tl-cnt { display:none; }
+  .tl-r.col .tl-lab:hover .tl-cnt { display:inline; }
+  .tl-ra button { width:17px; height:17px; border-radius:3px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-size:9px; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+  .tl-ra button:hover { color:var(--sim-purple); border-color:var(--sim-purple); }
+  .tl-ra button.x:hover { color:var(--danger); border-color:var(--danger); }
+  .tl-trk { position:relative; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,.04); cursor:crosshair;
+    background-image:linear-gradient(to right, rgba(255,255,255,.075) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size:var(--tl-gmaj,100px) 100%, var(--tl-gmin,25px) 100%; }
+  .tl-trk:hover { background-color:rgba(255,255,255,.012); }
+  .tl-trk.mini { cursor:pointer; background-color:rgba(255,255,255,.015); }
+  .tl-trk.drop { background-color:rgba(167,139,250,.12); box-shadow:inset 0 0 0 1px rgba(167,139,250,.55); }
+  .tl-mini { position:absolute; top:7px; height:8px; border-radius:2px; opacity:.85; }
+  .tl-mini:hover { opacity:1; outline:1px solid #fff; }
+  .tl-mini.bad { outline:1px solid #ef5350; }
+  .tl-mini.sel { outline:2px solid #fff; }
+  .tl-ghost { position:absolute; top:3px; height:18px; border:1px dashed var(--cc); background:color-mix(in srgb, var(--cc) 28%, transparent); border-radius:4px; color:#fff; font:9px/18px var(--mono); padding:0 4px; white-space:nowrap; overflow:visible; pointer-events:none; z-index:9; box-sizing:border-box; }
+  .tl-empty { padding:16px; color:var(--text3); font:10px var(--mono); }
+
+  .tl-chip { position:absolute; height:18px; top:3px; border:none; border-radius:4px; background:var(--cc); color:#0b0f14; padding:0 6px; box-sizing:border-box;
+    font:600 10px/18px var(--sans, system-ui); white-space:nowrap; overflow:hidden; cursor:grab; box-shadow:inset 0 0 0 1px rgba(0,0,0,.28); z-index:6; user-select:none; min-width:8px; transition:filter .12s; }
+  .tl-chip:hover { opacity:1; filter:brightness(1.12); z-index:9; }
+  .tl-chip .ct { position:relative; z-index:2; pointer-events:none; display:block; overflow:hidden; text-overflow:ellipsis; }
+  .tl-chip .cp { position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(255,255,255,.38); z-index:1; pointer-events:none; }
+  .tl-chip .hl, .tl-chip .hr { position:absolute; top:0; bottom:0; width:6px; cursor:ew-resize; z-index:3; }
+  .tl-chip .hl { left:0; } .tl-chip .hr { right:0; }
+  .tl-chip:hover .hl, .tl-chip:hover .hr { background:rgba(0,0,0,.22); }
+  .tl-chip.nc { background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--cc) 30%, transparent) 0 6px, color-mix(in srgb, var(--cc) 12%, transparent) 6px 12px); color:var(--cc); box-shadow:inset 0 0 0 1px var(--cc); }
+  .tl-chip.done { filter:saturate(.5) brightness(.75); }
+  .tl-chip.live { filter:brightness(1.15); box-shadow:inset 0 0 0 1px rgba(0,0,0,.28), 0 0 8px color-mix(in srgb, var(--cc) 70%, transparent); }
+  .tl-chip.bad { box-shadow:0 0 0 2px #ef5350; }
+  .tl-chip.sel { box-shadow:0 0 0 2px #fff, 0 0 10px rgba(255,255,255,.35); z-index:8; }
+  .tl-chip.sel.bad { box-shadow:0 0 0 2px #fff, 0 0 0 4px #ef5350; }
+  body.tl-dragging, body.tl-dragging * { cursor:grabbing !important; user-select:none !important; }
+
+  #tl-props { display:none; width:290px; flex-shrink:0; border-left:1px solid var(--border); overflow-y:auto; background:rgba(12,14,19,.98); }
+  #tl-props.show { display:block; }
+  #tl-props #chip-editor { position:static; border:none; border-radius:0; background:none; backdrop-filter:none; padding:10px 12px 14px; min-width:0; box-shadow:none; }
+  .ce-head { display:flex; align-items:center; gap:6px; }
+  .ce-head .ce-title { flex:1; display:flex; align-items:center; gap:6px; }
+  .ce-x { width:20px; height:20px; border-radius:4px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); cursor:pointer; font-size:10px; padding:0; }
+  .ce-x:hover { color:#fff; border-color:#fff; }
+  #ce-issues { display:none; font:9px/1.45 var(--mono); color:#ff8a80; background:rgba(239,83,80,.1); border:1px solid rgba(239,83,80,.35); border-radius:5px; padding:5px 7px; }
+  #tl-multi { display:none; flex-direction:column; gap:7px; padding:10px 12px; font-family:var(--mono); font-size:10px; color:var(--text2); }
+  #tl-multi .mm-info { display:flex; align-items:center; gap:3px; flex-wrap:wrap; }
+  #tl-multi .mm-info span:last-child { margin-left:6px; color:var(--sim-amber); }
+  #tl-multi .mm-lbl { font-size:9px; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-top:3px; }
+  #tl-multi .mm-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
+  #tl-multi .mm-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+  #tl-multi button { padding:6px 4px; border-radius:5px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font:9px var(--mono); cursor:pointer; }
+  #tl-multi button:hover { border-color:var(--sim-purple); color:var(--sim-purple); }
+  #tl-multi button.del { border-color:rgba(239,83,80,.35); color:var(--sim-red); }
+  #tl-multi .mm-hint { font-size:8px; color:var(--text3); line-height:1.4; }
+
+  .tl-menu { position:fixed; z-index:175; display:none; min-width:240px; max-height:62vh; overflow:auto; background:rgba(10,12,17,.98); border:1px solid rgba(167,139,250,.35); border-radius:9px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.55); font-family:var(--mono); }
+  .tlm-h { font-size:9px; letter-spacing:1px; color:var(--text3); text-transform:uppercase; padding:4px 6px 6px; display:flex; justify-content:space-between; }
+  .tlm-it { display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:1px solid transparent; border-radius:5px; color:var(--text); font:10px var(--mono); padding:6px 7px; cursor:pointer; box-sizing:border-box; }
+  .tlm-it:hover { background:rgba(167,139,250,.1); border-color:rgba(167,139,250,.25); }
+  .tlm-it.active { background:rgba(167,139,250,.16); border-color:var(--sim-purple); }
+  .tlm-it em { margin-left:auto; padding-left:12px; font-style:normal; color:var(--text3); font-size:9px; }
+  .tlm-it.dis { cursor:default; opacity:.6; }
+  .tlm-it.dis:hover { background:none; border-color:transparent; }
+  .tlm-sep { height:1px; background:var(--border); margin:5px 2px; }
+  #tlm-day { min-width:600px; }
+  .tlm-days { display:flex; flex-direction:column; gap:2px; }
+  .tlm-day { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-size:10px; color:var(--text2); }
+  .tlm-day:hover { background:rgba(255,255,255,.04); }
+  .tlm-day.act { border-color:var(--sim-purple); background:rgba(167,139,250,.1); }
+  .tlm-day input { background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--text); font:10px var(--mono); padding:2px 4px; outline:none; }
+  .tlm-day input:focus { border-color:var(--sim-purple); }
+  .tlm-day .dl { width:120px; } .tlm-day .dd { width:120px; }
+  .tlm-day .de { font-size:9px; color:var(--text3); width:44px; }
+  .tlm-day .ds, .tlm-day .dh { display:flex; align-items:center; gap:3px; font-size:9px; color:var(--text3); }
+  .tlm-day .ds input { width:60px; accent-color:var(--sim-purple); padding:0; }
+  .tlm-day .dh input { width:40px; }
+  .tlm-day em { font-style:normal; width:28px; }
+  .tlm-day button { width:21px; height:21px; border-radius:4px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); cursor:pointer; font-size:10px; padding:0; flex-shrink:0; }
+  .tlm-day button:hover { color:var(--sim-purple); border-color:var(--sim-purple); }
+  .tlm-day button.x:hover { color:var(--danger); border-color:var(--danger); }
+  .tlm-foot { display:flex; gap:6px; padding:8px 4px 2px; }
+  .tlm-foot button { flex:1; padding:6px; border-radius:5px; border:1px dashed rgba(167,139,250,.45); background:rgba(167,139,250,.06); color:var(--sim-purple); font:10px var(--mono); cursor:pointer; }
+  .tlm-foot button:hover { background:rgba(167,139,250,.16); }
+
+  #tl-tip { position:fixed; z-index:180; pointer-events:none; display:none; max-width:320px; background:rgba(10,12,17,.97); border:1px solid rgba(255,255,255,.16); border-radius:7px; padding:7px 9px; font:10px/1.5 var(--mono); color:var(--text2); box-shadow:0 6px 20px rgba(0,0,0,.5); }
+  #tl-tip b { color:#fff; font-size:11px; }
+  #tl-tip .tt-e { color:#ff8a80; } #tl-tip .tt-w { color:#ffd54f; } #tl-tip .tt-d { color:var(--text3); }
+  #tl-toast { position:fixed; left:50%; transform:translate(-50%, 10px); z-index:185; background:rgba(10,12,17,.97); border:1px solid rgba(167,139,250,.4); color:var(--text); font:11px var(--mono); padding:7px 14px; border-radius:8px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; max-width:70vw; }
+  #tl-toast.show { opacity:1; transform:translate(-50%, 0); }
+
+  .ov-r { display:flex; border-bottom:1px solid rgba(255,255,255,.05); cursor:pointer; }
+  .ov-r:hover { background:rgba(255,255,255,.03); }
+  .ov-r.act { background:rgba(167,139,250,.08); }
+  .ov-lab { position:sticky; left:0; width:var(--tl-lw); flex-shrink:0; padding:5px 8px; display:flex; flex-direction:column; justify-content:center; gap:2px; border-right:1px solid var(--border); font:10px var(--mono); color:var(--text2); background:#0b0e13; box-sizing:border-box; z-index:2; }
+  .ov-r.act .ov-lab { box-shadow:inset 3px 0 0 var(--sim-purple); }
+  .ov-lab b { color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ov-lab span { font-size:9px; color:var(--text3); }
+  .ov-leg { display:flex; gap:2px; }
+  .ov-leg .tl-bdg { width:13px; height:13px; font-size:8px; }
+  .ov-trk { position:relative; flex:1; height:42px; margin-right:12px; background-image:linear-gradient(to right, rgba(255,255,255,.07) 1px, transparent 1px); background-size:var(--ovs, 8.333%) 100%; }
+  .ov-trk > i { position:absolute; height:3.6px; border-radius:1px; }
+  .ov-trk > i:hover { outline:1px solid #fff; z-index:2; }
+  .ov-trk > s { position:absolute; top:0; bottom:0; right:0; background:rgba(0,0,0,.45); }
+  .ov-head { position:sticky; top:0; z-index:3; cursor:default; background:#0b0e13; }
+  .ov-head:hover { background:#0b0e13; }
+  .ov-ruler { height:34px; }
+  .ov-ruler b { position:absolute; top:10px; font:9px var(--mono); color:var(--text3); padding-left:3px; border-left:1px solid rgba(255,255,255,.18); height:24px; box-sizing:border-box; }
+  .ov-gap { font:9px var(--mono); color:var(--text3); padding:2px 0 2px calc(var(--tl-lw) + 8px); background:repeating-linear-gradient(90deg, transparent 0 6px, rgba(255,255,255,.025) 6px 12px); }
+  .ov-hint { font:9px var(--mono); color:var(--text3); padding:8px 10px; }
 </style>
 </head>
 <body>
@@ -1985,10 +2168,8 @@
 
     <!-- Tab: click in 3D -->
     <div id="lpp-tab-click-body">
-      <div class="lpp-pick-type">
-        <button class="lpp-pick-type-btn"         id="lpp-type-single"   onclick="setLppPickType('single')">🔲 Pieza</button>
-        <button class="lpp-pick-type-btn active"   id="lpp-type-assembly" onclick="setLppPickType('assembly')">📦 Ensamble</button>
-      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.45;">Clic en el modelo → un menú muestra la pieza y cada ensamble que la contiene; al pasar el cursor se resalta exactamente lo que se agregará. Las piezas iguales se distinguen como <b>#1, #2…</b></div>
+      <span id="lpp-type-single" hidden></span><span id="lpp-type-assembly" hidden></span>
       <button id="btn-lpp-pick" onclick="activateLiftPosPick()" style="margin-top:6px;">
         <span id="lpp-pick-label">🖱 Activar selección 3D</span>
       </button>
@@ -2629,6 +2810,11 @@ const liftPositions = new Map(); // uuid -> lift position config
 // Attached load data
 let attachedObject=null;      // single mesh or group
 let attachedIsAssembly=false; // was it picked as assembly?
+let attachedBySim=false;      // enganche hecho por una secuencia de la línea de tiempo (no manual)
+const simDropped=new Map();   // piezas soltadas por una secuencia → { hour } (el Bloque B no las devuelve a su pose)
+let _simHourNow=0;            // hora de simulación del cuadro en curso
+const _capFinal=new Set();
+let _capSettle=false;    // secuencias cuyo estado final (incluido el «soltar») ya se aplicó
 let attachedCraneId=null;
 let attachedOrigParent=null;
 let attachedOrigPos=new THREE.Vector3();
@@ -2737,7 +2923,8 @@ function applyCraneState(craneData) {
         attachedObject.parent.worldToLocal(desiredWorld);
       }
       attachedObject.position.copy(desiredWorld);
-      // hookRot Y is stored in liftPhys.baseRotY and applied there each frame
+      // con física activa la pieza conserva su giro: se recoloca colgando del gancho (sin avanzar el tiempo)
+      if (liftPhysicsEnabled && liftPhys.ready && liftPhys._obj === attachedObject) updateLiftPhysics(attachedObject, hookWorld, 0);
     }
   }
 }
@@ -2942,7 +3129,7 @@ window.toggleCraneAttach = function() {
 
   if(attachedObject && attachedCraneId===c.id) {
     // DETACH
-    releaseAttached();
+    releaseAttached(true);
     craneLog(`Grúa #${c.id}: pieza soltada`);
     updateAttachBtn(false);
     updateCraneStatusBar();
@@ -3033,6 +3220,7 @@ function doAttach(crane, target, name) {
 
   attachedObject=target;
   attachedCraneId=crane.id;
+  attachedBySim=false;
 
   pickTargetObject=null; pickTargetName='';
   document.getElementById('pick-target-display').style.display='none';
@@ -3051,13 +3239,48 @@ function doAttach(crane, target, name) {
   if (typeof initLiftPhysics === 'function') initLiftPhysics(target);
 }
 
-function releaseAttached() {
+// Al soltar, la pieza deja el gancho y se apoya: vuelve a la orientación con que se enganchó
+// (conservando el giro dado con «Rotar carga») y baja hasta lo que tenga debajo (estructura o piso).
+function settleReleased(obj) {
+  if (!obj) return;
+  const cr = cranes.find(c => c.id === attachedCraneId);
+  // orientación final
+  if (liftPhys.ready && liftPhys._obj === obj && liftPhys.q0) {
+    const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cr ? cr.state.hookRot - liftPhys.hookRot0 : 0);
+    const qW = yaw.multiply(liftPhys.q0.clone());
+    const c0 = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3());
+    if (obj.parent) { obj.parent.updateMatrixWorld(true); obj.quaternion.copy(obj.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(qW)); } else obj.quaternion.copy(qW);
+    obj.updateMatrixWorld(true);
+    const c1 = new THREE.Box3().setFromObject(obj).getCenter(new THREE.Vector3()), d = c0.sub(c1); d.y = 0;   // mismo centro en planta
+    const wp = new THREE.Vector3(); obj.getWorldPosition(wp).add(d);
+    if (obj.parent) obj.position.copy(obj.parent.worldToLocal(wp)); else obj.position.copy(wp);
+    obj.updateMatrixWorld(true);
+  }
+  // apoyo: lo más alto que haya debajo de su huella (piezas visibles del modelo) o el piso
+  const box = new THREE.Box3().setFromObject(obj); if (box.isEmpty()) return;
+  const floorY = projectFloorY !== null ? projectFloorY : state.modelFloor;
+  const skip = new Set(); obj.traverse(o => skip.add(o)); cranes.forEach(c => c.object.traverse(o => skip.add(o))); charGroup.traverse(o => skip.add(o));
+  const vis = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+  const meshes = []; const m = scene.getObjectByName('__model__'); if (m) m.traverse(o => { if (o.isMesh && !skip.has(o) && !o.userData.__helper && !o.userData.__fdOverlay && vis(o)) meshes.push(o); });
+  const rc = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0); let support = floorY;
+  const xs = [box.min.x, (box.min.x + box.max.x) / 2, box.max.x], zs = [box.min.z, (box.min.z + box.max.z) / 2, box.max.z];
+  const inset = (a, b, v) => v === a ? a + (b - a) * 0.08 : v === b ? b - (b - a) * 0.08 : v;
+  xs.forEach(x => zs.forEach(z => {
+    rc.set(new THREE.Vector3(inset(box.min.x, box.max.x, x), box.min.y + 0.05, inset(box.min.z, box.max.z, z)), down); rc.far = 200;
+    const hit = rc.intersectObjects(meshes, false)[0]; if (hit && hit.point.y > support) support = hit.point.y;
+  }));
+  const dy = support - box.min.y;
+  if (Math.abs(dy) > 1e-4) { const wp = new THREE.Vector3(); obj.getWorldPosition(wp); wp.y += dy; if (obj.parent) obj.position.copy(obj.parent.worldToLocal(wp)); else obj.position.copy(wp); obj.updateMatrixWorld(true); }
+}
+function releaseAttached(settle) {
+  if (settle && attachedObject) { try { settleReleased(attachedObject); } catch (e) { console.warn('settleReleased', e); } }
   // Settle physics tilt on release
   if (typeof liftPhys !== 'undefined') {
     liftPhys.tiltXVel = 0;
     liftPhys.tiltZVel = 0;
+    liftPhys.ready = false; liftPhys._obj = null;
   }
-  attachedObject=null; attachedCraneId=null;
+  attachedObject=null; attachedCraneId=null; attachedBySim=false;
   document.getElementById('csb-load').textContent='ninguna';
   document.getElementById('csb-load').className='val';
   updateCraneList();
@@ -3259,7 +3482,7 @@ window.refreshNearbyList = function() {
       const crane = getActiveCrane();
       if (!crane) { craneLog('Selecciona una grúa primero'); return; }
       if (isAttached) {
-        releaseAttached(); updateAttachBtn(false);
+        releaseAttached(true); updateAttachBtn(false);
         craneLog('Gru\u00faa #' + crane.id + ': pieza soltada');
       } else {
         if (attachedObject) releaseAttached();
@@ -3883,7 +4106,7 @@ function showError(msg){const el=document.getElementById('load-error');el.textCo
 function onModelReady(gltf,name){
   const prev=scene.getObjectByName('__model__'); if(prev)scene.remove(prev);
   const model=gltf.scene; model.name='__model__';
-  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} o.userData.__glb={p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()};});
   scene.add(model);
   const box=new THREE.Box3().setFromObject(model);
   const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
@@ -4227,66 +4450,181 @@ window.activateLiftPosPick = function() {
   liftPosPickMode = true;
   document.getElementById('pick-overlay').classList.add('active');
   canvas.classList.add('pick-mode');
-  const typeLabel = lppPickType === 'assembly' ? 'ensamble completo' : 'pieza individual';
   document.getElementById('pick-label').innerHTML =
-    `⬆ Haz click para seleccionar <strong>${typeLabel}</strong> para izaje<br><small style="opacity:.6">ESC para cancelar</small>`;
-  document.getElementById('lpp-pick-label').textContent = '⏳ Haz clic en la escena…';
+    '<b>⬆ Clic en una pieza → elige el nivel (pieza o ensamble)</b><br><small style="opacity:.6">Se resalta lo que se agregará · puedes agregar varias seguidas · ESC para terminar</small>';
+  document.getElementById('lpp-pick-label').textContent = '⏳ Haz clic en la escena… (ESC termina)';
   document.getElementById('btn-lpp-pick').classList.add('active');
 };
 
-// Overlay click handler — used by both 3D pick and activated programmatically
 document.getElementById('pick-overlay').addEventListener('click', e => {
   if (!liftPosPickMode || !state.modelLoaded) return;
   e.stopPropagation();
-
-  const rect = canvas.getBoundingClientRect();
-  const ndx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  const ndy = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(new THREE.Vector2(ndx, ndy), camera);
-
-  const allMeshes = [];
-  scene.traverse(o => { if (o.isMesh && o.name !== '__char__') allMeshes.push(o); });
-  const hits = raycaster.intersectObjects(allMeshes, false);
-
-  if (!hits.length) {
-    document.getElementById('lpp-pick-label').textContent = '⚠ Sin intersección, intenta otra zona';
-    return;
-  }
-
-  const hitMesh = hits[0].object;
-  // Choose target based on pick type
-  const target = lppPickType === 'assembly' ? getAssemblyRoot(hitMesh) : hitMesh;
-  registerLiftObject(target);
-  cancelLiftPick();
+  const m = vsHitAt(e.clientX, e.clientY);      // solo piezas visibles del modelo (sin grúas, personaje ni ayudas)
+  if (!m) { document.getElementById('lpp-pick-label').textContent = '⚠ Sin intersección, intenta otra zona'; vsMenuClose(); return; }
+  lpOpenLevelMenu(m, e.clientX, e.clientY);
+});
+let _lpHoverT = 0;
+document.getElementById('pick-overlay').addEventListener('mousemove', e => {
+  if (!liftPosPickMode || document.getElementById('vs-pick-menu')) return;
+  const now = performance.now(); if (now - _lpHoverT < 60) return; _lpHoverT = now;
+  vsHighlight(vsHitAt(e.clientX, e.clientY));
 });
 
 window.addEventListener('keydown', e => {
-  if (e.code === 'Escape' && liftPosPickMode) cancelLiftPick();
+  if (e.code === 'Escape' && liftPosPickMode) { if (document.getElementById('vs-pick-menu')) vsMenuClose(); else cancelLiftPick(); }
 });
 
 function cancelLiftPick() {
-  liftPosPickMode = false;
+  liftPosPickMode = false; vsMenuClose(); vsHighlight(null);
   document.getElementById('pick-overlay').classList.remove('active');
   canvas.classList.remove('pick-mode');
   document.getElementById('lpp-pick-label').textContent = '🖱 Activar selección 3D';
   document.getElementById('btn-lpp-pick').classList.remove('active');
 }
 
+// ── Identidad de cada pieza: ruta en el árbol (los nombres pueden repetirse) ──
+function lpKeyOf(obj) { for (const [k, c] of liftPositions) if (c.object === obj) return k; return null; }
+function lpOverlap(obj) {   // pieza ya configurada que contiene a obj o que está dentro de él
+  for (const [k, c] of liftPositions) {
+    if (!c.object || c.object === obj) continue;
+    for (let p = obj.parent; p; p = p.parent) if (p === c.object) return { k, c, rel:'dentro' };
+    for (let p = c.object.parent; p; p = p.parent) if (p === obj) return { k, c, rel:'contiene' };
+  }
+  return null;
+}
+function lpLabel(c) {
+  if (!c) return '';
+  if (c.label) return c.label;
+  const nm = (c.name || '').replace(/_/g, ' ');
+  const same = [...liftPositions.values()].filter(g => g.name === c.name)
+    .sort((a, b) => String(a.path ?? '').localeCompare(String(b.path ?? ''), undefined, { numeric:true }));
+  if (same.length < 2) return nm;
+  const par = c.object?.parent && c.object.parent.name !== '__model__' ? c.object.parent.name : '';
+  return nm + ' #' + (same.indexOf(c) + 1) + (par ? ' · ' + par.replace(/_/g, ' ') : '');
+}
+// Pose original con la que venía la pieza en el GLB (posición en mundo + giro local en grados, formato de las poses)
+function lpGlbPose(obj) {
+  const g = obj && obj.userData.__glb; if (!obj) return null;
+  if (!g) return lpCurPose(obj);
+  const wp = g.p.clone(); if (obj.parent) { obj.parent.updateMatrixWorld(true); wp.applyMatrix4(obj.parent.matrixWorld); }
+  const e = new THREE.Euler().setFromQuaternion(g.q), d = 180 / Math.PI;
+  return { x:wp.x, y:wp.y, z:wp.z, rx:e.x * d, ry:e.y * d, rz:e.z * d };
+}
+function lpCurPose(obj) {
+  obj.updateMatrixWorld(true); const wp = new THREE.Vector3(); obj.getWorldPosition(wp); const d = 180 / Math.PI;
+  return { x:wp.x, y:wp.y, z:wp.z, rx:obj.rotation.x * d, ry:obj.rotation.y * d, rz:obj.rotation.z * d };
+}
+// Pose destino de un evento B: índice ≥0 = posición guardada; -1 = posición original del GLB
+function lpTargetPose(cfg, idx) { return idx === -1 ? lpGlbPose(cfg.object) : (cfg.poses || [])[idx]; }
+// Crea un evento B «volver a la posición original» (registra la pieza si hace falta)
+function lpAddReturnChip(obj, startH, dur) {
+  if (!obj || !activeDay()) return null;
+  let key = lpKeyOf(obj);
+  if (!key) { const ov = lpOverlap(obj); if (ov) key = ov.k; else { registerLiftObject(obj); key = lpKeyOf(obj); } }
+  const cfg = liftPositions.get(key); if (!cfg) return null;
+  const d = dayDuration(); startH = Math.max(0, Math.min(d - 0.1, startH));
+  const chip = { id: tlNewChipId(), rowId: firstRowOfBlock('B'), label: '↺ ' + lpLabel(cfg), desc: 'Acomodar en su posición original (GLB)',
+    startH, endH: Math.min(d, startH + (dur || 0.5)), blockData: { liftPositionKey:key, liftPositionName:cfg.name, liftPositionPath:cfg.path ?? null, poseIndex:-1 } };
+  SIM.chips.push(chip);
+  return chip;
+}
+window.addLiftOrigToTimeline = function(key) {
+  const cfg = liftPositions.get(key); if (!cfg) return;
+  if (!activeDay()) { alert('Crea o selecciona un día primero.'); return; }
+  tlPushUndo(); const c = lpAddReturnChip(cfg.object, SIM.currentHour || 0, 0.5);
+  if (!timelineOpen) toggleTimeline(); else tlRender(); if (c) tlSelect([c.id]);
+};
+// Desde un evento de grúa: acomodar en su posición original las piezas que la secuencia suelta
+window.ceAddReturnAfterCrane = function() {
+  const chip = SIM.chips.find(c => c.id === _editChipId), cap = chip && chipCapsule(chip); if (!cap) { alert('Primero elige y guarda la secuencia de grúa.'); return; }
+  const names = new Set(); (cap.keyframes || []).forEach(k => (k.cranes || []).forEach(s => { if (s.load && s.load.name) names.add(s.load.name); }));
+  if (!names.size) { alert('Esta secuencia no carga ninguna pieza.'); return; }
+  tlPushUndo(); const made = [];
+  names.forEach(nm => { let o = null; scene.traverse(x => { if (!o && x.name === nm) o = x; }); const c = o && lpAddReturnChip(o, chip.endH, 0.5); if (c) made.push(c.id); });
+  tlRender(); if (made.length) { tlSelect(made); tlToast('↺ ' + made.length + ' evento(s) «posición original» tras la grúa'); }
+};
+
+// Resuelve una entrada guardada: por ruta (exacta) y si no, por nombre sin repetir objetos ya usados.
+function lpResolve(entry, used) {
+  let found = null;
+  if (entry.path !== undefined && entry.path !== null) { const n = vsNodeAt(entry.path); if (n && n.name === entry.name) found = n; }
+  if (!found) { const m = vsModel(); if (m) m.traverse(o => { if (!found && o.name === entry.name && !vsSkip(o) && !(used && used.has(o))) found = o; }); }
+  return found;
+}
+function lpChipsOf(key) { let n = 0; SIM.days.forEach(d => d.chips.forEach(c => { if (c.blockData?.liftPositionKey === key) n++; })); return n; }
+function lpAdd(obj, quiet) {
+  if (lpKeyOf(obj)) return false;
+  const ov = lpOverlap(obj);
+  if (ov) {
+    if (quiet) return false;
+    const n = lpChipsOf(ov.k);
+    const msg = ov.rel === 'dentro' ? `«${obj.name}» está dentro de «${lpLabel(ov.c)}», que ya se mueve como ensamble.` : `«${obj.name}» contiene a «${lpLabel(ov.c)}», que ya está configurada.`;
+    if (!confirm(msg + '\n\n¿Reemplazar «' + lpLabel(ov.c) + '» por «' + obj.name + '»?' + (n ? `\n(Sus ${n} evento(s) en la línea de tiempo quedarán sin enlazar.)` : ''))) return false;
+    lpRemove(ov.k, true);
+  }
+  registerLiftObject(obj);
+  return true;
+}
+function lpRemove(key, silent) {
+  const c = liftPositions.get(key); if (!c) return false;
+  const n = lpChipsOf(key);
+  if (!silent && !confirm(`¿Quitar «${lpLabel(c)}» de las posiciones de izaje?` + (n ? `\nTiene ${n} evento(s) en la línea de tiempo que quedarán sin enlazar.` : ''))) return false;
+  if (c.object) applyPoseToObject(c, { x:c.origX, y:c.origY, z:c.origZ, rx:c.origRx, ry:c.origRy, rz:c.origRz });   // vuelve a su sitio
+  liftPositions.delete(key);
+  return true;
+}
+function lpFocus(key) {
+  renderLiftPosList(key);
+  const el = document.querySelector(`#lpp-pieces-list .lpp-item[data-key="${key}"]`); if (!el) return;
+  el.scrollIntoView({ block:'nearest' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200);
+}
+window.lpHl = function(key) { const c = liftPositions.get(key); vsHighlight(c ? c.object : null); };
+window.lpRename = function(key, v) { const c = liftPositions.get(key); if (c) { c.label = String(v).trim() || null; } };
+function lpOpenLevelMenu(mesh, x, y) {
+  vsMenuClose();
+  const m = vsModel(), levels = [];
+  for (let o = mesh; o && o !== m; o = o.parent) levels.push(o);
+  const menu = document.createElement('div'); menu.id = 'vs-pick-menu'; menu.classList.add('lp');
+  menu.style.left = Math.min(x + 8, innerWidth - 330) + 'px'; menu.style.top = Math.min(y + 8, innerHeight - 50 - levels.length * 32) + 'px';
+  menu.innerHTML = '<div class="vs-pm-t">¿Qué se iza? (se resalta al pasar el cursor)</div>' + levels.map((o, i) => {
+    const k = lpKeyOf(o), ov = k ? null : lpOverlap(o), sib = fdSiblingsSame(o).filter(s => !lpKeyOf(s) && !lpOverlap(s));
+    const pz = o.isMesh ? '' : `<small>${vsMeshesOf(o).length} pz</small>`;
+    return `<div class="vs-pm-i${k ? ' on' : ''}" data-i="${i}"><span class="vs-pm-k">${i === 0 ? 'Pieza' : 'Ensamble ' + i}</span><span class="vs-pm-n">${(o.name || '(sin nombre)').replace(/[<>&]/g, '')}</span>${pz}`
+      + (k ? '<b title="Ya está configurada">✓</b>' : ov ? `<b title="${ov.rel === 'dentro' ? 'Está dentro de una pieza configurada' : 'Contiene una pieza configurada'}" style="color:var(--warn)">⚠</b>` : '<b>+</b>')
+      + (sib.length && !k && !ov ? `<button class="vs-pm-all" data-all="${i}" title="Agregar esta y las ${sib.length} iguales (mismo nombre y nivel)">+${sib.length + 1} iguales</button>` : '') + '</div>';
+  }).join('');
+  menu.addEventListener('mousemove', e => { const it = e.target.closest('.vs-pm-i'); if (!it) return vsHighlight(null);
+    const o = levels[+it.dataset.i]; vsHighlight(e.target.closest('.vs-pm-all') ? [o, ...fdSiblingsSame(o)] : o); });
+  menu.addEventListener('mouseleave', () => vsHighlight(null));
+  menu.addEventListener('click', e => {
+    const it = e.target.closest('.vs-pm-i'); if (!it) return; e.stopPropagation();
+    const o = levels[+it.dataset.i], st = document.getElementById('lpp-pick-label'); let focus = null;
+    if (e.target.closest('.vs-pm-all')) {
+      let n = lpAdd(o, true) ? 1 : 0; fdSiblingsSame(o).forEach(s => { if (lpAdd(s, true)) n++; });
+      st.textContent = `✓ ${n} piezas «${o.name}» agregadas · ESC termina`; focus = lpKeyOf(o);
+    } else if (lpKeyOf(o)) { focus = lpKeyOf(o); st.textContent = `«${o.name}» ya está configurada`; }
+    else if (lpAdd(o)) { focus = lpKeyOf(o); st.textContent = `✓ «${o.name}» agregada (${liftPositions.size}) · sigue eligiendo o ESC`; }
+    vsMenuClose(); vsHighlight(null);
+    if (focus) lpFocus(focus); else renderLiftPosList();
+    if (lppTab === 'tree') buildLppTree();
+  });
+  document.body.appendChild(menu);
+}
+
 // ── Register any Three.js object (mesh or group) as a lift position ──
 function registerLiftObject(obj) {
   const key = obj.uuid;
-  if (liftPositions.has(key)) {
+  if (liftPositions.has(key) || lpKeyOf(obj)) {
     renderLiftPosList(key);
     return;
   }
   obj.updateMatrixWorld(true);
-  const worldPos = new THREE.Vector3();
-  obj.getWorldPosition(worldPos);
-  // capture original rotation (degrees) too
-  const er = obj.rotation;
-  const origRx = parseFloat((er.x * 180/Math.PI).toFixed(2));
-  const origRy = parseFloat((er.y * 180/Math.PI).toFixed(2));
-  const origRz = parseFloat((er.z * 180/Math.PI).toFixed(2));
+  // posición original = la del GLB (aunque la pieza esté movida por la grúa o la simulación)
+  const gp = lpGlbPose(obj);
+  const worldPos = new THREE.Vector3(gp.x, gp.y, gp.z);
+  const origRx = parseFloat(gp.rx.toFixed(2));
+  const origRy = parseFloat(gp.ry.toFixed(2));
+  const origRz = parseFloat(gp.rz.toFixed(2));
 
   const displayName = obj.name || obj.uuid.slice(0, 8);
   const isGroup = !obj.isMesh;
@@ -4297,6 +4635,8 @@ function registerLiftObject(obj) {
 
   liftPositions.set(key, {
     name: displayName,
+    path: vsPath(obj),
+    label: null,
     isGroup,
     object: obj,
     // ── "pose en edición" (lo que se previsualiza en el panel) ──
@@ -4370,10 +4710,10 @@ window.addLiftPoseToTimeline = function(key, idx) {
   const start = SIM.currentHour || 0;
   SIM.chips.push({
     id: 'chip_' + SIM.chipCounter, rowId: firstRowOfBlock('B'),
-    label: cfg.name.replace(/_/g,' '),
+    label: lpLabel(cfg),
     desc: 'Mover a: ' + cfg.poses[idx].label,
     startH: start, endH: Math.min(dayDuration(), start + 1),
-    blockData: { liftPositionKey: key, liftPositionName: cfg.name, poseIndex: idx }
+    blockData: { liftPositionKey: key, liftPositionName: cfg.name, liftPositionPath: cfg.path ?? null, poseIndex: idx }
   });
   if (!timelineOpen) toggleTimeline(); else tlRender();
 };
@@ -4388,114 +4728,46 @@ window.resetLiftPosToOriginal = function(key) {
 };
 
 // ── MODEL HIERARCHY TREE ──────────────────────────────────────────────────────
+const _lpOpen = new Set();
 function buildLppTree() {
   const wrap = document.getElementById('lpp-tree-wrap');
-  const model = scene.getObjectByName('__model__');
-  if (!model) {
-    wrap.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">Sin modelo cargado</div>';
-    return;
-  }
-  wrap.innerHTML = '';
-  // Build tree starting from model's children (skip __model__ itself)
-  model.children.forEach(child => {
-    const node = buildTreeNode(child, 0);
-    if (node) wrap.appendChild(node);
-  });
+  const model = vsModel();
+  if (!model) { wrap.innerHTML = '<div style="color:var(--text3);font-size:10px;text-align:center;padding:12px 0;">Sin modelo cargado</div>'; return; }
+  const st = wrap.scrollTop; wrap.innerHTML = '';
+  model.children.forEach(child => { const node = buildTreeNode(child, 0, false); if (node) wrap.appendChild(node); });
+  wrap.scrollTop = st;
 }
-
-function buildTreeNode(obj, depth) {
-  // Skip crane objects and character
-  if (obj.name && (obj.name.startsWith('crane_') || obj.name === '__char__')) return null;
-
-  const isGroup = !obj.isMesh;
-  const hasChildren = obj.children && obj.children.length > 0;
-  const name = obj.name || (isGroup ? '(grupo)' : '(mesh)');
-
-  // Filter
-  if (lppTreeFilter && !name.toLowerCase().includes(lppTreeFilter.toLowerCase())) {
-    // Still show if any descendant matches
-    if (!hasDescendantMatch(obj, lppTreeFilter)) return null;
-  }
-
-  const node = document.createElement('div');
-  node.className = 'tree-node';
-
-  const row = document.createElement('div');
-  row.className = 'tree-row' + (liftPositions.has(obj.uuid) ? ' selected' : '');
-  row.dataset.uuid = obj.uuid;
-
-  const toggle = document.createElement('span');
-  toggle.className = 'tree-toggle' + (hasChildren && isGroup ? '' : ' leaf');
-  toggle.textContent = '▶';
-
-  const icon = document.createElement('span');
-  icon.className = 'tree-icon';
-  icon.textContent = isGroup ? '📁' : '▪';
-
-  const label = document.createElement('span');
-  label.className = 'tree-label ' + (isGroup ? 'group' : 'mesh');
-  label.textContent = name.replace(/_/g, ' ');
-  label.title = name;
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'tree-add-btn';
-  addBtn.textContent = '+';
-  addBtn.title = liftPositions.has(obj.uuid) ? 'Ya configurado' : 'Agregar a posiciones de izaje';
-  if (liftPositions.has(obj.uuid)) {
-    addBtn.style.color = 'var(--accent2)';
-    addBtn.style.borderColor = 'rgba(129,199,132,.4)';
-    addBtn.style.opacity = '1';
-    addBtn.textContent = '✓';
-  }
-
-  row.appendChild(toggle);
-  row.appendChild(icon);
-  row.appendChild(label);
-  row.appendChild(addBtn);
+function buildTreeNode(obj, depth, inside) {
+  if (vsSkip(obj)) return null;
+  const isGroup = !obj.isMesh, hasChildren = obj.children.some(c => !vsSkip(c)), name = obj.name || (isGroup ? '(grupo)' : '(pieza)');
+  if (lppTreeFilter && !name.toLowerCase().includes(lppTreeFilter.toLowerCase()) && !hasDescendantMatch(obj, lppTreeFilter)) return null;
+  const path = vsPath(obj), k = lpKeyOf(obj), on = !!k;
+  const part = !on && !inside && [...liftPositions.values()].some(c => { for (let p = c.object?.parent; p; p = p.parent) if (p === obj) return true; return false; });
+  const open = _lpOpen.has(path) || (!!lppTreeFilter && depth < 6);
+  const node = document.createElement('div'); node.className = 'tree-node';
+  const row = document.createElement('div'); row.className = 'tree-row vs-tr lp' + (on ? ' selected' : ''); row.dataset.uuid = obj.uuid;
+  const lbl = on ? lpLabel(liftPositions.get(k)) : name.replace(/_/g, ' ');
+  row.innerHTML = `<span class="tree-toggle${hasChildren ? (open ? ' open' : '') : ' leaf'}">▶</span>`
+    + `<span class="vs-cb${on ? ' on' : inside ? ' inh' : part ? ' part' : ''}" title="${on ? 'Configurada para izaje (clic para quitar)' : inside ? 'Se mueve con su ensamble' : part ? 'Contiene piezas configuradas' : 'Agregar a posiciones de izaje'}">${on || inside ? '✓' : part ? '–' : ''}</span>`
+    + `<span class="tree-icon">${isGroup ? '📁' : '▪'}</span><span class="tree-label ${isGroup ? 'group' : 'mesh'}" title="${name.replace(/"/g, '&quot;')}">${lbl.replace(/[<>&]/g, '')}</span>`
+    + (isGroup ? `<small class="vs-pz">${vsMeshesOf(obj).length}</small>` : '');
   node.appendChild(row);
-
-  // Children container (collapsed by default)
-  let childWrap = null;
-  let expanded = false;
-
-  if (hasChildren && isGroup) {
-    childWrap = document.createElement('div');
-    childWrap.className = 'tree-children';
-    childWrap.style.display = 'none';
-    node.appendChild(childWrap);
-
-    toggle.style.cursor = 'pointer';
-    const expand = () => {
-      expanded = !expanded;
-      childWrap.style.display = expanded ? 'block' : 'none';
-      toggle.classList.toggle('open', expanded);
-      if (expanded && childWrap.children.length === 0) {
-        obj.children.forEach(child => {
-          const cn = buildTreeNode(child, depth + 1);
-          if (cn) childWrap.appendChild(cn);
-        });
-      }
-    };
-    toggle.addEventListener('click', e => { e.stopPropagation(); expand(); });
-    // Click on row (not add btn) also expands
-    row.addEventListener('click', e => {
-      if (e.target === addBtn) return;
-      expand();
-    });
+  if (hasChildren) {
+    const cw = document.createElement('div'); cw.className = 'tree-children'; cw.style.display = open ? 'block' : 'none'; node.appendChild(cw);
+    const fill = () => { if (!cw.children.length) obj.children.forEach(c => { const n = buildTreeNode(c, depth + 1, inside || on); if (n) cw.appendChild(n); }); };
+    if (open) fill();
+    row.querySelector('.tree-toggle').addEventListener('click', e => { e.stopPropagation(); const o = cw.style.display === 'none'; cw.style.display = o ? 'block' : 'none'; e.target.classList.toggle('open', o); if (o) { _lpOpen.add(path); fill(); } else _lpOpen.delete(path); });
   }
-
-  // Add button: register this object
-  addBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    registerLiftObject(obj);
-    // Update button appearance
-    addBtn.textContent = '✓';
-    addBtn.style.color = 'var(--accent2)';
-    addBtn.style.borderColor = 'rgba(129,199,132,.4)';
-    addBtn.style.opacity = '1';
-    row.classList.add('selected');
+  row.addEventListener('mouseenter', () => vsHighlight(obj)); row.addEventListener('mouseleave', () => vsHighlight(null));
+  row.querySelector('.vs-cb').addEventListener('click', e => {
+    e.stopPropagation(); if (inside && !on) return;
+    let focus = null;
+    if (k) { if (!lpRemove(k)) return; }
+    else if (lpAdd(obj)) focus = lpKeyOf(obj);
+    if (focus) lpFocus(focus); else renderLiftPosList();
+    buildLppTree();
   });
-
+  row.addEventListener('click', e => { if (e.target.closest('.vs-cb') || e.target.closest('.tree-toggle')) return; if (k) lpFocus(k); else row.querySelector('.tree-toggle:not(.leaf)')?.click(); });
   return node;
 }
 
@@ -4531,8 +4803,9 @@ function renderLiftPosList(highlightKey) {
   list.innerHTML = '';
   liftPositions.forEach((cfg, key) => {
     const item = document.createElement('div');
-    item.className = 'lpp-item';
+    item.className = 'lpp-item'; item.dataset.key = key;
     if (key === highlightKey) item.style.border = '1px solid #a78bfa';
+    item.addEventListener('mouseenter', () => lpHl(key)); item.addEventListener('mouseleave', () => vsHighlight(null));
 
     const typeTag = cfg.isGroup
       ? '<span class="lpp-item-badge" style="border-color:rgba(79,195,247,.4);color:var(--accent);">ENSAMBLE</span>'
@@ -4562,11 +4835,15 @@ function renderLiftPosList(highlightKey) {
     item.innerHTML = `
       <div class="lpp-item-header" onclick="this.nextElementSibling.classList.toggle('open')">
         <span style="font-size:12px;margin-right:2px;">${cfg.isGroup ? '📁' : '▪'}</span>
-        <span class="lpp-item-name">${cfg.name.replace(/_/g,' ')}</span>
+        <span class="lpp-item-name" title="${String(cfg.name).replace(/"/g,'&quot;')}${cfg.path != null ? ' · ruta ' + cfg.path : ''}">${lpLabel(cfg).replace(/[<>&]/g,'')}</span>
         <span class="lpp-item-badge" style="border-color:rgba(167,139,250,.4);color:var(--sim-purple);">${(cfg.poses||[]).length} pos</span>
         <span style="color:var(--text3);font-size:10px;margin-left:4px;">▾</span>
       </div>
       <div class="lpp-item-body">
+        <div class="lpp-field">
+          <div class="lpp-field-label">Nombre visible</div>
+          <input class="lpp-input" style="text-align:left;" value="${(cfg.label || '').replace(/"/g,'&quot;')}" placeholder="${lpLabel(Object.assign({}, cfg, { label:null })).replace(/"/g,'&quot;')}" onchange="lpRename('${key}',this.value);renderLiftPosList('${key}')">
+        </div>
         <div class="lpp-field-label" style="color:var(--accent2);margin-bottom:4px;">✎ Editor de posición (vista previa en vivo)</div>
         <div class="lpp-field">
           <div class="lpp-field-label">Posición (m)</div>
@@ -4588,6 +4865,7 @@ function renderLiftPosList(highlightKey) {
           <button class="lpp-set-btn" style="flex:1;padding:5px 0;font-size:9px;border-color:rgba(167,139,250,.4);color:var(--sim-purple);background:rgba(167,139,250,.08);" onclick="addLiftPose('${key}')">＋ Guardar como posición</button>
           <button class="lpp-set-btn" style="flex:none;width:auto;padding:5px 8px;font-size:9px;" onclick="resetLiftPosToOriginal('${key}')">↺ Original</button>
         </div>
+        <button class="lpp-set-btn" style="width:100%;margin-top:4px;padding:5px 0;font-size:9px;border-color:rgba(167,139,250,.4);color:var(--sim-purple);" onclick="addLiftOrigToTimeline('${key}')" title="Evento de 30 min en la hora actual que lleva la pieza, desde donde esté, a su posición original del GLB">＋ Línea de tiempo: volver a posición original (GLB)</button>
 
         <div class="lpp-field-label" style="color:var(--sim-purple);margin:8px 0 4px;border-top:1px solid var(--border);padding-top:8px;">
           ⬆ Posiciones guardadas (keyframes)
@@ -4629,7 +4907,7 @@ window.applyLiftPos = function(key) {
 };
 
 window.removeLiftPos = function(key) {
-  liftPositions.delete(key);
+  if (!lpRemove(key)) return;
   renderLiftPosList();
   if (lppTab === 'tree') buildLppTree();
 };
@@ -4643,7 +4921,7 @@ window.exportLiftPositions = function() {
   const data = [];
   liftPositions.forEach((cfg, key) => {
     data.push({
-      name:    cfg.name,
+      name:    cfg.name, path: cfg.path ?? null, label: cfg.label || null,
       isGroup: cfg.isGroup,
       x: cfg.x, y: cfg.y, z: cfg.z,
       rx: cfg.rx, ry: cfg.ry, rz: cfg.rz,
@@ -4671,13 +4949,11 @@ window.importLiftPositions = function(input) {
       if (!Array.isArray(entries)) throw new Error('Formato inválido');
 
       let matched = 0, skipped = 0;
+      const used = new Set([...liftPositions.values()].map(c => c.object));
       entries.forEach(entry => {
-        // Try to find the object in the current scene by name
-        let found = null;
-        scene.traverse(o => {
-          if (found) return;
-          if (o.name && o.name === entry.name) found = o;
-        });
+        // por ruta (exacta aunque haya nombres repetidos) y si no, por nombre sin repetir objetos
+        const found = lpResolve(entry, used);
+        if (found) used.add(found);
 
         if (!found) { skipped++; return; }
 
@@ -4687,8 +4963,8 @@ window.importLiftPositions = function(input) {
         found.getWorldPosition(worldPos);
 
         const cfg = liftPositions.get(key) || {
-          name: entry.name, isGroup: entry.isGroup ?? !found.isMesh,
-          object: found,
+          name: entry.name, path: vsPath(found), label: entry.label || null, isGroup: entry.isGroup ?? !found.isMesh,
+          object: found, poses: [],
           origX: worldPos.x, origY: worldPos.y, origZ: worldPos.z,
           origRx: 0, origRy: 0, origRz: 0,
         };
@@ -4883,139 +5159,133 @@ const liftPhys = {
   grounded: false,
 };
 
-window.toggleLiftPhysics = function() {
-  liftPhysicsEnabled = !liftPhysicsEnabled;
-  const btn = document.getElementById('btn-physics-toggle');
-  if (liftPhysicsEnabled) {
-    btn.textContent = '⚛ Física de peso: ON';
-    btn.style.borderColor = 'rgba(129,199,132,.35)';
-    btn.style.background  = 'rgba(129,199,132,.08)';
-    btn.style.color       = 'var(--accent2)';
-  } else {
-    btn.textContent = '⚛ Física de peso: OFF';
-    btn.style.borderColor = 'rgba(239,83,80,.3)';
-    btn.style.background  = 'rgba(239,83,80,.06)';
-    btn.style.color       = 'var(--danger)';
-    // Reset tilt on the attached object
-    if (attachedObject) {
-      attachedObject.rotation.x = 0;
-      attachedObject.rotation.z = 0;
-    }
-    liftPhys.tiltX = liftPhys.tiltZ = 0;
-    liftPhys.tiltXVel = liftPhys.tiltZVel = 0;
-  }
-};
-
-// Called when an object is freshly attached — cache its geometry info
-function initLiftPhysics(obj) {
-  liftPhys.tiltXVel = 0;
-  liftPhys.tiltZVel = 0;
-  liftPhys.grounded = false;
-
-  // Save the rotation the object already has (from lift position config or original pose).
-  // Physics will add a DELTA on top of this — starting from 0 extra tilt.
-  liftPhys.baseRotX = obj.rotation.x;
-  liftPhys.baseRotY = obj.rotation.y;
-  liftPhys.baseRotZ = obj.rotation.z;
-
-  // Extra tilt added by gravity — starts at 0 regardless of current pose
-  liftPhys.tiltX = 0;
-  liftPhys.tiltZ = 0;
-
-  // Measure geometry in the object's CURRENT orientation (not neutralised),
-  // so longAxis reflects how the piece actually sits in space right now.
-  obj.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(obj);
-  liftPhys.localBox = box;
-  const size = box.getSize(new THREE.Vector3());
-
-  // The "long axis" in world space: which world dimension is largest?
-  const mx = Math.max(size.x, size.y, size.z);
-  // If the piece is lying on its side, the world-space X or Z will be largest.
-  // If it's standing up, Y will be largest.
-  liftPhys.longAxis   = (mx === size.x) ? 'x' : (mx === size.z) ? 'z' : 'y';
-  liftPhys.halfLength = mx * 0.5;
-
-  liftPhys.floorY = projectFloorY !== null ? projectFloorY : state.modelFloor;
+// liftPhysicsUser = lo que elige el usuario con el botón (no lo cambia la reproducción).
+// liftPhysicsEnabled = lo que rige en cada momento (en una secuencia de grúa manda la secuencia).
+let liftPhysicsUser = true;
+function setLiftPhysicsEffective(v) {
+  v = !!v; if (v === liftPhysicsEnabled) return;
+  liftPhysicsEnabled = v;
+  if (!v && attachedObject) liftPhysicsReset(attachedObject);
 }
+function liftPhysicsBtnRefresh() {
+  const btn = document.getElementById('btn-physics-toggle'); if (!btn) return;
+  const on = liftPhysicsUser;
+  btn.textContent = '⚛ Física de peso: ' + (on ? 'ON' : 'OFF');
+  btn.style.borderColor = on ? 'rgba(129,199,132,.35)' : 'rgba(239,83,80,.3)';
+  btn.style.background  = on ? 'rgba(129,199,132,.08)' : 'rgba(239,83,80,.06)';
+  btn.style.color       = on ? 'var(--accent2)' : 'var(--danger)';
+}
+window.toggleLiftPhysics = function() {
+  liftPhysicsUser = !liftPhysicsUser;
+  setLiftPhysicsEffective(liftPhysicsUser);
+  liftPhysicsBtnRefresh();
+};
+// Física que rige durante un tramo de secuencia: la del punto si se fijó a mano; si no, la de la secuencia.
+function kfPhysics(cap, kf) { return (kf && kf.physicsLock) ? !!kf.physics : (cap ? cap.physics !== false : true); }
 
+// ── Física de la carga: cuerpo rígido colgado de un punto (péndulo físico) ──
+// Al enganchar se calcula el punto de agarre P (punto de la pieza más cercano al gancho)
+// y el centro de masa C. La pieza gira libremente alrededor de P y la gravedad la lleva
+// a quedar con C bajo P; el piso limita el giro (un extremo puede apoyarse en el suelo).
+// Funciona con cualquier orientación previa de la pieza (giros en X/Y/Z).
+const _lpUp = new THREE.Vector3(0, 1, 0);
+function initLiftPhysics(obj, hookPos) {
+  liftPhys.tiltXVel = 0; liftPhys.tiltZVel = 0; liftPhys.grounded = false;
+  liftPhys.ready = false; liftPhys._obj = obj;
+  if (!obj) return;
+  obj.updateMatrixWorld(true);
+  // caja en coordenadas locales de la pieza (sigue a la pieza aunque esté girada)
+  const inv = obj.matrixWorld.clone().invert(), lb = new THREE.Box3(), tb = new THREE.Box3(), m4 = new THREE.Matrix4();
+  obj.traverse(o => {
+    if (!o.isMesh || !o.geometry) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    m4.multiplyMatrices(inv, o.matrixWorld); tb.copy(o.geometry.boundingBox).applyMatrix4(m4); lb.union(tb);
+  });
+  if (lb.isEmpty()) return;
+  // gancho actual
+  const cr = cranes.find(c => c.id === attachedCraneId), hs = cr && cr.object.getObjectByName('hookShape');
+  const H = new THREE.Vector3(); if (hookPos) H.copy(hookPos); else if (hs) hs.getWorldPosition(H); else obj.getWorldPosition(H);
+  // punto de agarre: el punto de la caja local más cercano al gancho
+  const Pl = obj.worldToLocal(H.clone()); lb.clampPoint(Pl, Pl);
+  const Cl = lb.getCenter(new THREE.Vector3());
+  const P = obj.localToWorld(Pl.clone()), C = obj.localToWorld(Cl.clone()), pivot = new THREE.Vector3(); obj.getWorldPosition(pivot);
+  const corners = [];
+  for (const x of [lb.min.x, lb.max.x]) for (const y of [lb.min.y, lb.max.y]) for (const z of [lb.min.z, lb.max.z]) corners.push(obj.localToWorld(new THREE.Vector3(x, y, z)).sub(P));
+  const L = lb.getSize(new THREE.Vector3()).multiply(obj.getWorldScale(new THREE.Vector3()));
+  Object.assign(liftPhys, {
+    ready: true,
+    q0: obj.getWorldQuaternion(new THREE.Quaternion()),
+    R: new THREE.Quaternion(), w: new THREE.Vector3(),
+    d0: P.clone().sub(pivot),                 // pivote → punto de agarre (en reposo)
+    rC: C.clone().sub(P),                     // agarre → centro de masa (en reposo)
+    rPivot: pivot.clone().sub(P),             // agarre → pivote de la pieza
+    corners,                                  // esquinas de la caja relativas al agarre
+    k2: (L.x * L.x + L.y * L.y + L.z * L.z) / 12,   // radio de giro² (inercia propia)
+    hookRot0: cr ? cr.state.hookRot : 0,
+    floorY: projectFloorY !== null ? projectFloorY : state.modelFloor,
+  });
+}
 function updateLiftPhysics(obj, hookWorldPos, dt) {
   if (!liftPhysicsEnabled || !attachedObject) return;
-
-  const floorY   = liftPhys.floorY;
-  const box      = liftPhys.localBox;
-  const longAxis = liftPhys.longAxis;
-  const halfLen  = liftPhys.halfLength || 1;
-  if (!box) return;
-
-  // ── 1. Hook height above floor — the physical constraint ──────────────────
-  // The piece hangs from the hook. The lowest its free end can go is the floor.
-  // So the maximum tilt possible = arcsin(hookHeight / halfLength).
-  // When hook is low: maxTilt ≈ 0 → piece stays flat.
-  // When hook reaches halfLen above floor: maxTilt = 90° → piece fully vertical.
-  const hookHeight = Math.max(0, hookWorldPos.y - floorY);
-  const maxTilt = hookHeight >= halfLen
-    ? Math.PI / 2
-    : Math.asin(hookHeight / halfLen);
-
-  // ── 2. Target tilt delta (what gravity wants, clamped to what's possible) ──
-  // We only rotate pieces that are lying on their side (longAxis = x or z).
-  // longAxis 'y' means piece is already upright — nothing to do.
-  let targetTiltX = 0, targetTiltZ = 0;
-  if      (longAxis === 'x') targetTiltZ = maxTilt;
-  else if (longAxis === 'z') targetTiltX = maxTilt;
-
-  // ── 3. Spring-damper on the DELTA tilt ────────────────────────────────────
-  const stiffness = 1.8;
-  const damping   = 2.2;
-
-  const errX = targetTiltX - liftPhys.tiltX;
-  const errZ = targetTiltZ - liftPhys.tiltZ;
-
-  liftPhys.tiltXVel += (errX * stiffness - liftPhys.tiltXVel * damping) * dt;
-  liftPhys.tiltZVel += (errZ * stiffness - liftPhys.tiltZVel * damping) * dt;
-  liftPhys.tiltX    += liftPhys.tiltXVel * dt;
-  liftPhys.tiltZ    += liftPhys.tiltZVel * dt;
-
-  // Clamp delta to [0, maxTilt] — never overshoot geometry
-  liftPhys.tiltX = Math.max(0, Math.min(maxTilt, liftPhys.tiltX));
-  liftPhys.tiltZ = Math.max(0, Math.min(maxTilt, liftPhys.tiltZ));
-
-  // ── 4. Apply: base rotation + gravity delta ────────────────────────────────
-  obj.rotation.x = liftPhys.baseRotX + liftPhys.tiltX;
-  obj.rotation.y = liftPhys.baseRotY;
-  obj.rotation.z = liftPhys.baseRotZ + liftPhys.tiltZ;
-  obj.updateMatrixWorld(true);
-
-  // ── 5. Floor contact ──────────────────────────────────────────────────────
-  const worldBox2  = new THREE.Box3().setFromObject(obj);
-  const newLowestY = worldBox2.min.y;
-  liftPhys.grounded = Math.abs(newLowestY - floorY) < 0.05;
-
-  // While piece isn't fully airborne, pin lowest point to floor (both directions)
-  if (maxTilt < Math.PI / 2 - 0.01) {
-    const correction = floorY - newLowestY;
-    if (Math.abs(correction) > 0.001) {
-      obj.position.y += correction;
-      obj.updateMatrixWorld(true);
-      if (correction > 0) {          // penetrating floor — damp velocity
-        liftPhys.tiltXVel *= 0.6;
-        liftPhys.tiltZVel *= 0.6;
-      }
-    }
-  } else if (newLowestY < floorY) {
-    // Fully vertical but still clipping floor — push up
-    obj.position.y += floorY - newLowestY;
-    obj.updateMatrixWorld(true);
+  if (!liftPhys.ready || liftPhys._obj !== obj) { initLiftPhysics(obj, hookWorldPos); if (!liftPhys.ready) return; }
+  const P = liftPhys, g = 9.81, damp = 1.1;
+  const cr = cranes.find(c => c.id === attachedCraneId);
+  const yaw = new THREE.Quaternion().setFromAxisAngle(_lpUp, cr ? cr.state.hookRot - P.hookRot0 : 0);
+  const J = hookWorldPos.clone().add(attachedOffset).add(P.d0);   // punto de agarre (cuelga del gancho)
+  const T = new THREE.Quaternion(), v = new THREE.Vector3(), tau = new THREE.Vector3(), dq = new THREE.Quaternion();
+  const total = () => T.copy(yaw).multiply(P.R);
+  // ── integración (subpasos) ──
+  let rest = Math.min(0.05, Math.max(0, dt || 0.016));
+  while (rest > 1e-5) {
+    const h = Math.min(rest, 1 / 120); rest -= h;
+    total(); const r = v.copy(P.rC).applyQuaternion(T);            // agarre → centro de masa
+    tau.crossVectors(r, new THREE.Vector3(0, -g, 0));               // par de la gravedad (por unidad de masa)
+    const I = r.lengthSq() + P.k2;
+    P.w.addScaledVector(tau, h / Math.max(1e-4, I));
+    P.w.multiplyScalar(Math.exp(-damp * h));
+    const ang = P.w.length() * h;
+    if (ang > 1e-9) { dq.setFromAxisAngle(v.copy(P.w).normalize(), ang); P.R.premultiply(dq).normalize(); }
   }
-
-  // ── 6. Resync attachedOffset Y after floor correction ────────────────────────
-  // X and Z of the offset stay fixed (hook point doesn't move laterally).
-  // Only Y changes when the floor pushes the object up/down.
+  // ── contacto con el piso: girar alrededor del agarre hasta apoyar; si no alcanza, la eslinga se afloja ──
+  const floorY = P.floorY; let lift = 0; P.grounded = false;
+  for (let it = 0; it < 6; it++) {
+    total(); let lo = null, loY = Infinity;
+    P.corners.forEach(c => { const q = v.copy(c).applyQuaternion(T).add(J); if (q.y < loY) { loY = q.y; lo = q.clone(); } });
+    const pen = floorY - loY; if (pen <= 1e-4) break;
+    P.grounded = true;
+    const rel = lo.sub(J), ax = new THREE.Vector3().crossVectors(rel, _lpUp);
+    const hz = Math.hypot(rel.x, rel.z);
+    if (ax.lengthSq() < 1e-8 || hz < 0.05) { lift = pen; break; }
+    ax.normalize(); const vy = new THREE.Vector3().crossVectors(ax, rel).y;
+    if (vy < 1e-3) { lift = pen; break; }
+    // nunca girar más allá de la horizontal del agarre (evita que la pieza se voltee por encima del gancho)
+    const toHoriz = rel.y < 0 ? Math.asin(Math.min(1, -rel.y / rel.length())) : 0;
+    const th = Math.min(0.5, pen / vy, toHoriz);
+    if (th < 1e-5) { lift = pen; break; }
+    dq.setFromAxisAngle(ax, th); P.R.premultiply(dq).normalize();
+    // el piso frena el giro que empuja hacia abajo
+    const wn = P.w.dot(ax); if (wn < 0) P.w.addScaledVector(ax, -wn);
+    P.w.multiplyScalar(0.85);
+  }
+  if (!lift) { total(); let loY = Infinity; P.corners.forEach(c => { const y = v.copy(c).applyQuaternion(T).y + J.y; if (y < loY) loY = y; }); if (loY < floorY) lift = floorY - loY; }
+  // ── aplicar a la pieza ──
+  total();
+  const qW = T.clone().multiply(P.q0), pos = v.copy(P.rPivot).applyQuaternion(T).add(J); pos.y += lift;
+  if (obj.parent) {
+    obj.parent.updateMatrixWorld(true);
+    const pq = obj.parent.getWorldQuaternion(new THREE.Quaternion()).invert();
+    obj.quaternion.copy(pq.multiply(qW));
+    obj.position.copy(obj.parent.worldToLocal(pos.clone()));
+  } else { obj.quaternion.copy(qW); obj.position.copy(pos); }
   obj.updateMatrixWorld(true);
-  const newPivot = new THREE.Vector3();
-  obj.getWorldPosition(newPivot);
-  attachedOffset.y = newPivot.y - hookWorldPos.y;
+}
+// Física desactivada: la pieza vuelve a su orientación de enganche
+function liftPhysicsReset(obj) {
+  if (!obj || !liftPhys.ready) return;
+  const qW = liftPhys.q0.clone();
+  if (obj.parent) { obj.parent.updateMatrixWorld(true); obj.quaternion.copy(obj.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(qW)); }
+  else obj.quaternion.copy(qW);
+  liftPhys.R.identity(); liftPhys.w.set(0, 0, 0);
 }
 
 
@@ -5137,6 +5407,7 @@ function ensureRowsValid() {
 
 // Add a new parallel row to a block
 window.tlAddRow = function(block) {
+  tlPushUndo();
   SIM.rowCounter = (SIM.rowCounter||0) + 1;
   const count = SIM.rows.filter(r => r.block === block).length + 1;
   const newRow = { id: block + '_r' + SIM.rowCounter, label: BLOCK_META[block].name + ' ' + count, color: BLOCK_META[block].color, block };
@@ -5155,6 +5426,7 @@ window.tlRemoveRow = function(rowId) {
   if (sameBlock.length <= 1) { alert('Cada bloque debe tener al menos una fila.'); return; }
   if (SIM.chips.some(c => c.rowId === rowId) &&
       !confirm('Esta fila tiene eventos. ¿Eliminar fila y sus eventos?')) return;
+  tlPushUndo();
   SIM.chips = SIM.chips.filter(c => c.rowId !== rowId);
   SIM.rows = SIM.rows.filter(r => r.id !== rowId);
   tlCollapsedRows.delete(rowId);
@@ -5174,6 +5446,7 @@ window.toggleTimeline = function() {
   timelineOpen = !timelineOpen;
   document.getElementById('sim-timeline').classList.toggle('open', timelineOpen);
   document.getElementById('btn-timeline').classList.toggle('active', timelineOpen);
+  document.body.classList.toggle('tl-open', timelineOpen);
   if (timelineOpen) { renderDayStrip(); tlRender(); }
   updateDateBanner();
 };
@@ -5192,11 +5465,14 @@ function parseHourStr(s) {
   return parseInt(m[1]) + (m[2] ? parseInt(m[2])/60 : 0);
 }
 
-function tlTrackWidth() {
-  const w = document.getElementById('tl-canvas-wrap');
-  return w ? Math.max(w.clientWidth, 600) : 800;
-}
-function tlPxPerHour() { return tlTrackWidth() / dayDuration(); }
+const TL = { zoom:1, lw:170, laneH:22, sel:new Set(), collapsed:new Set(), hideEmpty:false, overview:false,
+  clip:null, undo:[], redo:[], focus:false, chipEls:new Map(), issues:new Map(), lastH:-1, menu:null, hover:null };
+try { const s = JSON.parse(localStorage.getItem('tl_ui') || '{}'); if (s.lw) TL.lw = Math.max(110, Math.min(380, s.lw)); if (Array.isArray(s.col)) s.col.forEach(b => TL.collapsed.add(b)); TL.hideEmpty = !!s.he; } catch (e) {}
+function tlSaveUI() { try { localStorage.setItem('tl_ui', JSON.stringify({ lw:TL.lw, col:[...TL.collapsed], he:TL.hideEmpty })); } catch (e) {} }
+// px/h: el ancho de referencia es el del panel completo (no cambia al abrir el panel de propiedades)
+function tlViewW() { const m = document.getElementById('tl-main'); return Math.max(300, (m && m.clientWidth ? m.clientWidth : window.innerWidth) - TL.lw - 14); }
+function tlPxPerHour() { return tlViewW() / dayDuration() * TL.zoom; }
+function tlTrackWidth() { return dayDuration() * tlPxPerHour(); }
 function tlHourOffset(h) { return Math.max(0, Math.min(dayDuration(), h)); }
 
 // ── DATE HELPERS (still used by the day strip) ───────────────────────────────
@@ -5217,7 +5493,7 @@ window.setActiveDay = function(dayId) {
   if (SIM.playing) simPause();
   SIM.activeDayId = dayId;
   SIM.currentHour = 0;
-  tlCollapsedRows.clear();
+  TL.sel.clear(); if (window.chipEditorClose) chipEditorClose();
   ensureRowsValid();
   renderDayStrip();
   tlRender();
@@ -5261,6 +5537,7 @@ window.tlSetDayDate = function(dayId, val) {
 window.tlSetDayLabel = function(dayId, val) {
   const day = SIM.days.find(d => d.id === dayId);
   if (day) day.label = val;
+  tlDayBtn();
 };
 
 window.tlSetDaySpeed = function(dayId, val) {
@@ -5277,304 +5554,736 @@ window.tlSetDayDuration = function(dayId, val) {
   if (day) { day.durationHours = Math.max(1, Math.min(48, parseFloat(val) || 24)); if (day.id === SIM.activeDayId) tlRender(); }
 };
 
-// Render the master day strip
-function renderDayStrip() {
-  if (new Set(SIM.days.map(d => d.id)).size !== SIM.days.length) simFixDayIds();   // datos ya cargados con ids repetidos
-  const strip = document.getElementById('tl-day-strip');
-  if (!strip) return;
-  strip.innerHTML = '';
-  SIM.days.forEach(d => {
-    const active = d.id === SIM.activeDayId;
-    const card = document.createElement('div');
-    card.className = 'tl-day-card' + (active ? ' active' : '');
-    const chipCount = (d.chips||[]).length;
-    card.innerHTML =
-      '<div class="dc-top">'
-      +   '<input class="dc-label" value="'+(d.label||'')+'" title="Nombre del día" oninput="tlSetDayLabel(\''+d.id+'\',this.value)" onclick="event.stopPropagation()">'
-      +   '<button class="dc-del" title="Eliminar día" onclick="event.stopPropagation();tlRemoveDay(\''+d.id+'\')">✕</button>'
-      + '</div>'
-      + '<input class="dc-date" type="date" value="'+(d.date||'')+'" onclick="event.stopPropagation()" onchange="tlSetDayDate(\''+d.id+'\',this.value)">'
-      + '<div class="dc-meta">'
-      +   '<span>'+chipCount+' evt</span>'
-      +   '<span class="dc-speed-wrap">'
-      +     '⏩ <input class="dc-speed" type="range" min="0.2" max="4" step="0.1" value="'+(d.speed||1)+'" onclick="event.stopPropagation()" oninput="tlSetDaySpeed(\''+d.id+'\',this.value)">'
-      +     '<span id="dayspeed-val-'+d.id+'">'+(d.speed||1).toFixed(1)+'×</span>'
-      +   '</span>'
-      + '</div>'
-      + '<div class="dc-actions">'
-      +   '<button title="Exportar este día" onclick="event.stopPropagation();exportDayJSON(\''+d.id+'\')">↓ día</button>'
-      + '</div>';
-    card.addEventListener('click', () => setActiveDay(d.id));
-    strip.appendChild(card);
-  });
-  // Add-day button
-  const addBtn = document.createElement('button');
-  addBtn.className = 'tl-day-add';
-  addBtn.innerHTML = '＋<br>día';
-  addBtn.title = 'Agregar día';
-  addBtn.onclick = () => tlAddDay();
-  strip.appendChild(addBtn);
+// ══════════════════════════════════════════════════════════════════════════════
+// LÍNEA DE TIEMPO v2 — rejilla con desplazamiento, carriles, zoom continuo,
+// edición directa (crear arrastrando, imán, selección múltiple, atajos, dependencias),
+// vista de todos los días, avisos de conflicto, minimapa y resaltado cruzado 3D.
+// ══════════════════════════════════════════════════════════════════════════════
+const BLOCK_SHORT = { title:'T', A:'A', B:'B', C:'C', D:'D', E:'E', F:'F', G:'G' };
+const TL_ZMAX = 32;
+const $tl = id => document.getElementById(id);
+const tlEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function tlSortedDays() { return [...SIM.days].sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+function tlFmtDate(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
+function tlDurStr(h) { const m = Math.round(h * 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }
+function tlToast(msg) {
+  let t = $tl('tl-toast'); if (!t) { t = document.createElement('div'); t.id = 'tl-toast'; document.body.appendChild(t); }
+  const tl = $tl('sim-timeline'); t.style.bottom = ((timelineOpen && tl ? tl.offsetHeight : 0) + 14) + 'px';
+  t.textContent = msg; t.classList.add('show'); clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// ── RENDER TIMELINE (hours within the active day)
-function tlRender() {
-  const labelsEl = document.getElementById('tl-labels');
-  const canvasEl = document.getElementById('tl-canvas');
-  if (!labelsEl || !canvasEl) return;
-  if (!activeDay()) { labelsEl.innerHTML = ''; return; }
-
-  const W = tlTrackWidth();
-  const pph = tlPxPerHour();
-  const dur = dayDuration();
-
-  // Ruler — hour ticks. Density depends on zoom scale.
-  const ruler = document.getElementById('tl-ruler');
-  if (ruler) {
-    ruler.innerHTML = '';
-    ruler.style.width = W + 'px';
-    // step in hours: 'day' = every 15min, 'week' = hourly, 'month' = every 2h
-    let stepH = SIM.scale === 'day' ? 0.25 : SIM.scale === 'week' ? 1 : 2;
-    for (let h = 0; h <= dur + 0.001; h += stepH) {
-      const px = h * pph;
-      const tick = document.createElement('div');
-      tick.style.cssText = 'position:absolute;left:'+px+'px;top:0;height:20px;display:flex;align-items:center;padding-left:4px;font-family:var(--mono);font-size:8px;color:var(--text3);border-left:1px solid rgba(255,255,255,.06);white-space:nowrap;';
-      tick.textContent = fmtHour(h);
-      ruler.appendChild(tick);
-    }
-  }
-
-  // Labels + tracks, grouped by block
-  labelsEl.innerHTML = '';
-  canvasEl.querySelectorAll('.tl-track, .tl-block-head, .tl-block-head-track').forEach(t => t.remove());
-
-  const blockOrder = BLOCK_ORDER;
-  const blockHeadName = { title:'TÍTULOS', A:'BLOQUE A · CIMIENTOS', B:'BLOQUE B · POSICIONES', C:'BLOQUE C · VISIBILIDAD', D:'BLOQUE D · CÁMARA', E:'BLOQUE E · GRÚAS' };
-  blockOrder.forEach(block => {
-    const blockRows = SIM.rows.filter(r => r.block === block);
-    if (!blockRows.length) return;
-
-    const headLbl = document.createElement('div');
-    headLbl.className = 'tl-block-head';
-    headLbl.innerHTML =
-      '<span class="bh-name">' + (blockHeadName[block] || block) + '</span>'
-      + '<button class="bh-add" title="Agregar fila paralela" onclick="tlAddRow(\''+block+'\')">＋ fila</button>';
-    labelsEl.appendChild(headLbl);
-
-    const headTrack = document.createElement('div');
-    headTrack.className = 'tl-block-head-track';
-    headTrack.style.width = W + 'px';
-    canvasEl.insertBefore(headTrack, document.getElementById('tl-playhead'));
-
-    blockRows.forEach(row => {
-      const isCollapsed = tlCollapsedRows.has(row.id);
-
-      const el = document.createElement('div');
-      el.className = 'tl-row-label' + (isCollapsed ? ' collapsed' : '');
-      el.innerHTML =
-        '<button class="rl-collapse" title="Colapsar / expandir" onclick="tlToggleRowCollapse(\''+row.id+'\')">'+(isCollapsed?'▶':'▼')+'</button>'
-        + '<div class="rl-dot" style="background:'+row.color+'"></div>'
-        + '<input class="rl-name-input" value="'+(row.label||'')+'" oninput="tlRenameRow(\''+row.id+'\',this.value)" onclick="event.stopPropagation()">'
-        + '<button class="rl-add" title="Agregar evento" onclick="tlAddChip(\''+row.id+'\')">+</button>'
-        + '<button class="rl-del" title="Eliminar fila" onclick="tlRemoveRow(\''+row.id+'\')">✕</button>';
-      labelsEl.appendChild(el);
-
-      const track = document.createElement('div');
-      track.className = 'tl-track' + (isCollapsed ? ' row-collapsed' : '');
-      track.dataset.rowId = row.id;
-      track.style.width = W + 'px';
-
-      track.addEventListener('click', e => {
-        if (e.target.classList.contains('tl-chip')) return;
-        const rect = track.getBoundingClientRect();
-        const clickH = Math.round(((e.clientX - rect.left) / pph) * 4) / 4; // snap to 15min
-        tlAddChip(row.id, Math.max(0, clickH));
-      });
-
-      SIM.chips.filter(c => c.rowId === row.id).forEach(chip => {
-        const x1 = tlHourOffset(chip.startH) * pph;
-        const x2 = tlHourOffset(chip.endH)   * pph;
-        const w  = Math.max(24, x2 - x1);
-        const cel = document.createElement('div');
-        cel.className = 'tl-chip chip-' + (row.block||'a').toLowerCase();
-        cel.style.cssText = 'left:'+x1+'px;width:'+w+'px;';
-        let stageLabel = '';
-        let linkIcon = '';
-        if (chip.blockData?.foundationKey && typeof chip.blockData.stageIndex === 'number') {
-          const ff = foundations.get(chip.blockData.foundationKey);
-          if (ff && ff.stages[chip.blockData.stageIndex]) stageLabel = ' · ' + ff.stages[chip.blockData.stageIndex].label;
-          linkIcon = '🔗 ';
-        } else if (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number') {
-          const lp = liftPositions.get(chip.blockData.liftPositionKey);
-          if (lp && lp.poses[chip.blockData.poseIndex]) stageLabel = ' → ' + lp.poses[chip.blockData.poseIndex].label;
-          linkIcon = '🔗 ';
-        } else if (row.block === 'C') {
-          const st = chipVisState(chip);
-          if (st) { stageLabel = ' · ' + (st.visible ? '👁' : '🚫') + ' ' + st.name; linkIcon = '👁 '; }
-          else stageLabel = ' · (sin estado)';
-        } else if (row.block === 'D') {
-          const m = chip.blockData?.cam?.mode;
-          stageLabel = m ? ' · ' + (m==='first'?'1ª pers.':m==='third'?'3ª pers.':'libre') : ' · (sin captura)';
-          linkIcon = '🎥 ';
-        } else if (row.block === 'E') {
-          const cap = chipCapsule(chip);
-          if (cap) { stageLabel = ' · ' + cap.keyframes.length + ' pts'; linkIcon = '🏗 '; }
-          else stageLabel = ' · (sin secuencia)';
-        }
-        const fullyLinked = chip.blockData?.foundationKey
-          || (chip.blockData?.liftPositionKey && typeof chip.blockData.poseIndex === 'number')
-          || (row.block === 'C' && chipVisState(chip))
-          || (row.block === 'D' && chip.blockData?.cam)
-          || (row.block === 'E' && chipCapsule(chip))
-          || row.block === 'title';
-        cel.textContent = linkIcon + chip.label + stageLabel;
-        cel.title = chip.label+'\n'+fmtHour(chip.startH)+' → '+fmtHour(chip.endH)
-          + (fullyLinked ? '\n✓ Configurado'+stageLabel : '\n⚠ Falta configurar')
-          + (chip.desc?'\n'+chip.desc:'');
-        cel.dataset.chipId = chip.id;
-        if (!fullyLinked && row.block !== 'title') cel.style.opacity = '0.55';
-        cel.addEventListener('click', e => { e.stopPropagation(); if (cel._justDragged) { cel._justDragged = false; return; } chipEditorOpen(chip.id, e.clientX, e.clientY); });
-
-        // Drag to move chip: horizontal = time (snap 15-min), vertical = row
-        let dragX0=0, dragY0=0, h0=0, dragging=false;
-        cel.addEventListener('mousedown', e => {
-          e.stopPropagation();
-          dragX0 = e.clientX; dragY0 = e.clientY;
-          h0 = chip.startH;
-          dragging = false;
-          const len = chip.endH - chip.startH;
-          let hoverRowId = chip.rowId;
-
-          const onMove = ev => {
-            if (!dragging && (Math.abs(ev.clientX-dragX0) > 3 || Math.abs(ev.clientY-dragY0) > 3)) {
-              dragging = true;
-              cel.style.zIndex = '40';
-              cel.style.opacity = '0.85';
-            }
-            if (!dragging) return;
-
-            // ── horizontal → time ──
-            const deltaH = (ev.clientX - dragX0) / pph;
-            let newStart = Math.max(0, Math.min(dur - len, h0 + deltaH));
-            newStart = Math.round(newStart * 4) / 4;  // snap 15-min
-            chip.startH = newStart;
-            chip.endH   = newStart + len;
-            cel.style.left = (tlHourOffset(chip.startH) * pph) + 'px';
-
-            // ── vertical → find the track under the cursor ──
-            const under = document.elementFromPoint(ev.clientX, ev.clientY);
-            const overTrack = under ? under.closest('.tl-track') : null;
-            // clear previous highlight
-            document.querySelectorAll('.tl-track.row-drop-target').forEach(t => t.classList.remove('row-drop-target'));
-            if (overTrack && overTrack.dataset.rowId) {
-              const targetRowId = overTrack.dataset.rowId;
-              const targetBlock = rowBlock(targetRowId);
-              // only allow dropping within the same block
-              if (targetBlock === row.block && targetRowId !== chip.rowId) {
-                hoverRowId = targetRowId;
-                overTrack.classList.add('row-drop-target');
-              } else if (targetRowId === chip.rowId) {
-                hoverRowId = chip.rowId;
-              }
-            }
-          };
-          const onUp = () => {
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
-            document.querySelectorAll('.tl-track.row-drop-target').forEach(t => t.classList.remove('row-drop-target'));
-            if (dragging) {
-              cel._justDragged = true;
-              // commit row change if it moved to a different row of the same block
-              if (hoverRowId && hoverRowId !== chip.rowId && rowBlock(hoverRowId) === row.block) {
-                chip.rowId = hoverRowId;
-              }
-              tlRender();
-            }
-          };
-          window.addEventListener('mousemove', onMove);
-          window.addEventListener('mouseup', onUp);
-        });
-
-        track.appendChild(cel);
-      });
-
-      canvasEl.insertBefore(track, document.getElementById('tl-playhead'));
-    });
-  });
-
-  updatePlayhead();
-}
-
-window.tlToggleRowCollapse = function(rowId) {
-  if (tlCollapsedRows.has(rowId)) tlCollapsedRows.delete(rowId);
-  else tlCollapsedRows.add(rowId);
+// ── ZOOM ─────────────────────────────────────────────────────────────────────
+const tlZoomFromSlider = v => Math.pow(TL_ZMAX, v / 100);
+const tlSliderFromZoom = z => Math.round(Math.log(z) / Math.log(TL_ZMAX) * 100);
+window.tlSetZoom = function(z, anchorClientX) {
+  const body = $tl('tl-body'); z = Math.max(1, Math.min(TL_ZMAX, z));
+  let hA = null, ax = 0;
+  if (body && body.clientWidth) { const r = body.getBoundingClientRect(); ax = (anchorClientX ?? (r.left + TL.lw + (r.width - TL.lw) / 2)) - r.left - TL.lw; hA = (ax + body.scrollLeft) / tlPxPerHour(); }
+  TL.zoom = z; const s = $tl('tl-zoom'); if (s) s.value = tlSliderFromZoom(z);
   tlRender();
+  if (body && hA !== null) body.scrollLeft = Math.max(0, hA * tlPxPerHour() - ax);
+  tlMiniView();
+};
+window.tlFit = function() {
+  const ch = SIM.chips, dur = dayDuration(); let a = 0, b = dur;
+  if (ch.length) { a = Math.min(...ch.map(c => c.startH)); b = Math.max(...ch.map(c => c.endH)); const pad = Math.max(0.25, (b - a) * 0.04); a = Math.max(0, a - pad); b = Math.min(dur, b + pad); }
+  TL.zoom = Math.max(1, Math.min(TL_ZMAX, dur / Math.max(0.5, b - a)));
+  const s = $tl('tl-zoom'); if (s) s.value = tlSliderFromZoom(TL.zoom);
+  tlRender(); const body = $tl('tl-body'); if (body) body.scrollLeft = a * tlPxPerHour();
+  tlMiniView();
+};
+window.tlSetScale = function(scale) { tlSetZoom(scale === 'day' ? 8 : scale === 'week' ? 2 : 1); };
+
+// ── DESHACER / REHACER (instantáneas del día activo) ─────────────────────────
+function tlSnap(d) { d = d || activeDay(); return d ? JSON.stringify({ id:d.id, rows:d.rows, chips:d.chips, cc:d.chipCounter, rc:d.rowCounter }) : null; }
+function tlPushUndo() { const s = tlSnap(); if (!s) return; TL.undo.push(s); if (TL.undo.length > 80) TL.undo.shift(); TL.redo.length = 0; }
+window.tlUndo = function(redo) {
+  const from = redo ? TL.redo : TL.undo, to = redo ? TL.undo : TL.redo, s = from.pop();
+  if (!s) { tlToast(redo ? 'Nada que rehacer' : 'Nada que deshacer'); return; }
+  const o = JSON.parse(s), d = SIM.days.find(x => x.id === o.id); if (!d) return;
+  to.push(tlSnap(d));
+  d.rows = o.rows; d.chips = o.chips; d.chipCounter = o.cc; d.rowCounter = o.rc;
+  TL.sel.clear(); chipEditorClose();
+  if (SIM.activeDayId !== d.id) setActiveDay(d.id); else tlRender();
+  tlToast(redo ? '↷ Rehecho' : '↶ Deshecho');
 };
 
-function updatePlayhead() {
-  const ph = document.getElementById('tl-playhead');
-  if (!ph) return;
-  const pph = tlPxPerHour();
-  ph.style.left = (tlHourOffset(SIM.currentHour) * pph) + 'px';
-  const disp = document.getElementById('tl-time-display');
-  const d = activeDay();
-  if (disp) disp.textContent = (d ? d.date + '  ' : '') + fmtHour(SIM.currentHour);
+// ── INFORMACIÓN DE UN EVENTO ─────────────────────────────────────────────────
+function tlChipInfo(chip, block) {
+  const bd = chip.blockData || {}; let icon = '', extra = '', ok = true;
+  if (block === 'A') { const f = bd.foundationKey && foundations.get(bd.foundationKey); ok = !!f; icon = '🏛';
+    if (f) extra = (f.label || f.name) + (typeof bd.stageIndex === 'number' && f.stages[bd.stageIndex] ? ' · ' + f.stages[bd.stageIndex].label : ''); }
+  else if (block === 'B') { const lp = bd.liftPositionKey && liftPositions.get(bd.liftPositionKey); ok = !!lp && typeof bd.poseIndex === 'number'; icon = '⬆';
+    if (lp) extra = lpLabel(lp) + (bd.poseIndex === -1 ? ' → ↺ original' : lp.poses && lp.poses[bd.poseIndex] ? ' → ' + lp.poses[bd.poseIndex].label : ''); }
+  else if (block === 'C') { const st = chipVisState(chip); ok = !!st; icon = st && !st.visible ? '🚫' : '👁'; if (st) extra = st.name; }
+  else if (block === 'D') { ok = !!bd.cam; icon = '🎥'; if (bd.cam) extra = bd.cam.mode === 'first' ? '1ª pers.' : bd.cam.mode === 'third' ? '3ª pers.' : 'libre'; }
+  else if (block === 'E') { const cap = chipCapsule(chip); ok = !!cap; icon = '🏗';
+    if (cap) { const off = cap.keyframes.filter(k => !kfPhysics(cap, k)).length; extra = cap.name + ' · ' + cap.keyframes.length + ' pts' + (off === cap.keyframes.length ? ' · sin física' : off ? ' · física parcial' : ''); } }
+  else if (block === 'F') { const it = bd.excKey && excFind(bd.excKey); ok = !!it; icon = bd.mode === 'fill' ? '⬆' : '⛏'; extra = (it ? it.name + ' · ' : '') + (bd.toPct ?? 100) + '%'; }
+  else if (block === 'G') icon = '🖼';
+  return { icon, extra, ok };
 }
 
-// ── SCRUBBING: drag the playhead / click the ruler to move time (hours) ──────
-function tlScrubToClientX(clientX) {
-  const wrap = document.getElementById('tl-canvas-wrap');
-  if (!wrap) return;
-  const rect = wrap.getBoundingClientRect();
-  const localX = clientX - rect.left + wrap.scrollLeft;
-  const pph = tlPxPerHour();
-  let h = localX / pph;
-  h = Math.max(0, Math.min(dayDuration(), h));
-  SIM.currentHour = h;
-  updatePlayhead();
-  applySimFrame(SIM.currentHour);   // live preview while scrubbing
-  updateDateBanner();
+// ── CONFLICTOS ───────────────────────────────────────────────────────────────
+function tlAbs(day, h) { return dateToMs(day.date || '2026-01-01') / 3600000 + h; }
+function tlPip(x, z, P) { let ins = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const xi = P[i][0], zi = P[i][1], xj = P[j][0], zj = P[j][1]; if (((zi > z) !== (zj > z)) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) ins = !ins; } return ins; }
+function tlComputeIssues() {
+  const iss = new Map(), add = (c, m) => { if (!iss.has(c.id)) iss.set(c.id, []); const l = iss.get(c.id); if (!l.includes(m)) l.push(m); };
+  const day = activeDay(); TL.issues = iss; if (!day) return iss;
+  try {
+    const dur = dayDuration(), eps = 1e-4, ch = day.chips, blk = c => day.rows.find(r => r.id === c.rowId)?.block || null, res = {};
+    ch.forEach(c => {
+      const b = blk(c), bd = c.blockData || {};
+      if (c.endH > dur + eps) add(c, 'Termina después de la duración del día (' + fmtHour(dur) + ')');
+      if (b === 'A' && bd.foundationName && !foundations.has(bd.foundationKey)) add(c, 'El cimiento «' + bd.foundationName + '» no existe en el modelo cargado');
+      if (b === 'B' && bd.liftPositionName && !liftPositions.has(bd.liftPositionKey)) add(c, 'La posición «' + bd.liftPositionName + '» no existe');
+      if (b === 'C' && bd.visStateName && !chipVisState(c)) add(c, 'El estado de visibilidad «' + bd.visStateName + '» no existe');
+      if (b === 'E' && bd.capsuleName && !chipCapsule(c)) add(c, 'La secuencia de grúa «' + bd.capsuleName + '» no existe');
+      if (b === 'F' && bd.excName && !excFind(bd.excKey)) add(c, 'La excavación «' + bd.excName + '» no existe');
+      let key = null, what = '';
+      if (b === 'A' && foundations.has(bd.foundationKey)) { key = 'A' + bd.foundationKey; what = 'el mismo cimiento'; }
+      else if (b === 'B' && liftPositions.has(bd.liftPositionKey)) { key = 'B' + bd.liftPositionKey; what = 'la misma pieza'; }
+      else if (b === 'D' && bd.cam) { key = 'D'; what = 'otra cámara'; }
+      else if (b === 'E') { const cap = chipCapsule(c); if (cap && cap.craneId != null) { key = 'E' + cap.craneId; what = 'la misma grúa' + (cap.craneName ? ' (' + cap.craneName + ')' : ''); } }
+      else if (b === 'F' && excFind(bd.excKey)) { key = 'F' + bd.excKey; what = 'la misma excavación'; }
+      if (key) (res[key] = res[key] || { what, list:[] }).list.push(c);
+      if (c.dep) { const p = ch.find(x => x.id === c.dep.id);
+        if (!p) add(c, 'La dependencia apunta a un evento que ya no existe');
+        else if (c.startH < p.endH + (c.dep.lag || 0) - eps) add(c, 'Empieza antes de terminar «' + p.label + '»'); }
+    });
+    Object.values(res).forEach(({ what, list }) => { for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      const a = list[i], b = list[j]; if (a.startH < b.endH - eps && b.startH < a.endH - eps) { add(a, 'Se traslapa con «' + b.label + '» en ' + what); add(b, 'Se traslapa con «' + a.label + '» en ' + what); } } });
+    // Rellenos: después de terminar la excavación y los cimientos que quedan dentro (en todos los días)
+    const fills = ch.filter(c => blk(c) === 'F' && c.blockData?.mode === 'fill' && excFind(c.blockData.excKey));
+    if (fills.length) {
+      const all = []; SIM.days.forEach(d => d.chips.forEach(c => { const r = d.rows.find(r => r.id === c.rowId); if (r) all.push({ c, b:r.block, s:tlAbs(d, c.startH), e:tlAbs(d, c.endH) }); }));
+      fills.forEach(fc => {
+        const it = excFind(fc.blockData.excKey), s0 = tlAbs(day, fc.startH);
+        const digs = all.filter(o => o.b === 'F' && o.c.blockData?.excKey === it.id && o.c.blockData?.mode !== 'fill');
+        if (!digs.length) add(fc, 'No hay excavación de «' + it.name + '» en la línea de tiempo');
+        else if (!digs.some(o => o.e <= s0 + eps)) add(fc, 'El relleno empieza antes de terminar la excavación de «' + it.name + '»');
+        const inside = new Set();
+        foundations.forEach((f, k) => { if (!f.object) return; const bx = new THREE.Box3().setFromObject(f.object); if (bx.isEmpty()) return;
+          if (tlPip((bx.min.x + bx.max.x) / 2, (bx.min.z + bx.max.z) / 2, it.pts)) inside.add(k); });
+        all.filter(o => o.b === 'A' && inside.has(o.c.blockData?.foundationKey) && o.e > s0 + eps)
+          .forEach(o => add(fc, 'El relleno empieza antes de terminar «' + (foundations.get(o.c.blockData.foundationKey)?.name || o.c.label) + '»'));
+      });
+    }
+  } catch (e) { console.warn('tlComputeIssues', e); }
+  return iss;
 }
 
-(function setupScrubber(){
-  const ruler  = document.getElementById('tl-ruler');
-  const ph     = document.getElementById('tl-playhead');
-  let scrubbing = false;
+// ── CARRILES (eventos traslapados en la misma fila bajan a otro carril) ──────
+function tlLanes(chips) {
+  const s = [...chips].sort((a, b) => a.startH - b.startH || a.endH - b.endH), ends = [], lane = new Map();
+  s.forEach(c => { let i = ends.findIndex(e => e <= c.startH + 1e-6); if (i < 0) { i = ends.length; ends.push(0); } ends[i] = c.endH; lane.set(c.id, i); });
+  return { lane, n:Math.max(1, ends.length) };
+}
+function tlChipHTML(c, block, col, lane, pph, bad) {
+  const inf = tlChipInfo(c, block), x = c.startH * pph, w = Math.max(8, (c.endH - c.startH) * pph);
+  const cls = 'tl-chip' + (inf.ok ? '' : ' nc') + (bad ? ' bad' : '') + (TL.sel.has(c.id) ? ' sel' : '');
+  const txt = (bad ? '⚠ ' : '') + (inf.icon ? inf.icon + ' ' : '') + c.label + (inf.extra ? ' · ' + inf.extra : '');
+  return '<div class="' + cls + '" data-chip="' + c.id + '" style="left:' + x + 'px;width:' + w + 'px;top:' + (3 + lane * TL.laneH) + 'px;--cc:' + col + '">'
+    + '<i class="cp"></i><span class="ct">' + tlEsc(txt) + '</span><u class="hl"></u><u class="hr"></u></div>';
+}
 
-  const startScrub = e => {
-    scrubbing = true;
-    if (ph) ph.classList.add('scrubbing');
-    if (SIM.playing) simPause();
-    tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX);
-    e.preventDefault();
-  };
-  const moveScrub = e => { if (scrubbing) tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX); };
-  const endScrub  = () => { scrubbing = false; if (ph) ph.classList.remove('scrubbing'); };
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function tlRender() {
+  const rowsEl = $tl('tl-rows'), tlEl = $tl('sim-timeline'); if (!rowsEl || !tlEl) return;
+  tlEl.style.setProperty('--tl-lw', TL.lw + 'px');
+  tlEl.classList.toggle('ov', TL.overview);
+  document.body.classList.toggle('tl-open', timelineOpen); document.body.style.setProperty('--tlh', tlEl.offsetHeight + 'px');
+  tlDayBtn(); tlTipHide(); if (TL.hover) { TL.hover = null; tlHl3D(null); }
+  if (TL.overview) { tlRenderOverview(); return; }
+  const day = activeDay(); TL.chipEls.clear();
+  if (!day) { rowsEl.innerHTML = ''; return; }
+  const dur = dayDuration(), pph = tlPxPerHour(), W = dur * pph;
+  $tl('tl-grid').style.width = (TL.lw + W) + 'px';
+  // regla adaptativa
+  const major = [0.25, 0.5, 1, 2, 3, 6, 12].find(s => s * pph >= 58) || 12;
+  const minor = [1 / 12, 0.25, 0.5, 1, 2, 3].find(s => s < major && Math.abs(major / s - Math.round(major / s)) < 1e-6 && s * pph >= 9);
+  const ruler = $tl('tl-ruler'); ruler.style.width = W + 'px';
+  let rh = '';
+  if (minor) for (let h = 0; h <= dur + 1e-6; h += minor) rh += '<i style="left:' + (h * pph) + 'px"></i>';
+  for (let h = 0; h <= dur + 1e-6; h += major) rh += '<b style="left:' + (h * pph) + 'px">' + fmtHour(h) + '</b>';
+  ruler.innerHTML = rh + '<div id="tl-ph-head"></div>';
+  rowsEl.style.setProperty('--tl-gmaj', (major * pph) + 'px');
+  rowsEl.style.setProperty('--tl-gmin', ((minor || major) * pph) + 'px');
 
-  if (ruler) {
-    ruler.addEventListener('mousedown', startScrub);
-    ruler.addEventListener('touchstart', startScrub, {passive:false});
+  const iss = tlComputeIssues();
+  let html = '';
+  BLOCK_ORDER.forEach(block => {
+    const bRows = day.rows.filter(r => r.block === block); if (!bRows.length) return;
+    const meta = BLOCK_META[block], col = meta.color, rowIds = new Set(bRows.map(r => r.id));
+    const bChips = day.chips.filter(c => rowIds.has(c.rowId));
+    if (TL.hideEmpty && !bChips.length) return;
+    const badge = '<span class="tl-bdg" style="background:' + col + '">' + BLOCK_SHORT[block] + '</span>';
+    if (TL.collapsed.has(block)) {
+      let marks = '';
+      bChips.forEach(c => marks += '<span class="tl-mini' + (iss.has(c.id) ? ' bad' : '') + (TL.sel.has(c.id) ? ' sel' : '') + '" data-chip="' + c.id + '" style="left:' + (c.startH * pph) + 'px;width:' + Math.max(3, (c.endH - c.startH) * pph) + 'px;background:' + col + '" title="' + tlEsc(c.label + ' · ' + fmtHour(c.startH) + '–' + fmtHour(c.endH)) + '"></span>');
+      html += '<div class="tl-r blk col"><div class="tl-lab" style="--bc:' + col + '"><button class="tl-car" onclick="tlToggleBlock(\'' + block + '\')" title="Desplegar bloque">▸</button>' + badge
+        + '<span class="tl-bn">' + meta.name + '</span><span class="tl-cnt">' + bChips.length + ' evt' + (bRows.length > 1 ? ' · ' + bRows.length + ' filas' : '') + '</span></div>'
+        + '<div class="tl-trk mini" data-block="' + block + '" style="width:' + W + 'px">' + marks + '</div></div>';
+      return;
+    }
+    bRows.forEach((row, i) => {
+      const rc = bChips.filter(c => c.rowId === row.id), L = tlLanes(rc), h = L.n * TL.laneH + 6;
+      let chipsH = ''; rc.forEach(c => chipsH += tlChipHTML(c, block, col, L.lane.get(c.id), pph, iss.has(c.id)));
+      html += '<div class="tl-r' + (i === 0 ? ' blk' : '') + '" style="height:' + h + 'px"><div class="tl-lab" style="--bc:' + col + '">'
+        + (i === 0 ? '<button class="tl-car" onclick="tlToggleBlock(\'' + block + '\')" title="Plegar bloque">▾</button>' + badge : '<span class="tl-ind"></span>')
+        + '<input class="tl-rn" value="' + tlEsc(row.label) + '" title="' + tlEsc(meta.name + ' — ' + row.label) + '" oninput="tlRenameRow(\'' + row.id + '\',this.value)">'
+        + '<span class="tl-cnt">' + (rc.length || '') + '</span>'
+        + '<span class="tl-ra"><button onclick="tlAddChip(\'' + row.id + '\')" title="Agregar evento en la hora actual">＋</button>'
+        + '<button onclick="tlAddRow(\'' + block + '\')" title="Agregar fila paralela al bloque">≡</button>'
+        + '<button class="x" onclick="tlRemoveRow(\'' + row.id + '\')" title="Eliminar fila">✕</button></span>'
+        + '</div><div class="tl-trk" data-row="' + row.id + '" style="width:' + W + 'px">' + chipsH + '</div></div>';
+    });
+  });
+  rowsEl.innerHTML = html || '<div class="tl-empty">No hay bloques visibles · desactiva «Ocultar bloques sin eventos» en ▦ Bloques</div>';
+  rowsEl.querySelectorAll('.tl-chip').forEach(el => { const c = day.chips.find(x => x.id === el.dataset.chip); if (c) TL.chipEls.set(c.id, { el, c, p:el.querySelector('.cp') }); });
+  tlDrawDeps(); tlWarnBtn(); TL.lastH = -1; updatePlayhead(); tlMiniRender(); tlPropsRefresh();
+}
+function tlPlaceChip(c) { const o = TL.chipEls.get(c.id); if (!o) return; const pph = tlPxPerHour(); o.el.style.left = c.startH * pph + 'px'; o.el.style.width = Math.max(8, (c.endH - c.startH) * pph) + 'px'; }
+
+window.tlToggleBlock = function(b, collapse) {
+  const c = collapse ?? !TL.collapsed.has(b);
+  if (c) TL.collapsed.add(b); else TL.collapsed.delete(b);
+  tlSaveUI(); tlRender();
+};
+window.tlToggleRowCollapse = function(rowId) { const b = rowBlock(rowId); if (b) tlToggleBlock(b); };
+window.tlCollapseAll = function(v) {
+  const present = BLOCK_ORDER.filter(b => SIM.rows.some(r => r.block === b));
+  if (v === undefined) v = present.some(b => !TL.collapsed.has(b));
+  present.forEach(b => v ? TL.collapsed.add(b) : TL.collapsed.delete(b)); tlSaveUI(); tlRender();
+};
+window.tlSetHideEmpty = function(v) {
+  TL.hideEmpty = v ?? !TL.hideEmpty; const c = $tl('tl-hide-empty'); if (c) c.checked = TL.hideEmpty;
+  $tl('tl-he-btn')?.classList.toggle('active', TL.hideEmpty); tlSaveUI(); tlRender();
+};
+
+// ── DEPENDENCIAS ─────────────────────────────────────────────────────────────
+function tlApplyDeps() {
+  const ch = SIM.chips, dur = dayDuration();
+  for (let pass = 0; pass < 60; pass++) {
+    let changed = false;
+    ch.forEach(c => { if (!c.dep) return; const p = ch.find(x => x.id === c.dep.id); if (!p) return;
+      const len = c.endH - c.startH, want = Math.max(0, Math.min(dur - len, p.endH + (c.dep.lag || 0)));
+      if (Math.abs(want - c.startH) > 1e-6) { c.startH = want; c.endH = want + len; changed = true; } });
+    if (!changed) break;
   }
-  if (ph) {
-    ph.addEventListener('mousedown', startScrub);
-    ph.addEventListener('touchstart', startScrub, {passive:false});
-  }
-  window.addEventListener('mousemove', moveScrub);
-  window.addEventListener('touchmove', moveScrub, {passive:false});
-  window.addEventListener('mouseup', endScrub);
-  window.addEventListener('touchend', endScrub);
-})();
+}
+function tlDescendants(id) { const out = new Set(); let grow = true; while (grow) { grow = false; SIM.chips.forEach(c => { if (c.dep && (c.dep.id === id || out.has(c.dep.id)) && !out.has(c.id)) { out.add(c.id); grow = true; } }); } return out; }
+function tlDrawDeps() {
+  const svg = $tl('tl-deps'), grid = $tl('tl-grid'); if (!svg || !grid) return;
+  const g = grid.getBoundingClientRect();
+  svg.setAttribute('width', grid.scrollWidth); svg.setAttribute('height', grid.scrollHeight);
+  let s = '<defs><marker id="tl-arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#ffd54f"/></marker>'
+    + '<marker id="tl-arr-bad" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#ef5350"/></marker></defs>';
+  SIM.chips.forEach(c => {
+    if (!c.dep) return; const A = TL.chipEls.get(c.dep.id), B = TL.chipEls.get(c.id); if (!A || !B) return;
+    const ra = A.el.getBoundingClientRect(), rb = B.el.getBoundingClientRect();
+    const x1 = ra.right - g.left, y1 = ra.top + ra.height / 2 - g.top, x2 = rb.left - g.left, y2 = rb.top + rb.height / 2 - g.top;
+    const bad = (TL.issues.get(c.id) || []).some(m => m.startsWith('Empieza antes')), dx = Math.max(16, Math.abs(x2 - x1) / 2);
+    s += '<path class="' + (bad ? 'bad' : '') + '" d="M' + x1 + ',' + y1 + ' C' + (x1 + dx) + ',' + y1 + ' ' + (x2 - dx) + ',' + y2 + ' ' + (x2 - 1) + ',' + y2 + '" marker-end="url(#tl-arr' + (bad ? '-bad' : '') + ')"/>';
+  });
+  svg.innerHTML = s;
+}
 
-// ── ADD CHIP (startH in hours; default 1h long)
+// ── AVISOS ───────────────────────────────────────────────────────────────────
+function tlWarnBtn() {
+  const b = $tl('tl-warn-btn'); if (!b) return; const n = TL.issues.size;
+  b.style.display = n ? '' : 'none'; b.textContent = '⚠ ' + n; b.title = n + ' evento(s) con conflictos — clic para recorrerlos';
+}
+window.tlNextIssue = function() {
+  const ids = SIM.chips.filter(c => TL.issues.has(c.id)).sort((a, b) => a.startH - b.startH).map(c => c.id); if (!ids.length) return;
+  TL._iss = ((TL._iss ?? -1) + 1) % ids.length; const id = ids[TL._iss];
+  tlSelect([id]); tlToast('⚠ ' + (TL.issues.get(id) || []).join(' · '));
+};
+
+// ── SELECCIÓN ────────────────────────────────────────────────────────────────
+function tlSelRefresh() { TL.chipEls.forEach(({ el }, id) => el.classList.toggle('sel', TL.sel.has(id))); }
+function tlClearSel() { TL.sel.clear(); tlSelRefresh(); chipEditorClose(); tlPropsRefresh(); }
+window.tlClearSel = tlClearSel;
+window.tlSelect = function(ids) {
+  let ch = false;
+  ids.forEach(id => { const c = SIM.chips.find(x => x.id === id), b = c && rowBlock(c.rowId); if (b && TL.collapsed.has(b)) { TL.collapsed.delete(b); ch = true; } });
+  if (ch) tlSaveUI();
+  TL.sel = new Set(ids); tlRender();
+  if (ids.length === 1) chipEditorOpen(ids[0]); else tlPropsRefresh();
+  const e0 = TL.chipEls.get(ids[0]); if (e0) requestAnimationFrame(() => tlScrollIntoView(e0.el));
+};
+function tlScrollIntoView(el) {
+  const body = $tl('tl-body'); if (!body || !el) return;
+  const b = body.getBoundingClientRect(), r = el.getBoundingClientRect(), left = b.left + TL.lw + 10, right = b.right - 18;
+  if (r.left < left) body.scrollLeft -= (left - r.left) + 30;
+  else if (r.right > right) body.scrollLeft += Math.min(r.left - left - 30, r.right - right + 30);
+  const top = b.top + 26, bot = b.bottom - 16;
+  if (r.top < top) body.scrollTop -= top - r.top + 8; else if (r.bottom > bot) body.scrollTop += r.bottom - bot + 8;
+  tlMiniView();
+}
+
+// ── PANEL DE PROPIEDADES (editor acoplado / selección múltiple) ─────────────
+function tlPropsRefresh() {
+  const p = $tl('tl-props'), ed = $tl('chip-editor'), multi = $tl('tl-multi'); if (!p || !ed || !multi) return;
+  [...TL.sel].forEach(id => { if (!SIM.chips.some(c => c.id === id)) TL.sel.delete(id); });
+  const n = TL.sel.size;
+  if (n > 1) {
+    if (ed.style.display === 'flex') { ed.style.display = 'none'; _editChipId = null; }
+    const sel = SIM.chips.filter(c => TL.sel.has(c.id)), a = Math.min(...sel.map(c => c.startH)), b = Math.max(...sel.map(c => c.endH));
+    const blocks = [...new Set(sel.map(c => rowBlock(c.rowId)))].map(k => '<span class="tl-bdg" style="background:' + BLOCK_META[k].color + '">' + BLOCK_SHORT[k] + '</span>').join('');
+    multi.innerHTML = '<div class="ce-head"><span class="ce-title">▣ ' + n + ' eventos seleccionados</span><button class="ce-x" onclick="tlClearSel()" title="Quitar selección (Esc)">✕</button></div>'
+      + '<div class="mm-info">' + blocks + ' <span>' + fmtHour(a) + ' → ' + fmtHour(b) + '</span></div>'
+      + '<div class="mm-lbl">Mover el grupo</div><div class="mm-row">'
+      + '<button onclick="tlNudge(-1)">−1 h</button><button onclick="tlNudge(-0.25)">−15 min</button><button onclick="tlNudge(0.25)">+15 min</button><button onclick="tlNudge(1)">+1 h</button></div>'
+      + '<div class="mm-lbl">Acciones</div><div class="mm-grid">'
+      + '<button onclick="tlDuplicate()" title="Ctrl+D">⧉ Duplicar</button><button onclick="tlCopy()" title="Ctrl+C">⎘ Copiar</button>'
+      + '<button onclick="tlChainSel()" title="Cada evento empieza al terminar el anterior (por hora de inicio)">⛓ Encadenar</button><button onclick="tlUnchainSel()">✂ Sin dependencias</button>'
+      + '<button onclick="tlAlignSel(\'start\')">⇤ Alinear inicios</button><button onclick="tlAlignSel(\'end\')">⇥ Alinear finales</button>'
+      + '<button class="del" onclick="tlDeleteSel()" title="Supr">🗑 Eliminar</button></div>'
+      + '<div class="mm-hint">Shift/Ctrl+clic añade o quita · Shift+arrastrar en vacío selecciona por área</div>';
+    multi.style.display = 'flex';
+  } else multi.style.display = 'none';
+  const show = n > 1 || ed.style.display === 'flex';
+  if (p.classList.contains('show') !== show) { p.classList.toggle('show', show); requestAnimationFrame(() => { tlDrawDeps(); tlMiniView(); }); }
+}
+function tlEdHead(chip) {
+  const h = $tl('ce-head-title'); if (!h) return; const b = rowBlock(chip.rowId), m = BLOCK_META[b] || { name:'', color:'#fff' };
+  h.innerHTML = '<span class="tl-bdg" style="background:' + m.color + '">' + (BLOCK_SHORT[b] || '?') + '</span> ' + tlEsc(m.name);
+  const iss = TL.issues.get(chip.id) || [], w = $tl('ce-issues');
+  if (w) { w.innerHTML = iss.map(t => '<div>⚠ ' + tlEsc(t) + '</div>').join(''); w.style.display = iss.length ? 'block' : 'none'; }
+}
+function tlDepPopulate(chip) {
+  const sel = $tl('ce-dep'); if (!sel) return; const desc = tlDescendants(chip.id);
+  sel.innerHTML = '<option value="">— Sin dependencia —</option>' + SIM.chips.filter(c => c.id !== chip.id && !desc.has(c.id)).sort((a, b) => a.endH - b.endH)
+    .map(c => '<option value="' + c.id + '"' + (chip.dep?.id === c.id ? ' selected' : '') + '>' + tlEsc((BLOCK_SHORT[rowBlock(c.rowId)] || '?') + ' · ' + c.label + ' (termina ' + fmtHour(c.endH) + ')') + '</option>').join('');
+  $tl('ce-dep-lag').value = fmtHour(chip.dep?.lag || 0);
+}
+
+// ── OPERACIONES SOBRE LA SELECCIÓN ───────────────────────────────────────────
+function tlNewChipId() { let id; do { SIM.chipCounter++; id = 'chip_' + SIM.chipCounter; } while (SIM.chips.some(c => c.id === id)); return id; }
+function tlNewChip(rowId, a, b) {
+  tlPushUndo();
+  const id = tlNewChipId(), chip = { id, rowId, label:'Evento ' + SIM.chipCounter, desc:'', startH:a, endH:b, blockData:{} };
+  SIM.chips.push(chip); TL.sel = new Set([id]); tlRender(); chipEditorOpen(id);
+  setTimeout(() => { const n = $tl('ce-name'); if (n) { n.focus(); n.select(); } }, 40);
+  return chip;
+}
 window.tlAddChip = function(rowId, startH) {
   if (startH === undefined || startH === null) startH = SIM.currentHour || 0;
   startH = Math.max(0, Math.min(dayDuration() - 0.25, startH));
-  SIM.chipCounter++;
-  const chip = { id:'chip_'+SIM.chipCounter, rowId, label:'Evento '+SIM.chipCounter, desc:'',
-                 startH: startH, endH: Math.min(dayDuration(), startH + 1), blockData:{} };
-  SIM.chips.push(chip);
-  tlRender();
-  chipEditorOpen(chip.id, window.innerWidth/2, 200);
+  tlNewChip(rowId, startH, Math.min(dayDuration(), startH + 1));
 };
+window.tlDeleteSel = function() {
+  if (!TL.sel.size) return; tlPushUndo(); const n = TL.sel.size, gone = new Set(TL.sel);
+  SIM.chips = SIM.chips.filter(c => !gone.has(c.id)); SIM.chips.forEach(c => { if (c.dep && gone.has(c.dep.id)) delete c.dep; });
+  TL.sel.clear(); chipEditorClose(); tlRender(); tlToast('🗑 ' + n + ' evento(s) eliminado(s) · Ctrl+Z para deshacer');
+};
+window.tlCopy = function(quiet) {
+  const sel = SIM.chips.filter(c => TL.sel.has(c.id)); if (!sel.length) return;
+  const base = Math.min(...sel.map(c => c.startH));
+  TL.clip = { base, items:sel.map(c => ({ c:JSON.parse(JSON.stringify(c)), block:rowBlock(c.rowId) })) };
+  if (!quiet) tlToast('⎘ ' + sel.length + ' evento(s) copiado(s) · Ctrl+V pega en la hora actual (también en otro día)');
+};
+window.tlPaste = function(at) {
+  if (!TL.clip || !activeDay()) return; tlPushUndo(); const dur = dayDuration();
+  const span = Math.max(...TL.clip.items.map(i => i.c.endH)) - TL.clip.base;
+  at = Math.max(0, Math.min(Math.max(0, dur - span), at ?? SIM.currentHour));
+  const idMap = new Map(), out = [];
+  TL.clip.items.forEach(({ c, block }) => {
+    const n = JSON.parse(JSON.stringify(c)); n.id = tlNewChipId(); idMap.set(c.id, n.id);
+    if (!SIM.rows.some(r => r.id === n.rowId && r.block === block)) n.rowId = firstRowOfBlock(block) || SIM.rows[0].id;
+    n.startH = at + (c.startH - TL.clip.base); n.endH = Math.min(dur, at + (c.endH - TL.clip.base)); out.push(n);
+  });
+  out.forEach(n => { if (n.dep) { if (idMap.has(n.dep.id)) n.dep.id = idMap.get(n.dep.id); else delete n.dep; } });
+  SIM.chips.push(...out); tlApplyDeps();
+  tlSelect(out.map(n => n.id));
+};
+window.tlDuplicate = function() {
+  const sel = SIM.chips.filter(c => TL.sel.has(c.id)); if (!sel.length) return;
+  const keep = TL.clip; tlCopy(true); tlPaste(Math.max(...sel.map(c => c.endH))); TL.clip = keep;
+};
+window.tlNudge = function(dh) {
+  const sel = SIM.chips.filter(c => TL.sel.has(c.id)); if (!sel.length) return; tlPushUndo();
+  const dur = dayDuration(), a = Math.min(...sel.map(c => c.startH)), b = Math.max(...sel.map(c => c.endH));
+  dh = Math.max(-a, Math.min(dur - b, dh)); sel.forEach(c => { c.startH += dh; c.endH += dh; }); tlAfterEdit(sel);
+};
+window.tlChainSel = function() {
+  const sel = SIM.chips.filter(c => TL.sel.has(c.id)).sort((a, b) => a.startH - b.startH); if (sel.length < 2) return; tlPushUndo();
+  for (let i = 1; i < sel.length; i++) { if (tlDescendants(sel[i].id).has(sel[i - 1].id)) continue; sel[i].dep = { id:sel[i - 1].id, lag:0 }; }
+  tlApplyDeps(); tlRender(); tlToast('⛓ ' + sel.length + ' eventos encadenados: mover uno arrastra a los siguientes');
+};
+window.tlUnchainSel = function() { tlPushUndo(); SIM.chips.forEach(c => { if (TL.sel.has(c.id)) delete c.dep; }); tlRender(); };
+window.tlAlignSel = function(mode) {
+  const sel = SIM.chips.filter(c => TL.sel.has(c.id)); if (sel.length < 2) return; tlPushUndo(); const dur = dayDuration();
+  if (mode === 'start') { const a = Math.min(...sel.map(c => c.startH)); sel.forEach(c => { const l = c.endH - c.startH; c.startH = a; c.endH = Math.min(dur, a + l); }); }
+  else { const b = Math.max(...sel.map(c => c.endH)); sel.forEach(c => { const l = c.endH - c.startH; c.endH = b; c.startH = Math.max(0, b - l); }); }
+  tlAfterEdit(sel);
+};
+function tlAfterEdit(changed) {
+  const ids = new Set(changed.map(c => c.id));
+  changed.forEach(c => { if (c.dep) { const p = SIM.chips.find(x => x.id === c.dep.id); if (p && !ids.has(p.id)) c.dep.lag = Math.max(0, Math.round((c.startH - p.endH) * 60) / 60); } });
+  tlApplyDeps(); tlRender();
+  if (_editChipId) { const c = SIM.chips.find(x => x.id === _editChipId); if (c) { $tl('ce-start').value = fmtHour(c.startH); $tl('ce-end').value = fmtHour(c.endH); $tl('ce-dep-lag').value = fmtHour(c.dep?.lag || 0); } }
+}
+
+// ── ARRASTRES: mover / cambiar duración / crear / seleccionar por área ──────
+function tlHourAt(clientX) { return (clientX - $tl('tl-ruler').getBoundingClientRect().left) / tlPxPerHour(); }
+function tlSnapTargets(excl) { const t = [SIM.currentHour]; SIM.chips.forEach(c => { if (!excl.has(c.id)) t.push(c.startH, c.endH); }); return t; }
+function tlSnapH(h, targets, free) {
+  if (free) return { h:Math.round(h * 60) / 60, g:null };
+  const thr = 8 / tlPxPerHour(); let best = null, bd = thr;
+  targets.forEach(t => { const d = Math.abs(t - h); if (d < bd) { bd = d; best = t; } });
+  return best !== null ? { h:best, g:best } : { h:Math.round(h * 4) / 4, g:null };
+}
+function tlGuide(h) { const g = $tl('tl-guide'); if (!g) return; if (h === null || h === undefined) { g.style.display = 'none'; return; } g.style.display = 'block'; g.style.left = (TL.lw + h * tlPxPerHour()) + 'px'; }
+function tlDragListen(onMove, onUp) {
+  const up = ev => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', up); document.body.classList.remove('tl-dragging'); tlGuide(null); onUp(ev); };
+  window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', up);
+}
+function tlOnDown(e) {
+  if (e.button !== 0) return;
+  const t = e.target; if (t.closest('input,button,select')) return;
+  const mini = t.closest('.tl-mini'); if (mini) { tlSelect([mini.dataset.chip]); return; }
+  const trk = t.closest('.tl-trk'); if (!trk) return;
+  if (trk.classList.contains('mini')) { tlToggleBlock(trk.dataset.block, false); return; }
+  e.preventDefault();
+  const chipEl = t.closest('.tl-chip');
+  if (chipEl) return tlChipDown(e, chipEl);
+  if (e.shiftKey || e.ctrlKey || e.metaKey) return tlMarquee(e);
+  tlCreateDrag(e, trk);
+}
+function tlChipDown(e, el) {
+  const id = el.dataset.chip, chip = SIM.chips.find(c => c.id === id); if (!chip) return;
+  if (e.shiftKey || e.ctrlKey || e.metaKey) { if (TL.sel.has(id)) TL.sel.delete(id); else TL.sel.add(id); tlSelRefresh(); if (TL.sel.size === 1) chipEditorOpen([...TL.sel][0]); else { chipEditorClose(); } tlPropsRefresh(); return; }
+  const edge = e.target.classList.contains('hl') ? 'l' : e.target.classList.contains('hr') ? 'r' : null;
+  const wasSel = TL.sel.has(id);
+  if (!wasSel || edge) { TL.sel = new Set([id]); tlSelRefresh(); }
+  const group = edge ? [chip] : SIM.chips.filter(c => TL.sel.has(c.id));
+  const orig = new Map(group.map(c => [c.id, { s:c.startH, e:c.endH }]));
+  const targets = tlSnapTargets(new Set(orig.keys())), dur = dayDuration(), pph = tlPxPerHour(), blk = rowBlock(chip.rowId);
+  const minS = Math.min(...[...orig.values()].map(v => v.s)), maxE = Math.max(...[...orig.values()].map(v => v.e));
+  const x0 = e.clientX, y0 = e.clientY; let moved = false, hoverRow = chip.rowId;
+  tlDragListen(ev => {
+    if (!moved && Math.abs(ev.clientX - x0) < 4 && Math.abs(ev.clientY - y0) < 4) return;
+    if (!moved) { moved = true; tlPushUndo(); document.body.classList.add('tl-dragging'); tlTipHide(); }
+    const dH = (ev.clientX - x0) / pph, o = orig.get(chip.id);
+    if (edge) {
+      const minLen = ev.altKey ? 1 / 60 : 0.25;
+      if (edge === 'l') { const s = tlSnapH(o.s + dH, targets, ev.altKey); chip.startH = Math.max(0, Math.min(o.e - minLen, s.h)); tlGuide(s.g); }
+      else { const s = tlSnapH(o.e + dH, targets, ev.altKey); chip.endH = Math.min(dur, Math.max(o.s + minLen, s.h)); tlGuide(s.g); }
+      tlPlaceChip(chip);
+    } else {
+      const s1 = tlSnapH(o.s + dH, targets, ev.altKey), s2 = tlSnapH(o.e + dH, targets, ev.altKey);
+      let shift;
+      if (s2.g !== null && (s1.g === null || Math.abs(s2.h - (o.e + dH)) < Math.abs(s1.h - (o.s + dH)))) { shift = s2.h - o.e; tlGuide(s2.g); }
+      else { shift = s1.h - o.s; tlGuide(s1.g); }
+      shift = Math.max(-minS, Math.min(dur - maxE, shift));
+      group.forEach(c => { const v = orig.get(c.id); c.startH = v.s + shift; c.endH = v.e + shift; tlPlaceChip(c); });
+      if (group.length === 1) {
+        const under = document.elementFromPoint(ev.clientX, ev.clientY), tr = under && under.closest('.tl-trk[data-row]');
+        document.querySelectorAll('.tl-trk.drop').forEach(t => t.classList.remove('drop'));
+        if (tr && rowBlock(tr.dataset.row) === blk) { hoverRow = tr.dataset.row; if (hoverRow !== chip.rowId) tr.classList.add('drop'); }
+      }
+    }
+    tlDrawDeps(); tlTipShow(ev, chip, true);
+  }, () => {
+    document.querySelectorAll('.tl-trk.drop').forEach(t => t.classList.remove('drop')); tlTipHide();
+    if (!moved) { TL.sel = new Set([id]); tlSelRefresh(); chipEditorOpen(id); return; }
+    if (hoverRow !== chip.rowId) chip.rowId = hoverRow;
+    tlAfterEdit(group);
+  });
+}
+function tlCreateDrag(e, trk) {
+  const rowId = trk.dataset.row, targets = tlSnapTargets(new Set()), pph = tlPxPerHour(), dur = dayDuration();
+  const h0 = Math.max(0, Math.min(dur, tlSnapH(tlHourAt(e.clientX), targets, e.altKey).h)); let h1 = h0, moved = false;
+  const ghost = document.createElement('div'); ghost.className = 'tl-ghost';
+  ghost.style.cssText = 'left:' + h0 * pph + 'px;width:0;--cc:' + (BLOCK_META[rowBlock(rowId)]?.color || '#fff');
+  const x0 = e.clientX;
+  tlDragListen(ev => {
+    if (!moved && Math.abs(ev.clientX - x0) < 5) return;
+    if (!moved) { moved = true; trk.appendChild(ghost); document.body.classList.add('tl-dragging'); }
+    const s = tlSnapH(tlHourAt(ev.clientX), targets, ev.altKey); h1 = Math.max(0, Math.min(dur, s.h)); tlGuide(s.g);
+    const a = Math.min(h0, h1), b = Math.max(h0, h1);
+    ghost.style.left = a * pph + 'px'; ghost.style.width = (b - a) * pph + 'px'; ghost.textContent = fmtHour(a) + ' – ' + fmtHour(b) + ' · ' + tlDurStr(b - a);
+  }, () => {
+    ghost.remove();
+    if (!moved) { tlClearSel(); return; }
+    const a = Math.min(h0, h1), b = Math.max(h0, h1); if (b - a < 1 / 12) return;
+    tlNewChip(rowId, a, b);
+  });
+}
+function tlMarquee(e) {
+  const grid = $tl('tl-grid'), m = $tl('tl-marquee'), g0 = grid.getBoundingClientRect();
+  const x0 = e.clientX - g0.left, y0 = e.clientY - g0.top, base = new Set(TL.sel);
+  m.style.display = 'block'; Object.assign(m.style, { left:x0 + 'px', top:y0 + 'px', width:'0', height:'0' });
+  tlDragListen(ev => {
+    const g = grid.getBoundingClientRect(), x1 = ev.clientX - g.left, y1 = ev.clientY - g.top;
+    const L = Math.min(x0, x1), T = Math.min(y0, y1), R = Math.max(x0, x1), B = Math.max(y0, y1);
+    Object.assign(m.style, { left:L + 'px', top:T + 'px', width:(R - L) + 'px', height:(B - T) + 'px' });
+    TL.sel = new Set(base);
+    TL.chipEls.forEach(({ el }, id) => { const r = el.getBoundingClientRect(), rl = r.left - g.left, rt = r.top - g.top; if (rl < R && rl + r.width > L && rt < B && rt + r.height > T) TL.sel.add(id); });
+    tlSelRefresh();
+  }, () => {
+    m.style.display = 'none';
+    if (TL.sel.size === 1) chipEditorOpen([...TL.sel][0]); else { chipEditorClose(); tlPropsRefresh(); }
+  });
+}
+
+// ── TOOLTIP + RESALTADO 3D ───────────────────────────────────────────────────
+function tlTipHTML(c) {
+  const b = rowBlock(c.rowId), m = BLOCK_META[b] || { name:'', color:'#fff' }, inf = tlChipInfo(c, b), iss = TL.issues.get(c.id) || [];
+  const dep = c.dep && SIM.chips.find(x => x.id === c.dep.id);
+  return '<b>' + tlEsc(c.label) + '</b><div style="color:' + m.color + '">' + m.name + (inf.extra ? ' · ' + tlEsc(inf.extra) : '') + '</div>'
+    + '<div>' + fmtHour(c.startH) + ' → ' + fmtHour(c.endH) + ' <span class="tt-d">(' + tlDurStr(c.endH - c.startH) + ')</span></div>'
+    + (dep ? '<div>⛓ después de «' + tlEsc(dep.label) + '»' + (c.dep.lag ? ' + ' + tlDurStr(c.dep.lag) : '') + '</div>' : '')
+    + (inf.ok ? '' : '<div class="tt-w">◌ Falta configurar — clic para editar</div>')
+    + iss.map(t => '<div class="tt-e">⚠ ' + tlEsc(t) + '</div>').join('')
+    + (c.desc ? '<div class="tt-d">' + tlEsc(c.desc) + '</div>' : '');
+}
+function tlTipShow(ev, c, short) {
+  let t = $tl('tl-tip'); if (!t) { t = document.createElement('div'); t.id = 'tl-tip'; document.body.appendChild(t); }
+  t.innerHTML = short ? '<b>' + fmtHour(c.startH) + ' → ' + fmtHour(c.endH) + '</b> <span class="tt-d">' + tlDurStr(c.endH - c.startH) + '</span>' : tlTipHTML(c);
+  t.style.display = 'block';
+  const w = t.offsetWidth, h = t.offsetHeight;
+  t.style.left = Math.min(innerWidth - w - 8, ev.clientX + 14) + 'px';
+  t.style.top = Math.max(8, ev.clientY - h - 12) + 'px';
+}
+function tlTipHide() { const t = $tl('tl-tip'); if (t) t.style.display = 'none'; }
+let _tlBox = null;
+function tlHlTargets(chip) {
+  const bd = chip.blockData || {}, blk = rowBlock(chip.rowId), box = new THREE.Box3(); let objs = [];
+  if (blk === 'A' && foundations.get(bd.foundationKey)?.object) objs = [foundations.get(bd.foundationKey).object];
+  else if (blk === 'B' && liftPositions.get(bd.liftPositionKey)?.object) objs = [liftPositions.get(bd.liftPositionKey).object];
+  else if (blk === 'C') { const st = chipVisState(chip); if (st) objs = st.targets.flatMap(t => vsResolve(t)); }
+  else if (blk === 'E') { const cap = chipCapsule(chip), cr = cap && cranes.find(k => k.id === cap.craneId); if (cr) objs = [cr.object]; }
+  else if (blk === 'F') { const it = excFind(bd.excKey); if (it) it.pts.forEach(p => { box.expandByPoint(new THREE.Vector3(p[0], it.ntp - it.depth, p[1])); box.expandByPoint(new THREE.Vector3(p[0], it.ntp + 0.3, p[1])); }); }
+  objs.forEach(o => { if (!o) return; o.updateMatrixWorld(true); box.union(new THREE.Box3().setFromObject(o)); });
+  return box;
+}
+function tlHl3D(chip) {
+  if (!_tlBox) { _tlBox = new THREE.Box3Helper(new THREE.Box3(), 0xffffff); _tlBox.name = '__tl_hl__'; _tlBox.userData.__helper = true; _tlBox.material.depthTest = false; _tlBox.renderOrder = 999; _tlBox.visible = false; }
+  if (!_tlBox.parent) scene.add(_tlBox);
+  if (!chip || SIM.playing) { _tlBox.visible = false; return; }
+  let b; try { b = tlHlTargets(chip); } catch (e) { b = new THREE.Box3(); }
+  if (b.isEmpty()) { _tlBox.visible = false; return; }
+  _tlBox.box.copy(b); _tlBox.material.color.set(BLOCK_META[rowBlock(chip.rowId)]?.color || '#ffffff'); _tlBox.visible = true;
+}
+// Alt+clic en el modelo → seleccionar sus eventos
+function tlChipMatches(d, c, chain, point) {
+  const r = d.rows.find(r => r.id === c.rowId), bd = c.blockData || {}; if (!r) return false;
+  if (r.block === 'A') return chain.has(foundations.get(bd.foundationKey)?.object);
+  if (r.block === 'B') return chain.has(liftPositions.get(bd.liftPositionKey)?.object);
+  if (r.block === 'C') { const st = chipVisState(c); return !!st && st.targets.some(t => vsResolve(t).some(n => chain.has(n))); }
+  if (r.block === 'E') { const cap = chipCapsule(c), cr = cap && cranes.find(k => k.id === cap.craneId); return !!cr && chain.has(cr.object); }
+  if (r.block === 'F') { const it = excFind(bd.excKey); return !!it && tlPip(point.x, point.z, it.pts); }
+  return false;
+}
+window.tlPick3D = function(clientX, clientY) {
+  const r = canvas.getBoundingClientRect(), ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2((clientX - r.left) / r.width * 2 - 1, -(clientY - r.top) / r.height * 2 + 1), camera);
+  const vis = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+  const hit = ray.intersectObjects(scene.children, true).find(h => h.object.isMesh && !h.object.userData.__helper && vis(h.object));
+  if (!hit) return null;
+  const chain = new Set(); for (let o = hit.object; o; o = o.parent) chain.add(o);
+  const nm = hit.object.name || hit.object.parent?.name || 'objeto';
+  const d0 = activeDay(); let found = d0 ? d0.chips.filter(c => tlChipMatches(d0, c, chain, hit.point)).map(c => c.id) : [], dayHit = null;
+  if (!found.length) for (const d of tlSortedDays()) { const ids = d.chips.filter(c => tlChipMatches(d, c, chain, hit.point)).map(c => c.id); if (ids.length) { dayHit = d; found = ids; break; } }
+  if (!found.length) { tlToast('«' + nm + '» no tiene eventos en la línea de tiempo'); return []; }
+  if (dayHit) setActiveDay(dayHit.id);
+  tlSelect(found); tlToast('🔎 ' + found.length + ' evento(s) de «' + nm + '»' + (dayHit ? ' en ' + (dayHit.label || dayHit.date) : ''));
+  return found;
+};
+
+// ── MINIMAPA ─────────────────────────────────────────────────────────────────
+function tlMiniRender() {
+  const mm = $tl('tl-minimap'); if (!mm) return; const dur = dayDuration(); let s = '';
+  SIM.chips.forEach(c => { const b = rowBlock(c.rowId), i = Math.max(0, BLOCK_ORDER.indexOf(b));
+    s += '<i style="left:' + (c.startH / dur * 100) + '%;width:' + Math.max(0.3, (c.endH - c.startH) / dur * 100) + '%;top:' + (1.5 + i * 1.75) + 'px;background:' + (TL.issues.has(c.id) ? '#ef5350' : (BLOCK_META[b]?.color || '#888')) + '"></i>'; });
+  mm.innerHTML = s + '<div id="tl-mm-view"></div><div id="tl-mm-ph"></div>';
+  tlMiniView(); const ph = $tl('tl-mm-ph'); if (ph) ph.style.left = (SIM.currentHour / dur * 100) + '%';
+}
+function tlMiniView() {
+  const v = $tl('tl-mm-view'), body = $tl('tl-body'); if (!v || !body) return;
+  const W = tlTrackWidth(), vw = Math.max(1, body.clientWidth - TL.lw);
+  v.style.left = Math.min(100, body.scrollLeft / W * 100) + '%'; v.style.width = Math.min(100, vw / W * 100) + '%';
+}
+
+// ── VISTA DE TODOS LOS DÍAS ──────────────────────────────────────────────────
+window.tlToggleOverview = function(on) {
+  TL.overview = on ?? !TL.overview; $tl('tl-ov-btn')?.classList.toggle('active', TL.overview);
+  tlSelRefresh(); tlRender(); if (!TL.overview) requestAnimationFrame(() => { tlDrawDeps(); tlMiniView(); });
+};
+function tlRenderOverview() {
+  const ov = $tl('tl-overview'); if (!ov) return; const days = tlSortedDays();
+  const maxDur = Math.max(24, ...days.map(d => d.durationHours || 24)), step = maxDur > 24 ? 4 : 2;
+  let ticks = ''; for (let h = 0; h <= maxDur; h += step) ticks += '<b style="left:' + (h / maxDur * 100) + '%">' + fmtHour(h) + '</b>';
+  const legend = BLOCK_ORDER.map(b => '<span class="tl-bdg" title="' + BLOCK_META[b].name + '" style="background:' + BLOCK_META[b].color + '">' + BLOCK_SHORT[b] + '</span>').join('');
+  let s = '<div class="ov-r ov-head"><div class="ov-lab"><b>' + days.length + ' días · ' + days.reduce((n, d) => n + d.chips.length, 0) + ' eventos</b><span class="ov-leg">' + legend + '</span></div><div class="ov-trk ov-ruler" style="--ovs:' + (step / maxDur * 100) + '%">' + ticks + '</div></div>';
+  days.forEach((d, k) => {
+    const gap = k > 0 && d.date && days[k - 1].date ? daysDiff(days[k - 1].date, d.date) - 1 : 0;
+    if (gap > 0) s += '<div class="ov-gap">· ' + gap + ' día(s) sin actividad ·</div>';
+    let bars = '';
+    d.chips.forEach(c => { const r = d.rows.find(r => r.id === c.rowId); if (!r) return; const i = Math.max(0, BLOCK_ORDER.indexOf(r.block));
+      bars += '<i data-day="' + d.id + '" data-chip="' + c.id + '" title="' + tlEsc(BLOCK_META[r.block].name + ' · ' + c.label + ' · ' + fmtHour(c.startH) + '–' + fmtHour(c.endH)) + '" style="left:' + (c.startH / maxDur * 100) + '%;width:' + Math.max(0.35, (c.endH - c.startH) / maxDur * 100) + '%;top:' + (3 + i * 4.6) + 'px;background:' + BLOCK_META[r.block].color + '"></i>'; });
+    const dd = d.durationHours || 24;
+    s += '<div class="ov-r' + (d.id === SIM.activeDayId ? ' act' : '') + '" data-day="' + d.id + '"><div class="ov-lab"><b>' + tlEsc(d.label || '') + '</b><span>' + tlFmtDate(d.date) + ' · ' + d.chips.length + ' evt · ' + (d.speed || 1).toFixed(1) + '×</span></div>'
+      + '<div class="ov-trk" style="--ovs:' + (step / maxDur * 100) + '%">' + bars + (dd < maxDur ? '<s style="left:' + (dd / maxDur * 100) + '%"></s>' : '') + '</div></div>';
+  });
+  ov.innerHTML = s + '<div class="ov-hint">Clic en un día para abrirlo · clic en una barra para ir a ese evento</div>';
+}
+
+// ── DÍAS: selector desplegable ───────────────────────────────────────────────
+function tlDayBtn() {
+  const n = $tl('tl-day-name'), d = activeDay(); if (!n || !d) return;
+  const k = tlSortedDays().findIndex(x => x.id === d.id) + 1;
+  n.textContent = (d.label || 'Día') + ' · ' + tlFmtDate(d.date); $tl('tl-day-btn').title = 'Día ' + k + ' de ' + SIM.days.length + ' — clic para cambiar, renombrar o agregar días';
+}
+function renderDayStrip() {
+  if (new Set(SIM.days.map(d => d.id)).size !== SIM.days.length) simFixDayIds();   // datos ya cargados con ids repetidos
+  tlDayBtn(); if (TL.overview) tlRenderOverview();
+  const m = $tl('tlm-day'); if (!m) return;
+  let s = '<div class="tlm-h">Días de la simulación <span>' + SIM.days.length + '</span></div><div class="tlm-days">';
+  tlSortedDays().forEach(d => {
+    const a = d.id === SIM.activeDayId;
+    s += '<div class="tlm-day' + (a ? ' act' : '') + '" onclick="if(!event.target.closest(\'input,button\')){setActiveDay(\'' + d.id + '\');tlMenuClose();}">'
+      + '<input class="dl" value="' + tlEsc(d.label) + '" oninput="tlSetDayLabel(\'' + d.id + '\',this.value)" title="Nombre del día">'
+      + '<input class="dd" type="date" value="' + (d.date || '') + '" onchange="tlSetDayDate(\'' + d.id + '\',this.value)">'
+      + '<span class="de">' + d.chips.length + ' evt</span>'
+      + '<span class="ds" title="Velocidad de reproducción">⏩<input type="range" min="0.2" max="4" step="0.1" value="' + (d.speed || 1) + '" oninput="tlSetDaySpeed(\'' + d.id + '\',this.value)"><em id="dayspeed-val-' + d.id + '">' + (d.speed || 1).toFixed(1) + '×</em></span>'
+      + '<span class="dh" title="Duración editable del día">⏱<input type="number" min="1" max="48" step="1" value="' + (d.durationHours || 24) + '" onchange="tlSetDayDuration(\'' + d.id + '\',this.value)">h</span>'
+      + '<button onclick="tlDupDay(\'' + d.id + '\')" title="Duplicar día">⧉</button><button onclick="exportDayJSON(\'' + d.id + '\')" title="Exportar este día">↓</button><button class="x" onclick="tlRemoveDay(\'' + d.id + '\')" title="Eliminar día">✕</button></div>';
+  });
+  m.innerHTML = s + '</div><div class="tlm-foot"><button onclick="tlAddDay();tlMenuClose()">＋ Agregar día</button><button onclick="tlToggleOverview(true);tlMenuClose()">📅 Ver todos los días</button></div>';
+}
+window.tlStepDay = function(k) { const s = tlSortedDays(), i = s.findIndex(d => d.id === SIM.activeDayId), n = s[i + k]; if (n) setActiveDay(n.id); };
+window.tlDupDay = function(id) {
+  const src = SIM.days.find(d => d.id === id); if (!src) return;
+  const last = tlSortedDays().pop(), d = JSON.parse(JSON.stringify(src));
+  d.id = simNewDayId(); d.date = addDays(last.date || src.date, 1); d.label = (src.label || 'Día') + ' (copia)';
+  SIM.days.push(d); SIM.days.sort((a, b) => (a.date || '').localeCompare(b.date || '')); setActiveDay(d.id); tlMenuClose(); tlToast('⧉ Día duplicado: ' + d.label);
+};
+window.tlExportDay = function() { exportDayJSON(SIM.activeDayId); };
+
+// ── MENÚS DESPLEGABLES ───────────────────────────────────────────────────────
+window.tlMenu = function(name, btn) {
+  const m = $tl('tlm-' + name); if (!m) return;
+  if (TL.menu === name) { tlMenuClose(); return; } tlMenuClose();
+  if (name === 'day') renderDayStrip();
+  m.style.display = 'block'; const r = btn.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
+  let top = r.bottom + 4; if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  m.style.top = top + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px';
+  TL.menu = name; TL._menuBtn = btn; btn.classList.add('open');
+};
+window.tlMenuClose = function() { document.querySelectorAll('.tl-menu').forEach(m => m.style.display = 'none'); TL._menuBtn?.classList.remove('open'); TL.menu = null; };
+
+// ── CABEZAL DE REPRODUCCIÓN ──────────────────────────────────────────────────
+function updatePlayhead() {
+  const h = SIM.currentHour, pph = tlPxPerHour(), dur = dayDuration();
+  const ph = $tl('tl-playhead'); if (ph) ph.style.left = (TL.lw + tlHourOffset(h) * pph) + 'px';
+  const hd = $tl('tl-ph-head'); if (hd) { hd.style.left = (tlHourOffset(h) * pph) + 'px'; hd.textContent = fmtHour(h); }
+  const disp = $tl('tl-time-display'); if (disp) disp.textContent = fmtHour(h);
+  const mm = $tl('tl-mm-ph'); if (mm) mm.style.left = (h / dur * 100) + '%';
+  if (Math.abs(h - TL.lastH) > 1e-5) {
+    TL.lastH = h;
+    TL.chipEls.forEach(({ el, c, p }) => { const live = h >= c.startH && h < c.endH; el.classList.toggle('live', live); el.classList.toggle('done', h > 0 && h >= c.endH);
+      if (p) p.style.width = live ? ((h - c.startH) / Math.max(1e-6, c.endH - c.startH) * 100) + '%' : '0'; });
+  }
+  if (SIM.playing && timelineOpen && !TL.overview) {
+    const body = $tl('tl-body'); if (body) { const x = tlHourOffset(h) * pph, vw = body.clientWidth - TL.lw;
+      if (x < body.scrollLeft || x > body.scrollLeft + vw - 30) { body.scrollLeft = Math.max(0, x - vw * 0.25); tlMiniView(); } }
+  }
+}
+function tlScrubToClientX(clientX) {
+  const ruler = $tl('tl-ruler'); if (!ruler) return;
+  SIM.currentHour = Math.max(0, Math.min(dayDuration(), (clientX - ruler.getBoundingClientRect().left) / tlPxPerHour()));
+  updatePlayhead(); applySimFrame(SIM.currentHour); updateDateBanner();
+}
+(function setupScrubber(){
+  const ruler = $tl('tl-ruler'); let scrubbing = false;
+  const startScrub = e => { scrubbing = true; if (SIM.playing) simPause(); tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX); e.preventDefault(); };
+  const moveScrub = e => { if (scrubbing) tlScrubToClientX(e.touches ? e.touches[0].clientX : e.clientX); };
+  const endScrub = () => { scrubbing = false; };
+  if (ruler) { ruler.addEventListener('mousedown', startScrub); ruler.addEventListener('touchstart', startScrub, { passive:false }); }
+  window.addEventListener('mousemove', moveScrub); window.addEventListener('touchmove', moveScrub, { passive:false });
+  window.addEventListener('mouseup', endScrub); window.addEventListener('touchend', endScrub);
+})();
+
+// ── INICIALIZACIÓN: eventos de la rejilla, teclado, minimapa, ancho de etiquetas ─
+(function tlInit() {
+  const props = $tl('tl-props'), ed = $tl('chip-editor'); if (props && ed) props.appendChild(ed);
+  const rows = $tl('tl-rows'), body = $tl('tl-body'), mm = $tl('tl-minimap'), ov = $tl('tl-overview');
+  if (rows) {
+    rows.addEventListener('mousedown', tlOnDown);
+    rows.addEventListener('click', e => e.stopPropagation());
+    rows.addEventListener('dblclick', e => {
+      const trk = e.target.closest('.tl-trk[data-row]'); if (!trk || e.target.closest('.tl-chip')) return;
+      tlAddChip(trk.dataset.row, Math.floor(tlHourAt(e.clientX) * 4) / 4);
+    });
+    rows.addEventListener('mouseover', e => {
+      const el = e.target.closest('.tl-chip'); if (!el || document.body.classList.contains('tl-dragging')) return;
+      const c = SIM.chips.find(x => x.id === el.dataset.chip); if (!c) return;
+      if (TL.hover !== c.id) { TL.hover = c.id; tlHl3D(c); }
+      tlTipShow(e, c);
+    });
+    rows.addEventListener('mousemove', e => { const t = $tl('tl-tip'); if (!t || t.style.display !== 'block' || document.body.classList.contains('tl-dragging')) return;
+      t.style.left = Math.min(innerWidth - t.offsetWidth - 8, e.clientX + 14) + 'px'; t.style.top = Math.max(8, e.clientY - t.offsetHeight - 12) + 'px'; });
+    rows.addEventListener('mouseleave', () => { TL.hover = null; tlTipHide(); tlHl3D(null); });
+    rows.addEventListener('mouseout', e => { const el = e.target.closest('.tl-chip'); if (el && !el.contains(e.relatedTarget)) { TL.hover = null; tlTipHide(); tlHl3D(null); } });
+  }
+  if (body) {
+    body.addEventListener('scroll', tlMiniView, { passive:true });
+    body.addEventListener('wheel', e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); tlSetZoom(TL.zoom * Math.exp(-e.deltaY * 0.0015), e.clientX); }, { passive:false });
+  }
+  if (mm) mm.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const go = ev => { const r = mm.getBoundingClientRect(), f = (ev.clientX - r.left) / r.width; body.scrollLeft = f * tlTrackWidth() - (body.clientWidth - TL.lw) / 2; tlMiniView(); };
+    go(e); tlDragListen(go, () => {});
+  });
+  if (ov) ov.addEventListener('click', e => {
+    const bar = e.target.closest('i[data-chip]'), row = e.target.closest('.ov-r[data-day]'); if (!bar && !row) return;
+    e.stopPropagation(); const dayId = bar ? bar.dataset.day : row.dataset.day;
+    TL.overview = false; $tl('tl-ov-btn')?.classList.remove('active');
+    if (dayId !== SIM.activeDayId) setActiveDay(dayId);
+    if (bar) tlSelect([bar.dataset.chip]); else tlRender();
+  });
+  const lh = $tl('tl-lw-h');
+  if (lh) lh.addEventListener('mousedown', e => {
+    e.preventDefault(); const x0 = e.clientX, w0 = TL.lw;
+    tlDragListen(ev => { TL.lw = Math.max(110, Math.min(380, w0 + ev.clientX - x0)); $tl('sim-timeline').style.setProperty('--tl-lw', TL.lw + 'px'); },
+      () => { tlSaveUI(); tlRender(); });
+  });
+  const ce = $tl('chip-editor');
+  if (ce) ce.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); chipEditorSave(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); e.target.blur?.(); tlClearSel(); }
+  });
+  document.addEventListener('mousedown', e => {
+    TL.focus = !!e.target.closest('#sim-timeline, .tl-menu');
+    if (TL.menu && !e.target.closest('.tl-menu, .tl-dd')) tlMenuClose();
+  }, true);
+  window.addEventListener('keydown', e => {
+    if (!timelineOpen || !TL.focus) return;
+    if (/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return;
+    if (CE.active || DIMV.open) return;
+    const k = e.key, mod = e.ctrlKey || e.metaKey, kl = (k || '').toLowerCase(); let done = true;
+    if (k === 'Delete' || k === 'Backspace') { if (TL.sel.size) tlDeleteSel(); }
+    else if (mod && kl === 'z') tlUndo(e.shiftKey);
+    else if (mod && kl === 'y') tlUndo(true);
+    else if (mod && kl === 'c') tlCopy();
+    else if (mod && kl === 'v') tlPaste();
+    else if (mod && kl === 'd') tlDuplicate();
+    else if (mod && kl === 'a') { TL.sel = new Set(SIM.chips.map(c => c.id)); tlSelRefresh(); chipEditorClose(); tlPropsRefresh(); }
+    else if ((k === 'ArrowLeft' || k === 'ArrowRight') && TL.sel.size) tlNudge((k === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 0.25));
+    else if (k === 'Escape') { if (TL.menu) tlMenuClose(); else tlClearSel(); }
+    else if (e.code === 'Space') simPlay();
+    else if (!mod && kl === 'f') tlFit();
+    else done = false;
+    if (done) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  canvas.addEventListener('click', e => { if (e.altKey && timelineOpen && state.modelLoaded) { e.stopImmediatePropagation(); tlPick3D(e.clientX, e.clientY); } });
+  const he = $tl('tl-hide-empty'); if (he) he.checked = TL.hideEmpty;
+  $tl('tl-he-btn')?.classList.toggle('active', TL.hideEmpty);
+})();
 
 // ── CHIP EDITOR (with element linking) ───────────────────────────────────────
 let _editChipId = null;
@@ -5613,7 +6322,7 @@ function chipEditorPopulateLinks(chip) {
     liftPositions.forEach((cfg, key) => {
       const opt = document.createElement('option');
       opt.value = key;
-      opt.textContent = cfg.name.replace(/_/g,' ');
+      opt.textContent = lpLabel(cfg);
       if (chip.blockData?.liftPositionKey === key) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -5718,9 +6427,9 @@ function chipEditorPopulateStages(chip) {
     const cfg = liftPositions.get(linkKey);
     if (stageLbl) stageLbl.textContent = 'Posición destino del movimiento';
     stageWrap.style.display = 'flex';
-    stageSel.innerHTML = '';
+    stageSel.innerHTML = '<option value="-1"' + (chip.blockData?.poseIndex === -1 ? ' selected' : '') + '>↺ Posición original (como viene en el GLB)</option>';
     if (!cfg.poses || cfg.poses.length === 0) {
-      stageSel.innerHTML = '<option value="">⚠ Esta pieza no tiene posiciones guardadas</option>';
+      stageSel.innerHTML += '<option value="" disabled>— sin otras posiciones guardadas —</option>';
     } else {
       cfg.poses.forEach((p, i) => {
         const opt = document.createElement('option');
@@ -5750,13 +6459,16 @@ window.chipEditorOpen = function(chipId, x, y) {
   document.getElementById('ce-end').value   = fmtHour(chip.endH);
   document.getElementById('ce-desc').value  = chip.desc || '';
   chipEditorPopulateLinks(chip);
-  ed.style.left = Math.min(x, window.innerWidth-250) + 'px';
-  ed.style.top  = Math.min(y + 10, window.innerHeight-360) + 'px';
+  const props = document.getElementById('tl-props'); if (props && ed.parentElement !== props) props.appendChild(ed);
   ed.style.display = 'flex';
+  if (TL.sel.size !== 1 || !TL.sel.has(chipId)) { TL.sel = new Set([chipId]); tlSelRefresh(); }
+  tlDepPopulate(chip); tlEdHead(chip); tlPropsRefresh();
+  const ce = TL.chipEls.get(chipId); if (ce) requestAnimationFrame(() => tlScrollIntoView(ce.el));
 };
 
 window.chipEditorSave = function() {
   const chip = SIM.chips.find(c => c.id === _editChipId); if (!chip) return chipEditorClose();
+  tlPushUndo();
   chip.label     = document.getElementById('ce-name').value  || chip.label;
   const sH = parseHourStr(document.getElementById('ce-start').value);
   const eH = parseHourStr(document.getElementById('ce-end').value);
@@ -5783,12 +6495,12 @@ window.chipEditorSave = function() {
   } else if (block === 'B') {
     if (linkKey) {
       chip.blockData.liftPositionKey = linkKey;
-      if (liftPositions.has(linkKey)) chip.blockData.liftPositionName = liftPositions.get(linkKey).name;
+      if (liftPositions.has(linkKey)) { chip.blockData.liftPositionName = liftPositions.get(linkKey).name; chip.blockData.liftPositionPath = liftPositions.get(linkKey).path ?? null; }
       const poseVal = document.getElementById('ce-stage').value;
       if (poseVal !== '') chip.blockData.poseIndex = parseInt(poseVal);
       else delete chip.blockData.poseIndex;
     } else {
-      delete chip.blockData.liftPositionKey; delete chip.blockData.liftPositionName;
+      delete chip.blockData.liftPositionKey; delete chip.blockData.liftPositionName; delete chip.blockData.liftPositionPath;
       delete chip.blockData.poseIndex;
     }
   } else if (block === 'C') {
@@ -5817,14 +6529,21 @@ window.chipEditorSave = function() {
       delete chip.blockData.capsuleKey; delete chip.blockData.capsuleName;
     }
   }
-  chipEditorClose(); tlRender();
+  // dependencia: empieza al terminar otro evento (+ desfase)
+  const depId = document.getElementById('ce-dep').value;
+  if (depId && SIM.chips.some(c => c.id === depId) && !tlDescendants(chip.id).has(depId)) {
+    const lag = parseHourStr(String(document.getElementById('ce-dep-lag').value || '0').replace('+', '').trim());
+    chip.dep = { id: depId, lag: Math.max(0, lag || 0) };
+  } else delete chip.dep;
+  tlApplyDeps(); tlRender(); chipEditorOpen(chip.id); tlToast('✓ «' + chip.label + '» guardado');
 };
 
-window.chipEditorDelete = function() { SIM.chips = SIM.chips.filter(c => c.id !== _editChipId); chipEditorClose(); tlRender(); };
-window.chipEditorClose  = function() { document.getElementById('chip-editor').style.display='none'; _editChipId=null; };
+window.chipEditorDelete = function() { if (!_editChipId) return; TL.sel = new Set([_editChipId]); tlDeleteSel(); };
+window.chipEditorClose  = function() { document.getElementById('chip-editor').style.display='none'; _editChipId=null; tlPropsRefresh(); };
 document.addEventListener('click', e => {
   if (_ceVisPicking || vsPick3D) return;   // don't close editor while picking in 3D
   const ed = document.getElementById('chip-editor');
+  if (ed && ed.parentElement && ed.parentElement.id === 'tl-props') return;   // acoplado: se cierra con ✕ / Esc
   if (ed && !ed.contains(e.target) && ed.style.display==='flex') chipEditorClose();
 });
 
@@ -7512,7 +8231,7 @@ window.simPlay = function() {
 function startDayPlayback(onDayEnd, resetFirst) {
   SIM.playing = true;
   document.getElementById('tl-play-btn').textContent = '⏸ Pausar';
-  if (typeof liftPhysicsEnabled !== 'undefined') _physicsDefault = liftPhysicsEnabled;
+  _physicsDefault = liftPhysicsUser;   // la reproducción nunca cambia la preferencia del botón
   // Only reset when asked (single-day playback, or the very first day of a
   // continuous "play all" run). In continuous mode later days keep the
   // accumulated state (e.g. concrete poured on a previous day stays poured).
@@ -7609,6 +8328,7 @@ window.simRewind = function() { simPause(); SIM.currentHour = 0; updatePlayhead(
 function easeInOut(t) { return t<=0?0 : t>=1?1 : t*t*(3-2*t); }
 
 function applySimFrame(hour) {
+  _simHourNow = hour;
   // ── Titles ──
   const activeTitles = SIM.chips.filter(c => rowBlock(c.rowId)==='title' && c.startH<=hour && c.endH>=hour);
   if (activeTitles.length) showScreenTitle(activeTitles[0].label, activeTitles[0].desc);
@@ -7652,18 +8372,33 @@ function applySimFrame(hour) {
     } else applyFoundationProgress(key, Math.min(1, Math.max(0, level)));
   });
 
+  // ── Block B (función: se vuelve a aplicar si una grúa suelta una pieza en este cuadro) ──
+  const applyBlockB = () => {
   // ── Block B: piece movement (keyframe interpolation, eased) ──
+  // La pieza que cuelga de una grúa (enganchada por una secuencia) la mueve la grúa y su física, no el Bloque B.
+  const _held = attachedBySim ? attachedObject : null;
+  const _isRel = (a, b) => { if (!a || !b) return false; for (let p = a; p; p = p.parent) if (p === b) return true; for (let p = b; p; p = p.parent) if (p === a) return true; return false; };
+  const _isHeld = o => { if (!_held || !o) return false; for (let p = o; p; p = p.parent) if (p === _held) return true; for (let p = _held; p; p = p.parent) if (p === o) return true; return false; };
   liftPositions.forEach((cfg, key) => {
+    if (_isHeld(cfg.object)) return;
     const chips = SIM.chips
       .filter(c => rowBlock(c.rowId)==='B' && c.blockData?.liftPositionKey===key && typeof c.blockData.poseIndex==='number')
       .sort((a,b) => a.startH - b.startH);
     if (!chips.length) return;
+    // la grúa la soltó después del último evento B ya iniciado → queda donde la dejó la grúa
+    let dropped = null; for (const [o, d] of simDropped) if (_isRel(o, cfg.object)) dropped = d;
+    if (dropped) {
+      if (dropped.hour > hour + 1e-6) { for (const [o] of simDropped) if (_isRel(o, cfg.object)) simDropped.delete(o); }
+      else { const lastB = chips.filter(c => c.startH <= hour).pop(); if (!lastB || lastB.startH < dropped.hour - 1e-6) return; }
+    }
 
     let curPose = { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz };
-    let applied = false;
+    let applied = false, usedDrop = false;
     for (const chip of chips) {
-      const targetPose = cfg.poses[chip.blockData.poseIndex];
+      const targetPose = lpTargetPose(cfg, chip.blockData.poseIndex);
       if (!targetPose) continue;
+      // el primer evento B tras el «soltar» de la grúa parte de donde la dejó la grúa
+      if (dropped && !usedDrop && dropped.poses && dropped.poses[key] && chip.startH >= dropped.hour - 1e-6) { curPose = dropped.poses[key]; usedDrop = true; }
       if (hour < chip.startH) {
         applyPoseToObject(cfg, curPose); applied = true; break;
       } else if (hour >= chip.endH) {
@@ -7675,6 +8410,9 @@ function applySimFrame(hour) {
     }
     if (!applied) applyPoseToObject(cfg, curPose);
   });
+
+  };
+  applyBlockB();
 
   // ── Block C: visibility — apply the last visibility chip that has started ──
   // Each chip references a named visibility STATE (set of targets + show/hide).
@@ -7704,20 +8442,34 @@ function applySimFrame(hour) {
     }
   }
 
+  const _dropsBefore = simDropped.size, _dropSig = [...simDropped.values()].map(d => d.hour).join();
   // ── Block E: crane movement capsules — play the active capsule chip ──
   let anyCapsuleActive = false;
   SIM.chips.filter(c => rowBlock(c.rowId)==='E' && c.blockData?.capsuleKey)
     .forEach(chip => {
       const cap = chipCapsule(chip);
       if (!cap || !cap.keyframes.length) return;
-      if (hour < chip.startH || hour > chip.endH) return;   // only during the chip
+      if (hour > chip.endH) {   // terminó: aplicar una vez su estado final (posición de grúas y «soltar»)
+        if (!_capFinal.has(chip.id)) { _capFinal.add(chip.id); const hn = _simHourNow; _simHourNow = chip.endH; _capSettle = !SIM.playing; evalCapsule(cap, 1); _capSettle = false; _simHourNow = hn; }
+        return;
+      }
+      _capFinal.delete(chip.id);
+      if (hour < chip.startH) return;   // only during the chip
       anyCapsuleActive = true;
       // physics is now stored per-keyframe and applied inside evalCapsule
       const p = (hour - chip.startH) / Math.max(0.001, (chip.endH - chip.startH));
       evalCapsule(cap, Math.min(1, Math.max(0, p)));
     });
   // restore physics default when no capsule is currently driving a crane
-  if (!anyCapsuleActive && typeof liftPhysicsEnabled !== 'undefined') liftPhysicsEnabled = _physicsDefault;
+  if (!anyCapsuleActive) setLiftPhysicsEffective(liftPhysicsUser);
+  // si se retrocede antes de la secuencia que enganchó la pieza, se suelta y el Bloque B la vuelve a ubicar
+  if (attachedBySim && attachedObject) {
+    const nm = attachedObject.name;
+    const started = SIM.chips.some(c => rowBlock(c.rowId) === 'E' && hour >= c.startH && (chipCapsule(c)?.keyframes || []).some(k => (k.cranes || []).some(s => s.load && s.load.name === nm) || (k.load && k.load.name === nm)));
+    if (!started) releaseAttached();
+  }
+
+  if (simDropped.size !== _dropsBefore || [...simDropped.values()].map(d => d.hour).join() !== _dropSig) applyBlockB();   // la grúa soltó: el Bloque B parte de esa pose
 
   // ── Block F: excavaciones (hueco, retroexcavadora, acopios) ──
   excFrame(hour);
@@ -7758,14 +8510,20 @@ function gvReset() {   // al reiniciar / detener la simulación
 }
 
 // Linear interpolation between two poses
+// Giro interpolado por el camino más corto (cuaterniones), sin vueltas raras de los ángulos de Euler
+const _lpD = Math.PI / 180;
+function lerpRotDeg(a, b, t) {
+  const qa = new THREE.Quaternion().setFromEuler(new THREE.Euler(a.rx * _lpD, a.ry * _lpD, a.rz * _lpD));
+  const qb = new THREE.Quaternion().setFromEuler(new THREE.Euler(b.rx * _lpD, b.ry * _lpD, b.rz * _lpD));
+  const e = new THREE.Euler().setFromQuaternion(qa.slerp(qb, t));
+  return { rx:e.x / _lpD, ry:e.y / _lpD, rz:e.z / _lpD };
+}
 function lerpPose(a, b, t) {
   return {
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
     z: a.z + (b.z - a.z) * t,
-    rx: a.rx + (b.rx - a.rx) * t,
-    ry: a.ry + (b.ry - a.ry) * t,
-    rz: a.rz + (b.rz - a.rz) * t,
+    ...lerpRotDeg(a, b, t),
   };
 }
 
@@ -7789,6 +8547,8 @@ function applyPoseToObject(cfg, pose) {
 // stale color/position from a previous playback remains.
 function resetToInitialState() {
   hideScreenTitle();
+  if (attachedBySim) releaseAttached();
+  simDropped.clear(); _capFinal.clear();
   foundations.forEach((f, key) => { f.simBaseLevel = 0; applyFoundationProgress(key, 0); });
   liftPositions.forEach((cfg) => {
     applyPoseToObject(cfg, { x:cfg.origX, y:cfg.origY, z:cfg.origZ, rx:cfg.origRx, ry:cfg.origRy, rz:cfg.origRz });
@@ -7832,7 +8592,7 @@ function hideScreenTitle() { document.getElementById('sim-title-overlay')?.class
 function collectBlockDefs() {
   const liftData = [];
   liftPositions.forEach((cfg) => liftData.push({
-    name: cfg.name, isGroup: cfg.isGroup,
+    name: cfg.name, path: cfg.path ?? null, label: cfg.label || null, isGroup: cfg.isGroup,
     origX: cfg.origX, origY: cfg.origY, origZ: cfg.origZ,
     origRx: cfg.origRx, origRy: cfg.origRy, origRz: cfg.origRz,
     poses: cfg.poses || [],
@@ -7846,7 +8606,7 @@ function collectBlockDefs() {
   const capData = [];
   craneCapsules.forEach((cap, id) => capData.push({
     id, name: cap.name, craneId: cap.craneId, craneName: cap.craneName,
-    load: cap.load, physics: cap.physics,
+    load: cap.load, physics: cap.physics, releaseMode: cap.releaseMode || 'auto',
     keyframes: cap.keyframes.map(k => JSON.parse(JSON.stringify(k)))
   }));
   return { foundations: foundData, liftPositions: liftData, visStates: visData, capsules: capData };
@@ -7860,7 +8620,7 @@ function importCapsulesData(entries) {
     const id = e.id || ('cap_' + (++craneCapsuleCounter));
     craneCapsules.set(id, {
       name: e.name||'Secuencia', craneId: e.craneId??null, craneName: e.craneName??null,
-      load: e.load||null, physics: e.physics!==false, keyframes: e.keyframes||[]
+      load: e.load||null, physics: e.physics!==false, releaseMode: e.releaseMode || 'auto', keyframes: e.keyframes||[]
     });
     const m = (id.match(/cap_(\d+)/)||[])[1]; if (m) maxN = Math.max(maxN, parseInt(m));
   });
@@ -7894,7 +8654,7 @@ function serializeDay(day) {
   const chipsOut = (day.chips||[]).map(c => {
     const bd = Object.assign({}, c.blockData);
     if (bd.foundationKey && foundations.has(bd.foundationKey)) { const ff = foundations.get(bd.foundationKey); bd.foundationName = ff.name; bd.foundationPath = ff.path ?? null; }
-    if (bd.liftPositionKey && liftPositions.has(bd.liftPositionKey)) bd.liftPositionName = liftPositions.get(bd.liftPositionKey).name;
+    if (bd.liftPositionKey && liftPositions.has(bd.liftPositionKey)) { const lp = liftPositions.get(bd.liftPositionKey); bd.liftPositionName = lp.name; bd.liftPositionPath = lp.path ?? null; }
     if (bd.excKey && excFind(bd.excKey)) bd.excName = excFind(bd.excKey).name;
     delete bd.foundationKey; delete bd.liftPositionKey; delete bd.excKey;
     return Object.assign({}, c, { blockData: bd });
@@ -8116,14 +8876,15 @@ window.exportDayJSON = function(dayId) {
 // Re-resolve chip links from stored names → uuid, scoped to a list of chips
 function relinkChips(chips) {
   const foundByName = {}, foundByPath = {}; foundations.forEach((f, key) => { if (!(f.name in foundByName)) foundByName[f.name] = key; if (f.path != null) foundByPath[f.path] = key; });
-  const liftByName  = {}; liftPositions.forEach((cfg, key) => liftByName[cfg.name] = key);
+  const liftByName  = {}, liftByPath = {}; liftPositions.forEach((cfg, key) => { if (!(cfg.name in liftByName)) liftByName[cfg.name] = key; if (cfg.path != null) liftByPath[cfg.path] = key; });
   const visByName   = {}; visStates.forEach((s, key) => visByName[s.name] = key);
   const capByName   = {}; craneCapsules.forEach((cap, key) => capByName[cap.name] = key);
   (chips||[]).forEach(c => {
     if (!c.blockData) return;
     if (c.blockData.foundationPath != null && foundByPath[c.blockData.foundationPath]) c.blockData.foundationKey = foundByPath[c.blockData.foundationPath];
     else if (c.blockData.foundationName && foundByName[c.blockData.foundationName]) c.blockData.foundationKey = foundByName[c.blockData.foundationName];
-    if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
+    if (c.blockData.liftPositionPath != null && liftByPath[c.blockData.liftPositionPath]) c.blockData.liftPositionKey = liftByPath[c.blockData.liftPositionPath];
+    else if (c.blockData.liftPositionName && liftByName[c.blockData.liftPositionName]) c.blockData.liftPositionKey = liftByName[c.blockData.liftPositionName];
     if (c.blockData.visStateName && visByName[c.blockData.visStateName]) c.blockData.visStateKey = visByName[c.blockData.visStateName];
     if (c.blockData.capsuleName && capByName[c.blockData.capsuleName]) c.blockData.capsuleKey = capByName[c.blockData.capsuleName];
     if (c.blockData.excName) { const ex = EXC.items.find(i => i.name === c.blockData.excName); if (ex) c.blockData.excKey = ex.id; }
@@ -8305,7 +9066,7 @@ function captureCraneKeyframe(cap) {
 
   return {
     label: 'Punto ' + (cap.keyframes.length + 1),
-    physics: (typeof liftPhysicsEnabled !== 'undefined') ? !!liftPhysicsEnabled : true,
+    physics: cap.physics !== false,     // sigue a la secuencia (se puede fijar por punto en el editor)
     cranes: craneSnaps,
     // legacy single-crane fields kept for the editor summary (primary crane)
     pos: (craneSnaps.find(s => s.id === (active?active.id:craneSnaps[0].id)) || craneSnaps[0]).pos,
@@ -8345,14 +9106,17 @@ window.capGotoKeyframe = function(idx) {
   const cap = craneCapsules.get(_capEditingId); if (!cap || !cap.keyframes[idx]) return;
   applyCraneKeyframe(cap, cap.keyframes[idx]);
 };
+window.capSetReleaseMode = function(v) { const cap = craneCapsules.get(_capEditingId); if (cap) cap.releaseMode = v; };
 window.capTogglePhysics = function() {
   const cap = craneCapsules.get(_capEditingId); if (!cap) return;
   cap.physics = !cap.physics;
-  // also flip the live simulator physics so the next captured keyframe reflects it
-  if (typeof liftPhysicsEnabled !== 'undefined' && liftPhysicsEnabled !== cap.physics) {
-    if (typeof window.toggleLiftPhysics === 'function') window.toggleLiftPhysics();
-    else liftPhysicsEnabled = cap.physics;
-  }
+  renderCapsuleEditor(); renderCapsuleList();
+};
+// Fijar la física de un punto: según secuencia → contraria a la secuencia → según secuencia
+window.capToggleKfPhysics = function(idx) {
+  const cap = craneCapsules.get(_capEditingId), kf = cap && cap.keyframes[idx]; if (!kf) return;
+  if (kf.physicsLock) { kf.physicsLock = false; kf.physics = cap.physics !== false; }
+  else { kf.physicsLock = true; kf.physics = !(cap.physics !== false); }
   renderCapsuleEditor();
 };
 
@@ -8380,11 +9144,33 @@ function ensureCraneFromSnapshot(cs) {
 }
 
 // Resolve & (re)apply the attachment a crane snapshot expects this frame.
+// ¿Al soltar se mantiene la pieza donde la dejó la grúa (true) o se apoya en lo que tenga debajo (false)?
+// Automático: se mantiene si después viene un evento del Bloque B para esa pieza (p. ej. «↺ posición original»).
+function simReleaseHold(obj, cap) {
+  const mode = (cap && cap.releaseMode) || 'auto';
+  if (mode === 'hold') return true;
+  if (mode === 'settle') return false;
+  const rel = o => { for (let p = o; p; p = p.parent) if (p === obj) return true; for (let p = obj; p; p = p.parent) if (p === o) return true; return false; };
+  const keys = []; liftPositions.forEach((c, k) => { if (c.object && rel(c.object)) keys.push(k); });
+  let ref = _simHourNow;
+  if (_capPreviewing && !SIM.playing) {   // vista previa: se toma el final del evento de la línea de tiempo que usa esta secuencia
+    const ch = SIM.chips.find(c => rowBlock(c.rowId) === 'E' && chipCapsule(c) === cap); if (!ch) return false; ref = ch.endH;
+  }
+  return SIM.chips.some(c => rowBlock(c.rowId) === 'B' && keys.includes(c.blockData?.liftPositionKey) && typeof c.blockData.poseIndex === 'number' && c.startH >= ref - 1e-6);
+}
+// Al soltar: guardar la hora y la pose en que quedó cada pieza configurada relacionada
+function simDropRecord(obj) {
+  const poses = {};
+  liftPositions.forEach((cfg, k) => { const o = cfg.object; if (!o) return; let rel = false;
+    for (let p = o; p; p = p.parent) if (p === obj) rel = true; for (let p = obj; p; p = p.parent) if (p === o) rel = true;
+    if (rel) poses[k] = lpCurPose(o); });
+  simDropped.set(obj, { hour:_simHourNow, poses });
+}
 function syncCraneAttachment(crane, loadSnap) {
   const currentlyHasThis = attachedObject && attachedCraneId === crane.id;
   if (!loadSnap) {
-    // snapshot says: nothing attached to this crane
-    if (currentlyHasThis) releaseAttached();
+    // snapshot says: nothing attached to this crane → soltar (la pieza se queda donde la dejó la grúa)
+    if (currentlyHasThis) { const o = attachedObject, bySim = attachedBySim; releaseAttached(!simReleaseHold(o, _capEvalCur)); if (bySim) simDropRecord(o); }
     return;
   }
   // snapshot says: attach a named object with a stored offset
@@ -8401,11 +9187,14 @@ function syncCraneAttachment(crane, loadSnap) {
   scene.traverse(o => { if (!target && o.name === wantName) target = o; });
   if (!target) return;
   // release any current load on this crane, then attach
-  if (currentlyHasThis) releaseAttached();
+  if (currentlyHasThis) { const o = attachedObject, bySim = attachedBySim; releaseAttached(!simReleaseHold(o, _capEvalCur)); if (bySim) simDropRecord(o); }
+  simDropped.delete(target);
   attachedObject = target;
   attachedCraneId = crane.id;
   attachedIsAssembly = !!loadSnap.isAssembly;
+  attachedBySim = true;
   attachedOffset.set(loadSnap.offX, loadSnap.offY, loadSnap.offZ);
+  applyCraneState(crane);                       // gancho en su sitio antes de medir el punto de agarre
   if (typeof initLiftPhysics === 'function') initLiftPhysics(target);
 }
 
@@ -8413,9 +9202,7 @@ function syncCraneAttachment(crane, loadSnap) {
 function applyCraneKeyframe(cap, kf) {
   if (!kf) return;
   // physics flag: keyframe wins, capsule's toggle is the fallback
-  if (typeof liftPhysicsEnabled !== 'undefined') {
-    liftPhysicsEnabled = (kf.physics !== undefined) ? !!kf.physics : !!cap.physics;
-  }
+  setLiftPhysicsEffective(kfPhysics(cap, kf));
   const snaps = kf.cranes || [];
   snaps.forEach(cs => {
     const crane = ensureCraneFromSnapshot(cs);
@@ -8432,9 +9219,7 @@ function applyCraneKeyframe(cap, kf) {
 function lerpCraneKeyframe(cap, a, b, t) {
   const e = t<=0?0:t>=1?1:t*t*(3-2*t);
   // physics + attachment come from the segment's START keyframe (discrete)
-  if (typeof liftPhysicsEnabled !== 'undefined') {
-    liftPhysicsEnabled = (a.physics !== undefined) ? !!a.physics : !!cap.physics;
-  }
+  setLiftPhysicsEffective(kfPhysics(cap, a));
   const aSnaps = a.cranes || [], bSnaps = b.cranes || [];
   aSnaps.forEach(csA => {
     const crane = ensureCraneFromSnapshot(csA);
@@ -8461,7 +9246,9 @@ function lerpAngle(a, b, t) {
   while (d < -Math.PI) d += Math.PI*2;
   return a + d * t;
 }
-function evalCapsule(cap, p) {
+let _capEvalCur = null;   // secuencia que se está evaluando (para decidir cómo soltar)
+function evalCapsule(cap, p) { _capEvalCur = cap; try { evalCapsuleInner(cap, p); } finally { _capEvalCur = null; } }
+function evalCapsuleInner(cap, p) {
   const kfs = cap.keyframes; if (!kfs.length) return;
   // migrate any legacy single-crane keyframe to the new multi-crane shape
   kfs.forEach(migrateKeyframe);
@@ -8470,6 +9257,12 @@ function evalCapsule(cap, p) {
   const fp = Math.max(0, Math.min(1, p)) * segs;
   const i = Math.min(segs - 1, Math.floor(fp));
   lerpCraneKeyframe(cap, kfs[i], kfs[i+1], fp - i);
+  // al llegar al último punto rige SU carga: si allí se soltó, se suelta
+  if (p >= 1 && _capSettle && liftPhysicsEnabled && attachedObject && attachedBySim) {   // salto directo: dejar que la carga se asiente antes de soltar
+    const cr = cranes.find(c => c.id === attachedCraneId), hs = cr && cr.object.getObjectByName('hookShape');
+    if (hs) { const hw = new THREE.Vector3(); hs.getWorldPosition(hw); for (let k = 0; k < 240; k++) updateLiftPhysics(attachedObject, hw, 0.05); }
+  }
+  if (p >= 1) (kfs[segs].cranes || []).forEach(cs => { const cr = cranes.find(c => c.id === cs.id); if (cr) syncCraneAttachment(cr, cs.load); });
 }
 
 // Backward-compat: old keyframes only had {pos,rotY,state,load} for one crane.
@@ -8572,6 +9365,12 @@ function renderCapsuleEditor() {
   html += '</select>';
   html += '<button class="bap-btn" style="flex:none;padding:4px 8px;border-color:'+(cap.physics?'rgba(129,199,132,.4)':'rgba(239,83,80,.4)')+';color:'+(cap.physics?'var(--accent2)':'var(--danger)')+';" onclick="capTogglePhysics()">'+(cap.physics?'🟢 Física ON':'🔴 Física OFF')+'</button>';
   html += '</div>';
+  const rm = cap.releaseMode || 'auto';
+  html += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;"><span style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap;">Al soltar:</span>'
+    + '<select onchange="capSetReleaseMode(this.value)" title="Automático: si después hay un evento del Bloque B para la pieza (p. ej. volver a su posición original), se mantiene donde la dejó la grúa; si no, se apoya" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:9px;padding:3px 4px;">'
+    + '<option value="auto"'+(rm==='auto'?' selected':'')+'>Automático (mantener si luego se acomoda)</option>'
+    + '<option value="hold"'+(rm==='hold'?' selected':'')+'>Mantener donde la dejó la grúa</option>'
+    + '<option value="settle"'+(rm==='settle'?' selected':'')+'>Apoyar en lo que tenga debajo</option></select></div>';
   html += '<div style="font-family:var(--mono);font-size:9px;color:var(--crane);letter-spacing:.5px;margin-bottom:5px;">PUNTOS CLAVE ('+cap.keyframes.length+')</div>';
   if (!cap.keyframes.length) {
     html += '<div style="color:var(--text3);font-size:10px;text-align:center;padding:10px;border:1px dashed var(--border);border-radius:6px;">Mueve la grúa con la cruceta y pulsa "Capturar punto".</div>';
@@ -8593,7 +9392,8 @@ function renderCapsuleEditor() {
         + '<button title="Eliminar" onclick="capRemoveKeyframe('+i+')" style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(239,83,80,.25);background:rgba(239,83,80,.06);color:var(--danger);cursor:pointer;font-size:9px;">✕</button>'
         + '</div>'
         + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.5;">'
-        +   '🏗 '+nCranes+' grúa'+(nCranes!==1?'s':'')+' · '+(kf.physics?'🟢 física':'🔴 sin física')
+        +   '🏗 '+nCranes+' grúa'+(nCranes!==1?'s':'')+' · <span onclick="capToggleKfPhysics('+i+')" title="Clic: fijar/liberar la física de este tramo" style="cursor:pointer;text-decoration:underline dotted;">'
+        +   (kf.physicsLock ? (kf.physics?'🟢 física (fija en este punto)':'🔴 sin física (fija en este punto)') : (cap.physics!==false?'⚛ física: según secuencia (ON)':'⚛ física: según secuencia (OFF)')) + '</span>'
         +   ' · '+(loaded?('📦 '+loadNames):'sin carga')
         +   '<br>pluma '+primary.state.armAAngle.toFixed(2)+' · ext '+primary.state.armBExtension.toFixed(1)+' · gancho '+primary.state.hookDepth.toFixed(1)
         + '</div>'
@@ -9047,10 +9847,12 @@ function fdOverlap(obj) {   // cimiento ya registrado que contiene a obj o está
   }
   return null;
 }
-function fdSiblingsSame(obj) {   // otros nodos con el mismo nombre y a la misma profundidad (cimientos iguales)
+// Nombre base: el cargador GLTF renombra los repetidos como «Nombre_1», «Nombre_2»…
+function vsBaseName(n) { return String(n || '').replace(/_\d+$/, ''); }
+function fdSiblingsSame(obj) {   // otros nodos iguales: mismo nombre base, misma profundidad y mismo nº de piezas
   if (!obj.name) return [];
-  const d = vsDepth(obj), out = [];
-  vsModel()?.traverse(o => { if (o !== obj && o.name === obj.name && o.isMesh === obj.isMesh && vsDepth(o) === d) out.push(o); });
+  const d = vsDepth(obj), b = vsBaseName(obj.name), np = obj.isMesh ? 1 : vsMeshesOf(obj).length, out = [];
+  vsModel()?.traverse(o => { if (o !== obj && vsBaseName(o.name) === b && o.isMesh === obj.isMesh && vsDepth(o) === d && (o.isMesh ? 1 : vsMeshesOf(o).length) === np && !vsSkip(o)) out.push(o); });
   return out;
 }
 function fdLabel(f) {
@@ -9455,10 +10257,10 @@ window.addLiftPosToTimeline = function(key) {
   const start = SIM.currentHour || 0;
   SIM.chips.push({
     id:'chip_'+SIM.chipCounter, rowId:firstRowOfBlock('B'),
-    label: cfg.name.replace(/_/g,' '),
-    desc: 'Posición inicial: '+cfg.name,
+    label: lpLabel(cfg),
+    desc: 'Posición inicial: '+lpLabel(cfg),
     startH: start, endH: Math.min(dayDuration(), start + 1),
-    blockData: { liftPositionKey: key, liftPositionName: cfg.name }
+    blockData: { liftPositionKey: key, liftPositionName: cfg.name, liftPositionPath: cfg.path ?? null }
   });
   if (!timelineOpen) toggleTimeline(); else tlRender();
 };
@@ -9513,9 +10315,11 @@ function importFoundationsData(entries) {
   renderFoundationList(); fdBuildTree();
 }
 function importLiftPositionsData(entries) {
+  const used = new Set([...liftPositions.values()].map(c => c.object));
   entries.forEach(entry => {
-    let found=null; scene.traverse(o=>{ if(!found&&o.name===entry.name) found=o; });
+    const found = lpResolve(entry, used);
     if(!found) return;
+    used.add(found);
     const key=found.uuid; found.updateMatrixWorld(true);
     const wp=new THREE.Vector3(); found.getWorldPosition(wp);
     const ox = entry.origX ?? wp.x, oy = entry.origY ?? wp.y, oz = entry.origZ ?? wp.z;
@@ -9528,6 +10332,7 @@ function importLiftPositionsData(entries) {
     cfg.origX = ox; cfg.origY = oy; cfg.origZ = oz;
     cfg.origRx = orx; cfg.origRy = ory; cfg.origRz = orz;
     cfg.poses = entry.poses || cfg.poses || [];
+    cfg.path = vsPath(found); cfg.label = entry.label || cfg.label || null;
     // edit pose defaults to original
     cfg.x = ox; cfg.y = oy; cfg.z = oz; cfg.rx = orx; cfg.ry = ory; cfg.rz = orz;
     liftPositions.set(key, cfg);
@@ -9538,12 +10343,12 @@ function importLiftPositionsData(entries) {
 window.addEventListener('resize', () => { if(timelineOpen) tlRender(); });
 
 // ── TIMELINE HEIGHT / SIZE ───────────────────────────────────────────────────
-const TL_HEIGHTS = { sm: 140, md: 220, lg: 340, xl: Math.floor(window.innerHeight * 0.7) };
+const TL_HEIGHTS = { sm: 170, md: 270, lg: 400, xl: Math.floor(window.innerHeight * 0.7) };
 let tlCurrentH = TL_HEIGHTS.md;
 
 window.tlSetHeight = function(preset) {
   tlCurrentH = preset === 'xl' ? Math.floor(window.innerHeight * 0.7) : TL_HEIGHTS[preset];
-  document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+  document.getElementById('sim-timeline').style.height = tlCurrentH + 'px';
   ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.toggle('active', k===preset));
   tlRender();
 };
@@ -9559,7 +10364,7 @@ window.tlSetHeight = function(preset) {
     const onMove = ev => {
       const delta = startY - ev.clientY; // drag up = bigger
       tlCurrentH = Math.max(100, Math.min(window.innerHeight - 80, startH + delta));
-      document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+      document.getElementById('sim-timeline').style.height = tlCurrentH + 'px';
       // Clear active preset since we're freeform
       ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.remove('active'));
     };
@@ -9578,7 +10383,7 @@ window.tlSetHeight = function(preset) {
     const onMove = ev => {
       const delta = startY - ev.touches[0].clientY;
       tlCurrentH = Math.max(100, Math.min(window.innerHeight - 80, startH + delta));
-      document.getElementById('sim-timeline').style.maxHeight = tlCurrentH + 'px';
+      document.getElementById('sim-timeline').style.height = tlCurrentH + 'px';
       ['sm','md','lg','xl'].forEach(k => document.getElementById('tls-'+k)?.classList.remove('active'));
     };
     const onUp = () => { handle.removeEventListener('touchmove', onMove); handle.removeEventListener('touchend', onUp); tlRender(); };
@@ -9591,7 +10396,7 @@ window.tlSetHeight = function(preset) {
 // (collapse handling is built directly into tlRender now)
 
 // Initial render of day strip + default timeline height
-document.getElementById('sim-timeline').style.maxHeight = TL_HEIGHTS.md + 'px';
+document.getElementById('sim-timeline').style.height = TL_HEIGHTS.md + 'px';
 renderDayStrip();
 
 // ── DRAGGABLE FLOATING WINDOWS ───────────────────────────────────────────────
@@ -14001,7 +14806,8 @@ animate();
 
 <!-- Chip editor popup -->
 <div id="chip-editor">
-  <div class="ce-title">✏ Editar evento</div>
+  <div class="ce-head"><span class="ce-title" id="ce-head-title">✏ Editar evento</span><button class="ce-x" onclick="tlClearSel()" title="Cerrar (Esc)">✕</button></div>
+  <div id="ce-issues"></div>
   <div class="ce-field">
     <div class="ce-label">Nombre del evento</div>
     <input class="ce-input" id="ce-name" type="text" placeholder="Ej: Choreo de pedestales">
@@ -14061,6 +14867,7 @@ animate();
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.4;">
       Las secuencias se crean en el panel <b style="color:#f6ad55;">Bloque E</b>. La grúa recorrerá los puntos clave durante el tiempo del chip.
     </div>
+    <button class="ce-btn" style="border-color:rgba(167,139,250,.45);color:#a78bfa;background:rgba(167,139,250,.08);" onclick="ceAddReturnAfterCrane()" title="Crea en el Bloque B un evento de 30 min, justo al terminar la grúa, que lleva cada pieza cargada a su posición original del GLB">↺ Acomodar pieza en su posición original al terminar</button>
   </div>
 
   <!-- Block G: vista del modelo original -->
@@ -14102,10 +14909,15 @@ animate();
     </div>
   </div>
 
+  <div class="ce-field" id="ce-dep-wrap">
+    <div class="ce-label" title="El evento se mueve solo cuando cambia el anterior">⛓ Empieza al terminar</div>
+    <div style="display:flex;gap:4px;"><select class="ce-input" id="ce-dep"><option value="">— Sin dependencia —</option></select>
+    <input class="ce-input" id="ce-dep-lag" type="text" style="width:58px;flex-shrink:0" placeholder="0:00" title="Desfase después del evento anterior (HH:MM)"></div>
+  </div>
   <div class="ce-btns">
-    <button class="ce-btn ok" onclick="chipEditorSave()">✓ Guardar</button>
-    <button class="ce-btn del" onclick="chipEditorDelete()">✕ Eliminar</button>
-    <button class="ce-btn" onclick="chipEditorClose()">Cancelar</button>
+    <button class="ce-btn ok" onclick="chipEditorSave()" title="Enter">✓ Guardar</button>
+    <button class="ce-btn del" onclick="chipEditorDelete()" title="Supr">🗑 Eliminar</button>
+    <button class="ce-btn" onclick="tlClearSel()">Cerrar</button>
   </div>
 </div>
 
@@ -14260,86 +15072,104 @@ animate();
 
 <!-- ═══════════ SIMULATION TIMELINE ═══════════ -->
 <div id="sim-timeline">
-  <!-- Drag-resize handle -->
   <div id="tl-resize-handle" title="Arrastrar para redimensionar"></div>
 
-  <!-- Header / transport -->
   <div id="tl-header">
-    <span class="tl-logo">⏱ SIMULACIÓN</span>
-    <div class="tl-sep"></div>
-
     <div class="tl-transport">
-      <button class="tl-btn play" id="tl-play-btn" onclick="simPlay()">▶ Reproducir</button>
-      <button class="tl-btn playall" id="tl-playall-btn" onclick="simPlayAll()" title="Reproducir todos los días en orden">⏭ Todos los días</button>
-      <button class="tl-btn stop" onclick="simStop()">■ Detener</button>
-      <button class="tl-btn" onclick="simRewind()">⏮ Inicio</button>
+      <button class="tl-btn play" id="tl-play-btn" onclick="simPlay()" title="Reproducir / pausar el día (Espacio)">▶ Reproducir</button>
+      <button class="tl-btn playall" id="tl-playall-btn" onclick="simPlayAll()" title="Reproducir todos los días en orden">⏭ Todos</button>
+      <button class="tl-btn stop" onclick="simStop()" title="Detener y restaurar la escena">■</button>
+      <button class="tl-btn" onclick="simRewind()" title="Ir al inicio del día">⏮</button>
     </div>
-
     <div id="tl-time-display">00:00</div>
-
     <div class="tl-sep"></div>
-
-    <!-- Block launchers -->
-    <button class="tl-btn" onclick="toggleBlockA()" id="btn-block-a" title="Configurar cimientos">🏛 Bloque A</button>
-    <button class="tl-btn" onclick="toggleLiftPosPanel()" title="Posiciones iniciales de izaje" style="color:var(--sim-purple);border-color:rgba(167,139,250,.3);">⬆ Bloque B</button>
-    <button class="tl-btn" onclick="toggleBlockC()" id="btn-block-c" title="Estados de visibilidad" style="color:#4fd1c5;border-color:rgba(79,209,197,.3);">👁 Bloque C</button>
-    <button class="tl-btn" onclick="toggleBlockE()" id="btn-block-e" title="Secuencias de grúa" style="color:#f6ad55;border-color:rgba(246,173,85,.3);">🏗 Bloque E</button>
-    <button class="tl-btn" onclick="vsToggleShowAll()" id="btn-vs-all" title="Ver todo el modelo (ignora la visibilidad de la simulación y las reglas). Se desactiva al reproducir." style="color:#ffd54f;border-color:rgba(255,213,79,.3);">👁 Todo</button>
-    <button class="tl-btn" onclick="toggleBlockF()" id="btn-block-f" title="Excavaciones y acopios" style="color:#d7a77f;border-color:rgba(176,132,98,.35);">⛏ Bloque F</button>
-
-    <div class="tl-sep"></div>
-
-    <!-- Hour zoom -->
-    <div class="tl-scale-group">
-      <span style="font-family:var(--mono);font-size:9px;color:var(--text3);">ZOOM</span>
-      <button class="tl-scale-btn active" onclick="tlSetScale('day')" id="tls-day" title="15 min">15m</button>
-      <button class="tl-scale-btn" onclick="tlSetScale('week')" id="tls-week" title="1 hora">1h</button>
-      <button class="tl-scale-btn" onclick="tlSetScale('month')" id="tls-month" title="2 horas">2h</button>
+    <div class="tl-daynav">
+      <button class="tl-ibtn" onclick="tlStepDay(-1)" title="Día anterior">◀</button>
+      <button class="tl-btn tl-dd" id="tl-day-btn" onclick="tlMenu('day',this)"><span id="tl-day-name">Día 1</span><span class="tl-car-d">▾</span></button>
+      <button class="tl-ibtn" onclick="tlStepDay(1)" title="Día siguiente">▶</button>
     </div>
-
+    <button class="tl-btn" id="tl-ov-btn" onclick="tlToggleOverview()" title="Vista de todos los días">📅 Días</button>
     <div class="tl-sep"></div>
-
-    <!-- Export / Import (master) -->
-    <button class="tl-btn export-btn" onclick="exportSimJSON()" title="Exportar maestro (todos los días)">↓ Maestro</button>
-    <button class="tl-btn export-btn" onclick="document.getElementById('sim-import-file').click()" style="border-color:rgba(129,199,132,.3);color:var(--sim-green);" title="Importar maestro o día">↑ Importar</button>
+    <button class="tl-btn tl-dd" id="tl-blocks-btn" onclick="tlMenu('blocks',this)" title="Paneles de configuración de cada bloque">▦ Bloques ▾</button>
+    <button class="tl-btn" onclick="vsToggleShowAll()" id="btn-vs-all" title="Ver todo el modelo (ignora la visibilidad de la simulación y las reglas). Se desactiva al reproducir." style="color:#ffd54f;border-color:rgba(255,213,79,.3);">👁 Todo</button>
+    <div class="tl-sep"></div>
+    <div class="tl-zoom" title="Zoom horizontal (Ctrl + rueda sobre la línea de tiempo)">
+      <span>🔍</span><input type="range" id="tl-zoom" min="0" max="100" value="0" oninput="tlSetZoom(Math.pow(32, this.value / 100))">
+      <button class="tl-btn" onclick="tlFit()" title="Encajar los eventos del día (F)">⤢ Ajustar</button>
+    </div>
+    <button class="tl-btn tl-warn" id="tl-warn-btn" onclick="tlNextIssue()" style="display:none">⚠ 0</button>
+    <div class="tl-spacer"></div>
+    <button class="tl-btn tl-dd" id="tl-file-btn" onclick="tlMenu('file',this)" title="Exportar / importar">📁 Archivo ▾</button>
     <input type="file" id="sim-import-file" accept=".json" style="display:none" onchange="importSimJSON(this)">
-
-    <div class="tl-sep"></div>
     <button class="tl-btn rec-btn" id="btn-record" onclick="toggleRecordPanel()" title="Grabar video">🎬 Grabar</button>
     <button class="tl-btn cloud-btn" id="btn-cloud" onclick="toggleCloudPanel()" title="Guardar/cargar animaciones en Google Drive">☁ Drive</button>
-
-    <div class="tl-sep"></div>
-    <div class="tl-size-group">
+    <div class="tl-size-group" title="Altura del panel">
       <button class="tl-size-btn" id="tls-sm"  onclick="tlSetHeight('sm')"  title="Pequeño">S</button>
       <button class="tl-size-btn active" id="tls-md" onclick="tlSetHeight('md')" title="Mediano">M</button>
       <button class="tl-size-btn" id="tls-lg"  onclick="tlSetHeight('lg')"  title="Grande">L</button>
       <button class="tl-size-btn" id="tls-xl"  onclick="tlSetHeight('xl')"  title="Pantalla completa">XL</button>
     </div>
-    <button class="tl-btn" id="tl-hide" onclick="toggleTimeline()">✕ Ocultar</button>
+    <button class="tl-btn" id="tl-hide" onclick="toggleTimeline()" title="Ocultar línea de tiempo">✕</button>
   </div>
 
-  <!-- MASTER DAY STRIP -->
-  <div id="tl-day-strip-wrap">
-    <span class="tl-day-strip-label">DÍAS</span>
-    <div id="tl-day-strip"><!-- day cards injected by JS --></div>
-  </div>
+  <div id="tl-minimap" title="Día completo: clic o arrastrar para desplazarse"></div>
 
-  <!-- Body: labels + tracks (active day, by hour) -->
-  <div id="tl-body">
-    <div id="tl-labels">
-      <!-- Row labels injected by JS -->
-    </div>
-    <div id="tl-canvas-wrap">
-      <div id="tl-canvas">
-        <div id="tl-ruler"></div>
-        <!-- Track rows injected by JS -->
+  <div id="tl-main">
+    <div id="tl-body">
+      <div id="tl-grid">
+        <div id="tl-ruler-row">
+          <div id="tl-corner">
+            <button class="tl-cb" onclick="tlCollapseAll()" title="Plegar / desplegar todos los bloques">⇕</button>
+            <button class="tl-cb" id="tl-he-btn" onclick="tlSetHideEmpty()" title="Ocultar bloques sin eventos">◧</button>
+            <button class="tl-cb" onclick="tlUndo()" title="Deshacer (Ctrl+Z)">↶</button>
+            <button class="tl-cb" onclick="tlUndo(true)" title="Rehacer (Ctrl+Y)">↷</button>
+            <span class="tl-help" title="Arrastrar en vacío: crear evento · Doble clic: evento de 1 h
+Clic: seleccionar y editar · Arrastrar bordes: cambiar duración
+Shift/Ctrl+clic o Shift+arrastrar: selección múltiple
+Imán a bordes de otros eventos y al cursor (Alt: sin imán)
+Ctrl+rueda: zoom · F: ajustar · Espacio: reproducir
+Supr · Ctrl+C / V / D / Z / Y · ← → mover 15 min (Shift: 1 h)
+Alt+clic en el modelo 3D: buscar sus eventos">?</span>
+            <div id="tl-lw-h" title="Arrastrar para cambiar el ancho de los nombres"></div>
+          </div>
+          <div id="tl-ruler"></div>
+        </div>
+        <div id="tl-rows"></div>
+        <svg id="tl-deps"></svg>
+        <div id="tl-guide"></div>
         <div id="tl-playhead"></div>
+        <div id="tl-marquee"></div>
       </div>
     </div>
+    <div id="tl-overview"></div>
+    <div id="tl-props"><div id="tl-multi"></div></div>
   </div>
-
 </div>
 <!-- End simulation timeline -->
+
+<!-- Timeline dropdown menus -->
+<div class="tl-menu" id="tlm-day"></div>
+<div class="tl-menu" id="tlm-blocks">
+  <div class="tlm-h">Configuración de bloques</div>
+  <button class="tlm-it" id="btn-block-a" onclick="toggleBlockA();tlMenuClose()"><span class="tl-bdg" style="background:#4fc3f7">A</span>Cimientos<em>colado por etapas</em></button>
+  <button class="tlm-it" id="btn-block-b" onclick="toggleLiftPosPanel();tlMenuClose()"><span class="tl-bdg" style="background:#a78bfa">B</span>Posiciones<em>piezas a izar</em></button>
+  <button class="tlm-it" id="btn-block-c" onclick="toggleBlockC();tlMenuClose()"><span class="tl-bdg" style="background:#4fd1c5">C</span>Visibilidad<em>estados y reglas</em></button>
+  <div class="tlm-it dis"><span class="tl-bdg" style="background:#f687b3">D</span>Cámara<em>se captura en cada evento</em></div>
+  <button class="tlm-it" id="btn-block-e" onclick="toggleBlockE();tlMenuClose()"><span class="tl-bdg" style="background:#f6ad55">E</span>Grúas<em>secuencias</em></button>
+  <button class="tlm-it" id="btn-block-f" onclick="toggleBlockF();tlMenuClose()"><span class="tl-bdg" style="background:#d7a77f">F</span>Excavaciones<em>y rellenos</em></button>
+  <div class="tlm-it dis"><span class="tl-bdg" style="background:#90caf9">G</span>Vista del modelo<em>opciones en cada evento</em></div>
+  <div class="tlm-sep"></div>
+  <button class="tlm-it" onclick="tlCollapseAll(true);tlMenuClose()">▸ Plegar todos los bloques</button>
+  <button class="tlm-it" onclick="tlCollapseAll(false);tlMenuClose()">▾ Desplegar todos</button>
+  <label class="tlm-it"><input type="checkbox" id="tl-hide-empty" onchange="tlSetHideEmpty(this.checked)"> Ocultar bloques sin eventos</label>
+</div>
+<div class="tl-menu" id="tlm-file">
+  <div class="tlm-h">Archivo</div>
+  <button class="tlm-it" onclick="exportSimJSON();tlMenuClose()">↓ Exportar maestro<em>todos los días</em></button>
+  <button class="tlm-it" onclick="tlExportDay();tlMenuClose()">↓ Exportar día actual</button>
+  <button class="tlm-it" onclick="document.getElementById('sim-import-file').click();tlMenuClose()">↑ Importar maestro o día</button>
+</div>
+
 
 <div id="pub-loader">
   <div class="pl-box">
