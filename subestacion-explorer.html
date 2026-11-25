@@ -6222,6 +6222,7 @@ function tlScrubToClientX(clientX) {
 })();
 
 // ── INICIALIZACIÓN: eventos de la rejilla, teclado, minimapa, ancho de etiquetas ─
+setTimeout(() => { try { playMusicBtn(); } catch (e) {} }, 0);
 (function tlInit() {
   const props = $tl('tl-props'), ed = $tl('chip-editor'); if (props && ed) props.appendChild(ed);
   const rows = $tl('tl-rows'), body = $tl('tl-body'), mm = $tl('tl-minimap'), ov = $tl('tl-overview');
@@ -7990,7 +7991,7 @@ window.musSetMode = function(mode) {
   if (mode === 'custom' && !MUSIC.customBuf) { document.getElementById('mus-file').click(); return; }
   const wasPreview = MUSIC.previewing;
   if (wasPreview) musicStop();
-  MUSIC.mode = mode;
+  MUSIC.mode = mode; try { playMusicBtn(); } catch (e) {}
   ['epic','custom','none'].forEach(k => document.getElementById('mus-mode-'+k)?.classList.toggle('active', k === mode));
   document.getElementById('mus-custom-row').style.display = (mode === 'custom') ? 'flex' : 'none';
   document.getElementById('mus-opts').style.display = (mode === 'none') ? 'none' : 'flex';
@@ -8287,6 +8288,32 @@ function startDayPlayback(onDayEnd, resetFirst) {
 }
 
 // ── PLAY ALL DAYS continuously ───────────────────────────────────────────────
+// ── Música al reproducir todos los días (usa la música elegida en 🎬 Grabar) ──
+let PLAY_MUSIC = true; try { PLAY_MUSIC = localStorage.getItem('tl_music') !== '0'; } catch (e) {}
+let _musicByPlay = false;
+function playMusicStart() {
+  if (!PLAY_MUSIC || REC.recording || !musicWanted()) return;
+  if (MUSIC.previewing) musicStop();
+  if (MUSIC.active) return;                 // ya suena (p. ej. por una grabación)
+  musicCtx(); if (musicStart()) _musicByPlay = true;
+}
+function playMusicEnd(sec) {
+  if (!_musicByPlay) return; _musicByPlay = false;
+  if (REC.recording) return;
+  const s = Math.max(0.05, sec ?? 1), keep = MUSIC.fade;
+  musicFadeOut(s);
+  setTimeout(() => { if (MUSIC.fade === keep && !_musicByPlay && !REC.recording) musicStop(); }, s * 1000 + 120);
+}
+function playMusicBtn() {
+  const b = document.getElementById('tl-music-btn'); if (!b) return;
+  b.classList.toggle('active', PLAY_MUSIC); b.textContent = PLAY_MUSIC ? '🎵' : '🔇';
+  b.title = (PLAY_MUSIC ? 'Música activada' : 'Música desactivada') + ' al reproducir todos los días · se elige en 🎬 Grabar (' + (MUSIC.mode === 'none' ? 'sin música' : MUSIC.mode === 'custom' ? (MUSIC.customName || 'archivo propio') : 'épica') + ')';
+}
+window.tlToggleMusic = function() {
+  PLAY_MUSIC = !PLAY_MUSIC; try { localStorage.setItem('tl_music', PLAY_MUSIC ? '1' : '0'); } catch (e) {}
+  if (!PLAY_MUSIC) playMusicEnd(0.6); else if (_playAllMode) playMusicStart();
+  playMusicBtn();
+};
 window.simPlayAll = function() {
   if (SIM.playing) { simPause(); return; }
   if (VS.showAll) vsToggleShowAll(false);
@@ -8304,6 +8331,7 @@ window.simPlayAll = function() {
         setTimeout(() => { if (!_playAllMode) return; resetToInitialState(); idx = 0; playNext(); }, 1500);
         return;
       }
+      playMusicEnd(MUSIC.fadeOut || 3);   // fin: la música se desvanece
       _playAllMode = false; simPause(); return;
     }
     SIM.activeDayId = SIM.days[idx].id;
@@ -8320,12 +8348,14 @@ window.simPlayAll = function() {
     }, 350);
   };
   document.getElementById('tl-playall-btn')?.classList.add('active');
+  playMusicStart();
   playNext();
 };
 
 function simPause() {
   SIM.playing = false;
   _playAllMode = false;
+  playMusicEnd(1);
   if (SIM.playTimer) cancelAnimationFrame(SIM.playTimer);
   document.getElementById('tl-play-btn').textContent = '▶ Reproducir';
   document.getElementById('tl-playall-btn')?.classList.remove('active');
@@ -15176,7 +15206,8 @@ animate();
   <div id="tl-header">
     <div class="tl-transport">
       <button class="tl-btn play" id="tl-play-btn" onclick="simPlay()" title="Reproducir / pausar el día (Espacio)">▶ Reproducir</button>
-      <button class="tl-btn playall" id="tl-playall-btn" onclick="simPlayAll()" title="Reproducir todos los días en orden">⏭ Todos</button>
+      <button class="tl-btn playall" id="tl-playall-btn" onclick="simPlayAll()" title="Reproducir todos los días en orden (con música)">⏭ Todos</button>
+      <button class="tl-btn" id="tl-music-btn" onclick="tlToggleMusic()" style="padding:0 6px;">🎵</button>
       <button class="tl-btn stop" onclick="simStop()" title="Detener y restaurar la escena">■</button>
       <button class="tl-btn" onclick="simRewind()" title="Ir al inicio del día">⏮</button>
     </div>
