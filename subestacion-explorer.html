@@ -1762,6 +1762,19 @@
   /* paneles flotantes: no tapar la línea de tiempo abierta */
   body.tl-open #block-a-panel, body.tl-open #block-c-panel, body.tl-open #block-e-panel, body.tl-open #block-f-panel,
   body.tl-open #lift-pos-panel, body.tl-open #capsule-editor, body.tl-open #record-panel, body.tl-open #cloud-panel { max-height:calc(100vh - 72px - var(--tlh, 270px)) !important; }
+  /* visibilidad de cables por aspecto */
+  .vs-cabrow { display:flex; flex-wrap:wrap; align-items:center; gap:3px; padding:4px 4px 4px 18px; border-radius:4px; font-family:var(--mono); font-size:9px; }
+  .vs-cabrow .vs-cabn { flex-basis:100%; }
+  .vs-cabrow:hover { background:rgba(255,255,255,.03); }
+  .vs-cabrow.all { border-bottom:1px dashed var(--border); margin-bottom:2px; }
+  .vs-cabn { flex:1; min-width:0; display:flex; align-items:center; gap:5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vs-cabn i { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .vs-cab { padding:2px 5px; border-radius:4px; border:1px solid var(--border); background:var(--bg3); color:var(--text3); font:9px var(--mono); cursor:pointer; white-space:nowrap; }
+  .vs-cab:hover:not([disabled]) { border-color:#4fd1c5; color:#4fd1c5; }
+  .vs-cab.on { border-color:#4fd1c5; background:rgba(79,209,197,.15); color:#4fd1c5; }
+  .vs-cab.inh { border-color:rgba(79,209,197,.35); color:rgba(79,209,197,.7); }
+  .vs-cab.na { opacity:.35; }
+  .vs-cab[disabled] { cursor:default; }
   /* ══════════ LÍNEA DE TIEMPO v2 ══════════ */
   #sim-timeline { max-height:none; --tl-lw:170px; }
   #tl-header { gap:6px; padding:0 10px; flex-wrap:nowrap; overflow:hidden; height:40px; }
@@ -8601,7 +8614,7 @@ function collectBlockDefs() {
   foundations.forEach((f) => foundData.push({name:f.name,path:f.path??null,label:f.label||null,totalH:f.totalH,bottomY:f.bottomY,stageCount:f.stageCount,stages:f.stages,pourLevel:f.pourLevel}));
   // visibility states (shared, like foundations)
   const visData = [];
-  visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(t => (t.path !== undefined && t.path !== null ? { name:t.name, path:t.path } : { name:t.name })) }));
+  visStates.forEach((s, id) => visData.push({ id, name: s.name, visible: s.visible, targets: s.targets.map(vsTgOut) }));
   // crane capsules (shared)
   const capData = [];
   craneCapsules.forEach((cap, id) => capData.push({
@@ -8634,17 +8647,19 @@ function importVisStatesData(entries) {
   let maxN = 0;
   entries.forEach(e => {
     const id = e.id || ('vis_' + (++visStateCounter));
-    visStates.set(id, { name: e.name||'Estado', visible: !!e.visible, targets: (e.targets||[]).map(t => ({ name:t.name || '', path:t.path ?? null })) });
+    visStates.set(id, { name: e.name||'Estado', visible: !!e.visible, targets: (e.targets||[]).map(vsTgIn) });
     const m = (id.match(/vis_(\d+)/)||[])[1]; if (m) maxN = Math.max(maxN, parseInt(m));
   });
   visStateCounter = Math.max(visStateCounter, maxN);
   vsChanged(); renderVisStateList(); buildVisTree();
 }
-function vsSettingsOut() { return { init:VS.init, keepTerrain:VS.keepTerrain, keepFound:VS.keepFound, rules:VS.rules.map(r => ({ name:r.name, path:r.path ?? null, mode:r.mode, on:r.on !== false })) }; }
+function vsTgOut(t) { return t.cab !== undefined ? { name:t.name, cab:t.cab, part:t.part } : (t.path !== undefined && t.path !== null ? { name:t.name, path:t.path } : { name:t.name }); }
+function vsTgIn(t) { return t.cab !== undefined ? { name:t.name || '', cab:t.cab, part:t.part || 'all' } : { name:t.name || '', path:t.path ?? null }; }
+function vsSettingsOut() { return { init:VS.init, cabInit:VS.cabInit, keepTerrain:VS.keepTerrain, keepFound:VS.keepFound, rules:VS.rules.map(r => Object.assign(vsTgOut(r), { mode:r.mode, on:r.on !== false })) }; }
 function vsSettingsIn(o) {
   if (!o) return;
-  VS.init = o.init === 'none' ? 'none' : 'all'; VS.keepTerrain = o.keepTerrain !== false; VS.keepFound = o.keepFound !== false;
-  VS.rules = (o.rules || []).map(r => ({ name:r.name || '', path:r.path ?? null, mode:r.mode === 'show' ? 'show' : 'hide', on:r.on !== false }))
+  VS.init = o.init === 'none' ? 'none' : 'all'; VS.cabInit = o.cabInit === 'hide' ? 'hide' : 'show'; VS.keepTerrain = o.keepTerrain !== false; VS.keepFound = o.keepFound !== false;
+  VS.rules = (o.rules || []).map(r => Object.assign(vsTgIn(r), { mode:r.mode === 'show' ? 'show' : 'hide', on:r.on !== false }))
     .concat((o.always || []).map(t => ({ name:t.name || '', path:t.path ?? null, mode:'show', on:true })));   // versión anterior
   vsChanged(); renderVisStateList();
 }
@@ -9439,7 +9454,7 @@ let visStateCounter = 0;
 let blockCOpen = false;
 let _vsEditingId = null;      // estado en edición ('__rules' = reglas permanentes)
 let _vsTreeFilter = '';
-const VS = { init:'all', keepTerrain:true, keepFound:true, rules:[], ruleMode:'hide', showAll:false, rev:0 };
+const VS = { init:'all', cabInit:'show', keepTerrain:true, keepFound:true, rules:[], ruleMode:'hide', showAll:false, rev:0 };
 // rules: [{name, path, mode:'hide'|'show', on}] — reglas permanentes (también fuera de la simulación)
 let vsPick3D = false;
 
@@ -9460,9 +9475,27 @@ function vsPath(obj) {
   return o === m ? p.join('/') : null;
 }
 function vsTargetOf(obj) { return { name:obj.name || '', path:vsPath(obj) }; }
-function vsSameTarget(a, b) { return a.path && b.path ? a.path === b.path : a.name === b.name; }
+function vsSameTarget(a, b) {
+  if (a.cab !== undefined || b.cab !== undefined) return a.cab === b.cab && a.part === b.part;
+  return a.path && b.path ? a.path === b.path : a.name === b.name;
+}
+// ── Cables: cada aspecto por separado (conductor, distancia de aislamiento, cadenas de aisladores) ──
+// objetivo: { name, cab:'<id del cable>' | '*', part:'line' | 'clr' | 'ins' | 'all' }
+const VS_CAB_PARTS = { line:'conductor', clr:'distancia de aislamiento', ins:'aisladores', all:'todo' };
+function vsCabPartOf(m) { return m.userData.clr ? 'clr' : m.userData.ins ? 'ins' : 'line'; }
+function vsCableMeshes(id, part) {
+  const g = scene.getObjectByName('__cables__'); if (!g) return [];
+  return g.children.filter(m => m.isMesh && m.userData.cableId !== undefined && (id === '*' || m.userData.cableId === id) && (!part || part === 'all' || vsCabPartOf(m) === part));
+}
+function vsCabTarget(id, part) {
+  const cb = id === '*' ? null : (DIMV.doc?.cables || []).find(c => c.id === id);
+  return { name:'⚡ ' + (id === '*' ? 'Todos los cables' : (cb ? cb.name : 'Cable')) + ' · ' + VS_CAB_PARTS[part], cab:id, part };
+}
+function vsAllMeshesC() { return vsAllMeshes().concat(vsCableMeshes('*', 'all')); }   // modelo + cables
+function vsCabInitVis() { return VS.cabInit !== 'hide'; }
 function vsNodeAt(path) { let o = vsModel(); if (!o || path === null || path === undefined) return null; if (path === '') return o; for (const i of String(path).split('/')) { o = o && o.children[+i]; } return o || null; }
 function vsResolve(t) {
+  if (t.cab !== undefined) return vsCableMeshes(t.cab, t.part);   // los cables se reconstruyen: sin caché
   const C = vsC(), key = (t.path ?? '') + '|' + t.name;
   if (C.nodes.has(key)) return C.nodes.get(key);
   let out = [];
@@ -9500,10 +9533,10 @@ function vsApplyAt(hour) {
   _vsMode = 'sim'; _vsHour = hour;
   if (VS.showAll) { vsApplyBase(true); _vsMode = 'sim'; return; }
   const started = vsStartedChips(hour);
-  const sig = VS.init + '|' + VS.rev + '|' + SIM.activeDayId + '|' + started.map(c => c.id + ':' + c.startH + ':' + (c.blockData.visStateKey || c.blockData.visStateName)).join(',');
+  const sig = VS.init + '|' + VS.cabInit + '|' + VS.rev + '|' + SIM.activeDayId + '|' + started.map(c => c.id + ':' + c.startH + ':' + (c.blockData.visStateKey || c.blockData.visStateName)).join(',');
   if (sig === _vsSig) return; _vsSig = sig;
-  const all = vsAllMeshes(), vis = new Map(), def = VS.init !== 'none';
-  all.forEach(m => vis.set(m, def));
+  const all = vsAllMeshesC(), vis = new Map(), def = VS.init !== 'none';
+  all.forEach(m => vis.set(m, m.userData.cableId !== undefined ? vsCabInitVis() : def));
   if (!def) {
     const keep = n => vsMeshesOf(n).forEach(m => vis.set(m, true));
     if (VS.keepTerrain && typeof excTerrainMeshes === 'function') excTerrainMeshes().forEach(m => vis.set(m, true));
@@ -9527,7 +9560,7 @@ function vsApplyBase(ignoreRules) {
   const hide = ignoreRules || VS.showAll ? [] : vsRuleNodes('hide');
   if (!hide.length && !_vsControlled) return;
   vsTakeControl();
-  vsAllMeshes().forEach(m => { m.visible = true; });
+  vsAllMeshesC().forEach(m => { m.visible = true; });
   hide.forEach(n => vsMeshesOf(n).forEach(m => { m.visible = false; }));
   if (!hide.length) { _vsControlled = false; const r = vsModel(); if (r) r.traverse(o => { if (!vsSkip(o)) o.visible = true; }); }
 }
@@ -9548,6 +9581,7 @@ function vsTakeControl() {   // los grupos (ensambles) quedan visibles: la visib
 }
 function resetVisibility() {   // vista normal (al reiniciar o detener): todo visible salvo las reglas «siempre oculto»
   _vsSig = null;
+  vsCableMeshes('*', 'all').forEach(m => { m.visible = true; });
   if (VS.rules.some(r => r.on !== false && r.mode === 'hide') && !VS.showAll) { vsApplyBase(); return; }
   _vsMode = 'base';
   if (!_vsControlled) {   // compatibilidad: estados aplicados a grupos por la versión anterior
@@ -9586,6 +9620,13 @@ window.vsPickDone = function() {
   if (vsPick3D) { vsPick3D = false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); }
   renderVisStateList(); buildVisTree();
 };
+window.vsToggleCab = function(id, part) {   // añade o quita un aspecto de cable del estado en edición
+  const T = vsEditTargets(); if (!T) return;
+  const t = vsCabTarget(id, part), i = T.findIndex(x => vsSameTarget(x, t));
+  if (i >= 0) T.splice(i, 1); else T.push(_vsEditingId === '__rules' ? Object.assign(t, { mode:VS.ruleMode, on:true }) : t);
+  vsChanged(); renderVisStateList(); buildVisTree();
+};
+window.vsHlCab = function(id, part) { vsHighlight(id === null ? null : vsCableMeshes(id, part)); };
 function vsToggleTarget(obj) {   // añade o quita el objeto del estado en edición
   const T = vsEditTargets(); if (!T) return;
   const t = vsTargetOf(obj), i = T.findIndex(x => vsSameTarget(x, t));
@@ -9600,6 +9641,7 @@ window.vsRuleSet = function(i, k, v) {
 window.vsRuleMode = function(m) { VS.ruleMode = m === 'show' ? 'show' : 'hide'; renderVisStateList(); };
 window.vsSetInit = function(k, v) {
   if (k === 'init') VS.init = v === 'none' ? 'none' : 'all';
+  if (k === 'cab') VS.cabInit = v === 'hide' ? 'hide' : 'show';
   if (k === 'terrain') VS.keepTerrain = !!v;
   if (k === 'found') VS.keepFound = !!v;
   vsChanged(); renderVisStateList();
@@ -9610,7 +9652,7 @@ window.vsPreview = function(id) {
   const st = visStates.get(id); if (!st) return;
   _vsSig = null;
   const all = vsAllMeshes(), def = VS.init !== 'none';
-  vsTakeControl(); all.forEach(m => { m.visible = def; });
+  vsTakeControl(); all.forEach(m => { m.visible = def; }); vsCableMeshes('*', 'all').forEach(m => { m.visible = vsCabInitVis(); });
   if (!def) { if (VS.keepTerrain && typeof excTerrainMeshes === 'function') excTerrainMeshes().forEach(m => m.visible = true); if (VS.keepFound) foundations.forEach(f => f.object && vsMeshesOf(f.object).forEach(m => m.visible = true)); }
   st.targets.forEach(t => vsResolve(t).forEach(n => vsMeshesOf(n).forEach(m => m.visible = !!st.visible)));
   vsRuleNodes('show').forEach(n => vsMeshesOf(n).forEach(m => m.visible = true));
@@ -9649,6 +9691,27 @@ function vsHitAt(cx, cy) {
   const meshes = vsAllMeshes().filter(m => { for (let o = m; o; o = o.parent) if (!o.visible) return false; return true; });
   return raycaster.intersectObjects(meshes, false)[0]?.object || null;
 }
+function vsHitAtC(cx, cy) {   // como vsHitAt, incluyendo cables (conductor, aislamiento, aisladores)
+  const rect = canvas.getBoundingClientRect();
+  raycaster.setFromCamera(new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1), camera);
+  const meshes = vsAllMeshesC().filter(m => { for (let o = m; o; o = o.parent) if (!o.visible) return false; return true; });
+  return raycaster.intersectObjects(meshes, false)[0]?.object || null;
+}
+function vsOpenCableMenu(mesh, x, y) {
+  vsMenuClose();
+  const id = mesh.userData.cableId, cb = (DIMV.doc?.cables || []).find(c => c.id === id), T = vsEditTargets() || [];
+  const opts = [[id, 'line'], [id, 'clr'], [id, 'ins'], [id, 'all'], ['*', vsCabPartOf(mesh)]].filter(([i, p]) => p === 'all' || p === 'line' || vsCableMeshes(i, p).length);
+  const menu = document.createElement('div'); menu.id = 'vs-pick-menu';
+  menu.style.left = Math.min(x + 8, innerWidth - 320) + 'px'; menu.style.top = Math.min(y + 8, innerHeight - 40 - opts.length * 30) + 'px';
+  menu.innerHTML = '<div class="vs-pm-t">⚡ ' + dvEsc(cb ? cb.name : 'Cable') + ' — añadir / quitar</div>' + opts.map(([i, p], k) => {
+    const inc = T.some(t => t.cab === i && t.part === p);
+    return `<div class="vs-pm-i${inc ? ' on' : ''}" data-k="${k}"><span class="vs-pm-k">${i === '*' ? 'Todos' : 'Cable'}</span><span class="vs-pm-n">${VS_CAB_PARTS[p]}</span><small>${vsCableMeshes(i, p).length} pz</small><b>${inc ? '✓' : '+'}</b></div>`;
+  }).join('');
+  menu.addEventListener('mousemove', e => { const it = e.target.closest('.vs-pm-i'); vsHighlight(it ? vsCableMeshes(...opts[+it.dataset.k]) : null); });
+  menu.addEventListener('mouseleave', () => vsHighlight(null));
+  menu.addEventListener('click', e => { const it = e.target.closest('.vs-pm-i'); if (!it) return; e.stopPropagation(); vsToggleCab(...opts[+it.dataset.k]); vsMenuClose(); vsHighlight(null); });
+  document.body.appendChild(menu);
+}
 function vsMenuClose() { document.getElementById('vs-pick-menu')?.remove(); }
 function vsOpenLevelMenu(mesh, x, y) {
   vsMenuClose();
@@ -9671,7 +9734,8 @@ function vsOpenLevelMenu(mesh, x, y) {
 function vsTargetsHTML(id, T) {
   return T.length ? T.map((t, i) => {
     const n = vsResolve(t), miss = !n.length;
-    return `<div class="vs-tg${miss ? ' miss' : ''}" onmouseenter="vsHlTarget('${id}',${i})" onmouseleave="vsHighlight(null)" title="${miss ? 'No se encontró en el modelo cargado' : (t.path ? 'Ruta ' + t.path : 'Por nombre')}">
+    const tip = t.cab !== undefined ? (miss ? 'Ese cable no tiene este elemento activo (o no está en la vista 3D)' : 'Elemento de cable') : miss ? 'No se encontró en el modelo cargado' : (t.path ? 'Ruta ' + t.path : 'Por nombre');
+    return `<div class="vs-tg${miss ? ' miss' : ''}" onmouseenter="vsHlTarget('${id}',${i})" onmouseleave="vsHighlight(null)" title="${tip}">
       <span>${(t.name || '(sin nombre)').replace(/_/g, ' ').replace(/[<>&]/g, '')}</span><small>${miss ? '⚠' : n.reduce((s, o) => s + vsMeshesOf(o).length, 0) + ' pz'}</small>
       <button onclick="removeVisTarget('${id}',${i})" title="Quitar">✕</button></div>`;
   }).join('') : '<div class="vs-empty">Sin elementos. Usa 🖱 Elegir en 3D o marca en el árbol.</div>';
@@ -9684,6 +9748,7 @@ function renderVisStateList() {
   if (init) init.innerHTML = `
     <button class="bap-btn${VS.showAll ? ' active' : ''}" style="width:100%;margin-bottom:6px;${VS.showAll ? 'border-color:#ffd54f;color:#ffd54f;' : ''}" onclick="vsToggleShowAll()" title="Muestra absolutamente todo (ignora estados y reglas) para trabajar en otros ajustes. Se desactiva al reproducir.">${VS.showAll ? '👁 Viendo todo — clic para volver a la simulación' : '👁 Ver todo el modelo'}</button>
     <div class="vs-seg"><button class="${VS.init === 'all' ? 'on' : ''}" onclick="vsSetInit('init','all')">👁 Todo visible</button><button class="${VS.init === 'none' ? 'on' : ''}" onclick="vsSetInit('init','none')">🚫 Todo oculto</button></div>
+    <div class="vs-seg" style="margin-top:4px;" title="Conductores, distancias de aislamiento y aisladores al iniciar la simulación"><button class="${VS.cabInit !== 'hide' ? 'on' : ''}" onclick="vsSetInit('cab','show')">⚡ Cables visibles</button><button class="${VS.cabInit === 'hide' ? 'on' : ''}" onclick="vsSetInit('cab','hide')">⚡ Cables ocultos</button></div>
     <div class="vs-note">${VS.init === 'none' ? 'Al iniciar, todo el modelo se oculta y cada estado <b>👁 Mostrar</b> lo va revelando en su hora.' : 'Al iniciar, todo es visible; los estados ocultan o muestran en su hora.'}</div>
     ${VS.init === 'none' ? `<label class="vs-chk"><input type="checkbox"${VS.keepTerrain ? ' checked' : ''} onchange="vsSetInit('terrain',this.checked)"> Terreno siempre visible</label>
     <label class="vs-chk"><input type="checkbox"${VS.keepFound ? ' checked' : ''} onchange="vsSetInit('found',this.checked)"> Cimientos del Bloque A siempre visibles</label>
@@ -9733,7 +9798,36 @@ function buildVisTree() {
   if (T) T.forEach(t => vsResolve(t).forEach(n => inc.add(n)));
   const st = wrap.scrollTop; wrap.innerHTML = '';
   model.children.forEach(child => { const node = buildVisTreeNode(child, 0, inc, false); if (node) wrap.appendChild(node); });
+  const cn = buildVisCableTree(T); if (cn) wrap.appendChild(cn);
   wrap.scrollTop = st;
+}
+// Sección de cables del árbol: por cable (y para todos) un interruptor por aspecto
+function buildVisCableTree(T) {
+  const all = DIMV.doc?.cables || []; if (!all.length) return null;
+  const cables = all.filter(cb => !_vsTreeFilter || (cb.name || '').toLowerCase().includes(_vsTreeFilter.toLowerCase()));
+  const has = (id, part) => !!T && T.some(t => t.cab === id && t.part === part);
+  const ed = !!_vsEditingId, open = _vsOpen.has('__cab') || !!_vsTreeFilter;
+  const chip = (id, part, avail) => {
+    const on = has(id, part);
+    const inh = !on && ((id !== '*' && (has('*', part) || (part !== 'all' && has(id, 'all')))) || (part !== 'all' && has('*', 'all')) || (part === 'all' && id !== '*' && has('*', 'all')));
+    const lbl = { line:'Conductor', clr:'Aislamiento', ins:'Aisladores', all:'Todo' }[part];
+    const tip = avail ? (ed ? (on ? 'Incluido — clic para quitar' : inh ? 'Incluido por «todos» o «todo»' : 'Incluir en el estado') : 'Pulsa ✎ Editar en un estado') : 'Este cable no lo tiene activo (actívalo con doble clic en el cable)';
+    return `<button class="vs-cab${on ? ' on' : inh ? ' inh' : ''}${avail ? '' : ' na'}" ${ed ? `onclick="vsToggleCab('${id}','${part}')"` : 'disabled'} onmouseenter="vsHlCab('${id}','${part}')" onmouseleave="vsHlCab(null)" title="${tip}">${on || inh ? '✓ ' : ''}${lbl}</button>`;
+  };
+  const node = document.createElement('div'); node.className = 'tree-node';
+  const head = document.createElement('div'); head.className = 'tree-row vs-tr';
+  head.innerHTML = `<span class="tree-toggle${open ? ' open' : ''}">▶</span><span class="tree-icon">⚡</span><span class="tree-label group">Cables</span><small class="vs-pz">${all.length}</small>`;
+  node.appendChild(head);
+  const cw = document.createElement('div'); cw.className = 'tree-children'; cw.style.display = open ? 'block' : 'none'; node.appendChild(cw);
+  const anyClr = all.some(c => c.clr), anyIns = all.some(c => cableIns(c));
+  let html = `<div class="vs-cabrow all"><span class="vs-cabn">Todos los cables</span>${chip('*', 'line', true)}${chip('*', 'clr', anyClr)}${chip('*', 'ins', anyIns)}${chip('*', 'all', true)}</div>`;
+  cables.forEach(cb => {
+    html += `<div class="vs-cabrow"><span class="vs-cabn" onmouseenter="vsHlCab('${cb.id}','all')" onmouseleave="vsHlCab(null)"><i style="background:${dvEsc(cb.color)}"></i>${dvEsc(cb.name || 'Cable')}</span>${chip(cb.id, 'line', true)}${chip(cb.id, 'clr', !!cb.clr)}${chip(cb.id, 'ins', !!cableIns(cb))}${chip(cb.id, 'all', true)}</div>`;
+  });
+  cw.innerHTML = html;
+  head.querySelector('.tree-toggle').addEventListener('click', e => { e.stopPropagation(); const o = cw.style.display === 'none'; cw.style.display = o ? 'block' : 'none'; e.target.classList.toggle('open', o); if (o) _vsOpen.add('__cab'); else _vsOpen.delete('__cab'); });
+  head.addEventListener('click', e => { if (!e.target.closest('.tree-toggle')) head.querySelector('.tree-toggle').click(); });
+  return node;
 }
 function vsHasInc(obj, inc) { let f = false; obj.traverse(o => { if (!f && o !== obj && inc.has(o)) f = true; }); return f; }
 function buildVisTreeNode(obj, depth, inc, inherited) {
@@ -9955,15 +10049,16 @@ function fdTreeNode(obj, depth, inside) {
 document.getElementById('pick-overlay').addEventListener('click', e => {
   if (vsPick3D && _vsEditingId && state.modelLoaded) {
     e.stopPropagation();
-    const m = vsHitAt(e.clientX, e.clientY);
-    if (m) vsOpenLevelMenu(m, e.clientX, e.clientY); else vsMenuClose();
+    const m = vsHitAtC(e.clientX, e.clientY);
+    if (m && m.userData.cableId !== undefined) vsOpenCableMenu(m, e.clientX, e.clientY);
+    else if (m) vsOpenLevelMenu(m, e.clientX, e.clientY); else vsMenuClose();
   }
 });
 let _vsHoverT = 0;
 document.getElementById('pick-overlay').addEventListener('mousemove', e => {
   if (!vsPick3D || document.getElementById('vs-pick-menu')) return;
   const now = performance.now(); if (now - _vsHoverT < 60) return; _vsHoverT = now;
-  vsHighlight(vsHitAt(e.clientX, e.clientY));
+  vsHighlight(vsHitAtC(e.clientX, e.clientY));
 });
 window.addEventListener('keydown', e => {
   if (vsPick3D && e.code === 'Escape') { e.preventDefault(); if (document.getElementById('vs-pick-menu')) vsMenuClose(); else { vsPick3D = false; document.getElementById('pick-overlay').classList.remove('active'); canvas.classList.remove('pick-mode'); vsHighlight(null); renderVisStateList(); } }
@@ -13184,7 +13279,10 @@ function dvSyncCables3D() {
     g.add(m);
     dvAddClear(g, cb); dvAddIns(g, cb);
   });
+  vsAfterCables();
 }
+// los cables se reconstruyen con objetos nuevos: volver a aplicar la visibilidad vigente
+function vsAfterCables() { try { if (_vsMode === 'sim' || _vsControlled) vsRefreshView(); } catch (e) {} }
 function dvCableGeo(cb) {
   const ci = cableIns(cb);
   if (ci && ci.strings.length) {   // con cadenas: el conductor empieza donde termina la cadena
@@ -13203,6 +13301,7 @@ function dvRebuildCableMesh(cb) {   // solo el cable editado (durante el arrastr
   m.geometry.dispose(); m.geometry = geo;
   g.children.filter(o => o.userData.cableId === cb.id && (o.userData.clr || o.userData.ins)).forEach(o => { g.remove(o); o.geometry.dispose(); });
   dvAddClear(g, cb); dvAddIns(g, cb);
+  vsAfterCables();
 }
 
 // ═══ CADENAS DE AISLADORES ═══
